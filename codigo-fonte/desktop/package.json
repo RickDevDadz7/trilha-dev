@@ -1,7 +1,7 @@
 {
   "name": "trilha-dev",
   "productName": "Trilha Dev",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Trilha Dev: aprenda JavaScript, TypeScript, SQL e HTML/CSS",
   "author": "Rick",
   "main": "main.js",

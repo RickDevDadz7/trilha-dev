@@ -1,7 +1,8 @@
 // Ponte segura entre a página e o PC: só expõe o armazenamento, salvar arquivo e a chamada da IA.
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('tdNative', {
+const ok = location.protocol === 'file:' || location.origin === 'https://rickdevdadz7.github.io';
+if (ok) contextBridge.exposeInMainWorld('tdNative', {
   store: {
     get: (p) => ipcRenderer.invoke('store:get', p),
     set: (p, data) => ipcRenderer.invoke('store:set', p, data),
