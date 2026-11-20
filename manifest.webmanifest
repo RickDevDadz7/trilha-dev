@@ -2,7 +2,7 @@
   "name": "Trilha Dev",
   "short_name": "Trilha Dev",
   "description": "Aprenda JavaScript, TypeScript, SQL e HTML/CSS",
-  "id": "./",
+  "id": "/trilha-dev/",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
