@@ -1,7 +1,7 @@
 /* JavaScript — módulos 1 a 4: fundamentos, decisões, functions, arrays */
 (function (TD) {
   'use strict';
-  const { learn, quiz, code, lesson, unit } = TD.C;
+  const { learn, quiz, predict, code, lesson, unit } = TD.C;
 
   TD.courses.push({
     id: 'js', name: 'JavaScript', badge: 'JS', runner: 'js',
@@ -11,123 +11,296 @@
     units: [
       unit('Fundamentos',
         lesson('js-hello', 'Hello, console',
-          learn('Seu primeiro comando', `Todo programa precisa mostrar alguma coisa. Em JavaScript, o jeito mais simples é o \`console.log()\`.
+          learn('Seu primeiro comando', `Todo programa precisa mostrar alguma coisa. Em JavaScript, o jeito mais simples é o \`console.log()\`:
 
 ~~~
 console.log("Hello, world!");
 ~~~
 
-O texto entre aspas é uma **string**. O \`console.log\` imprime o valor no console, a área de saída embaixo do editor.
+Ele imprime o que estiver dentro dos parênteses no **console**, a área de saída embaixo do editor.
 
-- Pode usar aspas duplas \`"..."\` ou simples \`'...'\`.
-- O \`;\` no final é opcional, mas é bom costume.
-- \`//\` começa um comentário: o resto da linha é ignorado.`),
-          quiz('O que o código `console.log("5" + "5")` mostra no console?', ['10', '55', '"5" + "5"', 'Um erro'], 1,
-            'As duas são strings, então o `+` junta (concatena) os textos: `"55"`. Só soma de verdade quando os dois lados são numbers.'),
-          code({ title: 'Diga olá', task: 'Use `console.log` pra mostrar exatamente `Hello, world!` no console.',
-            starter: '// write your code below\n', solution: 'console.log("Hello, world!");',
-            hint: 'Lembre das aspas em volta do texto e dos parênteses do `console.log(...)`.',
-            tests: [['Mostra "Hello, world!" no console', '__logs.includes("Hello, world!")']] })),
+O \`;\` no final é opcional, mas é bom costume. Uma linha que começa com \`//\` é um **comentário**: o computador ignora, serve pra humanos.`),
+          predict('O que aparece no console?', 'console.log("Oi");\nconsole.log("Tudo bem?");', ['Oi Tudo bem? (na mesma linha)', 'Oi, e embaixo: Tudo bem?', 'Só: Tudo bem?', 'Nada, falta um comando'], 1,
+            'Cada `console.log` imprime uma linha nova, na ordem em que aparece no código.'),
+          code({ title: 'Diga olá', task: 'Mostre exatamente `Hello, world!` no console.',
+            starter: '// show the text Hello, world! in the console\n', solution: 'console.log("Hello, world!");',
+            hint: 'O texto vai entre aspas dentro dos parênteses: `console.log("...")`.',
+            tests: [['Mostra "Hello, world!" no console', '__logs.includes("Hello, world!")']] }),
+          learn('Texto e números', `Texto entre aspas é uma **string**: \`"Rick"\`, \`'Berlin'\`. Número vai **sem** aspas: \`42\`, \`3.5\`.
 
-        lesson('js-vars', 'Variáveis: let e const',
-          learn('Guardando valores', `Uma variável é um nome que guarda um valor:
+A diferença importa:
 
 ~~~
-const name = "Rick";   // não muda depois
-let score = 0;         // pode mudar
-score = score + 10;
+console.log(2 + 3);      // 5   (soma)
+console.log("2" + "3");  // 23  (junta os textos)
 ~~~
 
-- \`const\`: o valor não pode ser reatribuído. Use por padrão.
-- \`let\`: use quando o valor vai mudar.
-- Evite \`var\`: é o jeito antigo e tem comportamentos estranhos.
+Com números, \`+\` soma. Com strings, \`+\` **junta** (concatena).`),
+          quiz('O que o código `console.log("5" + "5")` mostra?', ['10', '55', '"5" + "5"', 'Um erro'], 1,
+            'As duas são strings, então o `+` junta os textos: `55`. Só soma quando os dois lados são numbers.'),
+          code({ title: 'Duas linhas', task: 'Mostre no console:\n\n1. o texto `I am learning JavaScript`\n2. o resultado de `2026 + 1` (como número, sem aspas)',
+            starter: '// 1. show the text: I am learning JavaScript\n\n// 2. show the result of 2026 + 1 (no quotes!)\n',
+            solution: 'console.log("I am learning JavaScript");\nconsole.log(2026 + 1);',
+            hint: 'Dois `console.log`, um em cada linha. No segundo, nada de aspas: `console.log(2026 + 1);`',
+            tests: [['Mostra "I am learning JavaScript"', '__logs.includes("I am learning JavaScript")'], ['Mostra 2027', '__logs.includes("2027")']] })),
 
-Pra montar textos com variáveis, use **template literals**, com crase e \`\${...}\`:
+        lesson('js-vars', 'Variáveis: const e let',
+          learn('Guardando valores com const', `Uma **variável** é um nome que guarda um valor. Pense numa caixa com etiqueta:
 
 ~~~
-console.log(\`Hi, \${name}! Score: \${score}\`);
+const name = "Rick";
+console.log(name);   // Rick
 ~~~
 
-Convenção de nomes: **camelCase** (\`userName\`, \`totalPrice\`).`),
+- \`const\` cria a caixa
+- \`name\` é a etiqueta
+- \`=\` coloca o valor dentro
+
+Depois disso, sempre que você escreve \`name\`, o JavaScript usa o valor guardado.`),
+          code({ title: 'Sua cidade', task: 'Crie uma `const` chamada `city` com o valor `"Berlin"` e mostre `city` no console.',
+            starter: '// 1. create a const called city with the value "Berlin"\n\n// 2. show city in the console\n',
+            solution: 'const city = "Berlin";\nconsole.log(city);',
+            hint: 'Primeiro `const city = "Berlin";`, depois `console.log(city);` (sem aspas em `city`, porque é o nome da variável).',
+            tests: [['`city` vale "Berlin"', 'city === "Berlin"'], ['Mostra Berlin no console', '__logs.includes("Berlin")']], requires: [['Usa `const`', 'const\\s+city\\b']] }),
+          learn('let: valores que mudam', `Uma \`const\` não pode receber outro valor depois. Quando o valor **vai mudar**, use \`let\`:
+
+~~~
+let score = 0;
+score = 10;          // sem let de novo!
+console.log(score);  // 10
+~~~
+
+Regra prática: comece sempre com \`const\`. Só troque pra \`let\` se precisar mudar. (Existe também o \`var\`, o jeito antigo: evite.)`),
           quiz('O que acontece ao rodar `const city = "Berlin"; city = "Munich";`?', ['city passa a valer "Munich"', 'Dá erro: não dá pra reatribuir uma const', 'city vira undefined', 'Cria uma segunda variável city'], 1,
             'Uma `const` não pode receber outro valor: você recebe `TypeError: Assignment to constant variable`. Se precisa mudar, use `let`.'),
-          code({ title: 'Apresente-se', task: 'Crie uma `const` chamada `name` com o seu nome (string) e um `let` chamado `age` com a sua idade (number). Depois mostre no console `My name is <name> and I am <age> years old` usando template literal.',
-            starter: '// create name and age here\n\n', solution: 'const name = "Rick";\nlet age = 28;\nconsole.log(`My name is ${name} and I am ${age} years old`);',
-            hint: 'Template literal usa crase: `My name is ${name} ...` entre crases.',
+          code({ title: 'Perdeu uma vida', task: 'O jogador tinha `3` vidas e perdeu uma. Na linha indicada, mude o valor de `lives` pra `2`.',
+            starter: 'let lives = 3;\n\n// lose one life: change lives to 2 here\n\nconsole.log(lives);\n',
+            solution: 'let lives = 3;\nlives = 2;\nconsole.log(lives);',
+            hint: 'Só `lives = 2;`, sem `let` de novo (a variável já existe).',
+            tests: [['`lives` vale 2', 'lives === 2'], ['Mostra 2 no console', '__logs.includes("2")']] }),
+          learn('Juntando texto e variáveis', `Pra montar uma frase com variáveis, use **template literals**: o texto vai entre **crases** \`\` \` \`\` e cada variável dentro de \`\${ }\`:
+
+~~~
+const name = "Ana";
+const age = 29;
+console.log(\`Hi, \${name}! You are \${age}.\`);
+// Hi, Ana! You are 29.
+~~~
+
+A crase fica na tecla ao lado do 1 no teclado brasileiro (com Shift no ABNT2).`),
+          predict('O que aparece no console?', 'const pet = "cat";\nconsole.log(`My ${pet} is cute`);', ['My ${pet} is cute', 'My cat is cute', 'My pet is cute', 'Dá erro'], 1,
+            'Dentro da crase, `${pet}` é trocado pelo valor da variável: "cat".'),
+          code({ title: 'Apresente-se', task: 'Siga os passos do editor: crie `name` (string) e `age` (number), e mostre `My name is <name> and I am <age> years old` usando template literal.',
+            starter: '// 1. create a const called name with your name (a string)\n\n// 2. create a let called age with your age (a number)\n\n// 3. show: My name is <name> and I am <age> years old\n//    tip: use backticks ` and ${...}\n',
+            solution: 'const name = "Rick";\nlet age = 28;\nconsole.log(`My name is ${name} and I am ${age} years old`);',
+            hint: 'O passo 3 fica assim: crase, o texto, e `${name}` / `${age}` nos lugares certos.',
             tests: [['`name` é uma string', 'typeof name === "string" && name.length > 0'], ['`age` é um number', 'typeof age === "number"'],
               ['Mostra a frase completa', '__logs.includes(`My name is ${name} and I am ${age} years old`)']],
             requires: [['Usa `const` pra name', 'const\\s+name\\b'], ['Usa `let` pra age', 'let\\s+age\\b']] })),
 
         lesson('js-types', 'Tipos e operadores',
-          learn('Os tipos primitivos', `Os valores mais comuns em JavaScript:
+          learn('Os tipos de valor', `Todo valor tem um **tipo**. Os mais comuns:
 
-- **number**: \`42\`, \`3.14\` (não existe tipo separado pra inteiro)
+- **number**: \`42\`, \`3.14\`
 - **string**: \`"hello"\`
 - **boolean**: \`true\` ou \`false\`
-- **undefined**: variável sem valor
-- **null**: "nenhum valor", colocado de propósito
+- **undefined**: variável que ainda não recebeu valor
 
-O operador \`typeof\` diz o tipo:
+O \`typeof\` diz o tipo:
 
 ~~~
-typeof 42        // "number"
-typeof "42"      // "string"
-typeof true      // "boolean"
+typeof 42      // "number"
+typeof "42"    // "string"
+typeof true    // "boolean"
+~~~`),
+          quiz('Qual é o resultado de `typeof "42"`?', ['"number"', '"string"', '"text"', '"integer"'], 1, 'Está entre aspas, então é uma string, mesmo parecendo número.'),
+          learn('Fazendo contas', `Operadores matemáticos:
+
+~~~
+10 + 3    // 13
+10 - 3    // 7
+10 * 3    // 30  (multiplicação)
+10 / 4    // 2.5 (divisão)
+10 % 3    // 1   (resto da divisão)
+2 ** 3    // 8   (potência)
 ~~~
 
-Operadores: \`+\`, \`-\`, \`*\`, \`/\`, \`%\` (resto da divisão) e \`**\` (potência). \`10 % 3\` dá \`1\`, \`2 ** 3\` dá \`8\`.`),
-          quiz('Qual é o resultado de `typeof "42"`?', ['"number"', '"string"', '"text"', '"integer"'], 1, 'Está entre aspas, então é uma string, mesmo que pareça número.'),
-          code({ title: 'Carrinho de compras', task: 'Com `price` e `quantity` já criados, calcule `total` multiplicando os dois e mostre o `total` no console.',
-            starter: 'const price = 19.9;\nconst quantity = 3;\n\n// calculate total\n', solution: 'const price = 19.9;\nconst quantity = 3;\nconst total = price * quantity;\nconsole.log(total);',
-            hint: 'Multiplicação é `*`.',
-            tests: [['Existe uma variável `total`', 'typeof total === "number"'], ['`total` é price × quantity', 'Math.abs(total - price * quantity) < 1e-9'], ['Mostra o total no console', '__logs.includes(String(total))']] })),
+O \`%\` parece estranho, mas é muito usado: \`n % 2\` dá \`0\` quando o número é par.`),
+          predict('O que aparece no console?', 'const price = 10;\nconst qty = 3;\nconsole.log(price * qty);', ['13', '30', '103', 'price * qty'], 1, '`*` multiplica: 10 × 3 = 30.'),
+          code({ title: 'Carrinho de compras', task: 'Com `price` e `quantity` prontos, crie `total` (price × quantity) e mostre no console.',
+            starter: 'const price = 19.9;\nconst quantity = 3;\n\n// 1. create a const called total = price times quantity\n\n// 2. show total in the console\n',
+            solution: 'const price = 19.9;\nconst quantity = 3;\nconst total = price * quantity;\nconsole.log(total);',
+            hint: '`const total = price * quantity;` e depois `console.log(total);`',
+            tests: [['Existe uma variável `total`', 'typeof total === "number"'], ['`total` é price × quantity', 'Math.abs(total - price * quantity) < 1e-9'], ['Mostra o total no console', '__logs.includes(String(total))']] }),
+          code({ title: 'Par ou ímpar', task: 'Crie `rest` com o resto da divisão de `17` por `5` e mostre no console.',
+            starter: '// create a const called rest = the remainder of 17 divided by 5\n\n// show rest in the console\n',
+            solution: 'const rest = 17 % 5;\nconsole.log(rest);', hint: 'Resto da divisão é `%`: `17 % 5`.',
+            tests: [['`rest` vale 2', 'rest === 2'], ['Mostra 2 no console', '__logs.includes("2")']] })),
 
-        lesson('js-strings', 'Métodos de string',
-          learn('Manipulando texto', `Strings têm vários **methods** prontos:
+        lesson('js-strings', 'Methods de string',
+          learn('Transformando texto', `Strings vêm com **methods**: comandos que você chama com um ponto depois do valor.
 
 ~~~
 const s = "  Hello World  ";
-s.length;            // 15
-s.trim();            // "Hello World"
-s.toLowerCase();     // "  hello world  "
-s.includes("World"); // true
-"banana".slice(1, 3);        // "an"
-"a-b-c".split("-");          // ["a", "b", "c"]
-["a", "b"].join("+");        // "a+b"
-"hi".replaceAll("i", "o");   // "ho"
+s.length          // 15 (quantos caracteres)
+s.trim()          // "Hello World" (tira espaços das pontas)
+s.toUpperCase()   // "  HELLO WORLD  "
+s.toLowerCase()   // "  hello world  "
 ~~~
 
-Strings são **imutáveis**: os methods devolvem uma string nova e não mudam a original.`),
-          quiz('O que `"JavaScript".slice(0, 4)` retorna?', ['"Java"', '"JavaS"', '"avaS"', '"Script"'], 0, '`slice(início, fim)` pega do índice 0 até antes do 4: "Java".'),
-          code({ title: 'Gerador de slug', task: 'Crie `slugify(title)` que transforma um título em slug: remove espaços das pontas, deixa tudo minúsculo e troca os espaços por `-`.\n\nEx: `"  Learn JavaScript Fast "` → `"learn-javascript-fast"`.',
-            starter: 'function slugify(title) {\n  // your code\n}\n', solution: 'function slugify(title) {\n  return title.trim().toLowerCase().split(" ").join("-");\n}',
-            hint: 'Encadeie: `title.trim().toLowerCase()` e depois `split(" ")` + `join("-")`.',
-            tests: [['"  Learn JavaScript Fast " → "learn-javascript-fast"', 'slugify("  Learn JavaScript Fast ") === "learn-javascript-fast"'], ['"Hello" → "hello"', 'slugify("Hello") === "hello"']] })),
+Os methods **não mudam** a string original: eles devolvem uma nova. Por isso a gente guarda o resultado numa variável.`),
+          code({ title: 'Limpando um título', task: 'Com o `title` pronto:\n\n1. crie `clean` com o title **sem espaços nas pontas**\n2. crie `upper` com o `clean` em **maiúsculas**\n3. mostre `upper` no console',
+            starter: 'const title = "  Learn JavaScript  ";\n\n// 1. const clean = title without the spaces at the ends\n\n// 2. const upper = clean in uppercase\n\n// 3. show upper\n',
+            solution: 'const title = "  Learn JavaScript  ";\nconst clean = title.trim();\nconst upper = clean.toUpperCase();\nconsole.log(upper);',
+            hint: '`title.trim()` e depois `clean.toUpperCase()`.',
+            tests: [['`clean` sem espaços', 'clean === "Learn JavaScript"'], ['`upper` em maiúsculas', 'upper === "LEARN JAVASCRIPT"'], ['Mostra upper', '__logs.includes("LEARN JAVASCRIPT")']] }),
+          learn('Procurando e recortando', `Mais methods úteis:
+
+~~~
+const email = "rick@mail.com";
+email.includes("@")      // true  (contém?)
+email.slice(0, 4)        // "rick" (do índice 0 até antes do 4)
+email.replace("mail", "corp")  // "rick@corp.com"
+~~~
+
+As posições (**índices**) começam em **0**: o "r" é o índice 0, o "i" é o 1...`),
+          quiz('O que `"JavaScript".slice(0, 4)` retorna?', ['"Java"', '"JavaS"', '"avaS"', '"Script"'], 0, '`slice(0, 4)` pega do índice 0 até antes do 4: "Java".'),
+          code({ title: 'Analisando um email', task: 'Com o `email` pronto, crie:\n\n1. `hasAt`: se o email contém `"@"`\n2. `user`: os 4 primeiros caracteres\n\nE mostre os dois no console.',
+            starter: 'const email = "rick@mail.com";\n\n// 1. const hasAt = does email include "@"?\n\n// 2. const user = the first 4 characters\n\n// 3. show hasAt and user\n',
+            solution: 'const email = "rick@mail.com";\nconst hasAt = email.includes("@");\nconst user = email.slice(0, 4);\nconsole.log(hasAt);\nconsole.log(user);',
+            hint: '`email.includes("@")` e `email.slice(0, 4)`.',
+            tests: [['`hasAt` é true', 'hasAt === true'], ['`user` é "rick"', 'user === "rick"'], ['Mostra os dois', '__logs.includes("true") && __logs.includes("rick")']] })),
 
         lesson('js-math', 'Números e Math',
-          learn('Contas de verdade', `O objeto \`Math\` tem funções úteis:
+          learn('O objeto Math', `O \`Math\` tem funções prontas pra números:
 
 ~~~
-Math.round(4.6);    // 5
-Math.floor(4.6);    // 4 (pra baixo)
-Math.ceil(4.1);     // 5 (pra cima)
-Math.max(3, 9, 1);  // 9
-Math.random();      // número entre 0 e 1
-~~~
-
-Converter texto em número: \`Number("42")\` ou \`parseInt("42px")\`. Se não der, vem \`NaN\` (Not a Number).
-
-Cuidado com decimais: \`0.1 + 0.2\` dá \`0.30000000000000004\`. Pra arredondar em casas decimais:
-
-~~~
-Math.round(8.333 * 10) / 10;   // 8.3
-(8.333).toFixed(1);            // "8.3" (string!)
+Math.round(4.6)     // 5 (arredonda)
+Math.floor(4.6)     // 4 (sempre pra baixo)
+Math.ceil(4.1)      // 5 (sempre pra cima)
+Math.max(3, 9, 1)   // 9 (o maior)
+Math.min(3, 9, 1)   // 1 (o menor)
 ~~~`),
           quiz('Quanto vale `Math.floor(-2.5)`?', ['-2', '-3', '-2.5', '2'], 1, '`floor` arredonda sempre pra baixo, e abaixo de -2.5 vem -3.'),
-          code({ title: 'Média da prova', task: 'Crie `average(a, b, c)` que retorna a média dos três números **arredondada para 1 casa decimal** (como number, não string).',
-            starter: 'function average(a, b, c) {\n  // your code\n}\n', solution: 'function average(a, b, c) {\n  const avg = (a + b + c) / 3;\n  return Math.round(avg * 10) / 10;\n}',
-            hint: 'Calcule `(a + b + c) / 3` e use `Math.round(x * 10) / 10`.',
-            tests: [['`average(7, 8, 10)` → 8.3', 'average(7, 8, 10) === 8.3'], ['`average(10, 10, 10)` → 10', 'average(10, 10, 10) === 10'], ['Retorna number', 'typeof average(1, 2, 2) === "number"']] }))
+          learn('Decimais e conversão', `Contas com decimais podem sair "quebradas": \`0.1 + 0.2\` dá \`0.30000000000000004\`.
+
+Pra arredondar em 1 casa decimal:
+
+~~~
+Math.round(8.333 * 10) / 10   // 8.3
+~~~
+
+E pra transformar texto em número: \`Number("42")\` dá \`42\`. Se não der pra converter, vem \`NaN\` (Not a Number).`),
+          code({ title: 'Média da prova', task: 'Com as notas prontas, crie:\n\n1. `avg`: a média das três, arredondada em **1 casa decimal**\n2. `best`: a maior nota, com `Math.max`\n\nE mostre os dois.',
+            starter: 'const a = 7;\nconst b = 8;\nconst c = 10;\n\n// 1. const avg = average of a, b and c, rounded to 1 decimal\n//    tip: Math.round(x * 10) / 10\n\n// 2. const best = the highest grade\n\n// 3. show avg and best\n',
+            solution: 'const a = 7;\nconst b = 8;\nconst c = 10;\nconst avg = Math.round((a + b + c) / 3 * 10) / 10;\nconst best = Math.max(a, b, c);\nconsole.log(avg);\nconsole.log(best);',
+            hint: 'Média: `(a + b + c) / 3`. Depois aplique `Math.round(... * 10) / 10`. Maior: `Math.max(a, b, c)`.',
+            tests: [['`avg` vale 8.3', 'avg === 8.3'], ['`best` vale 10', 'best === 10'], ['Mostra os dois', '__logs.includes("8.3") && __logs.includes("10")']] }))
+      ),
+
+      unit('Functions',
+        lesson('js-functions', 'Functions',
+          learn('Blocos reutilizáveis', `Uma **function** recebe valores (parâmetros), faz algo e devolve um resultado com \`return\`:
+
+~~~
+function add(a, b) {
+  return a + b;
+}
+add(2, 3); // 5
+~~~
+
+A **arrow function** é o jeito curto, muito usado:
+
+~~~
+const add = (a, b) => a + b;
+const square = n => n * n;
+const log = () => { console.log("hi"); };
+~~~
+
+Atenção: \`console.log\` só mostra. \`return\` devolve o valor pra quem chamou.`),
+          quiz('Se uma function não tem `return`, o que ela devolve?', ['0', 'null', 'undefined', 'Uma string vazia'], 2, 'Sem `return`, toda function devolve `undefined`.'),
+          predict('O que aparece no console?', 'function triple(n) {\n  return n * 3;\n}\nconst x = triple(4);\nconsole.log(x + 1);', ['12', '13', '4', 'undefined'], 1, '`triple(4)` devolve 12, que vai pra `x`. Depois `x + 1` dá 13.'),
+          code({ title: 'Dobro', task: 'Crie `double(n)` que **retorna** o dobro de `n`.',
+            starter: 'function double(n) {\n  // your code\n}\n', solution: 'function double(n) {\n  return n * 2;\n}', hint: 'Use `return n * 2;`.',
+            tests: [['double(4) → 8', 'double(4) === 8'], ['double(-3) → -6', 'double(-3) === -6'], ['double(0.5) → 1', 'double(0.5) === 1']] }),
+          code({ title: 'Saudação com arrow function', task: 'Crie a arrow function `greet` que recebe `name` e retorna `Hello, <name>!`.',
+            starter: 'const greet = // your code\n', solution: 'const greet = (name) => `Hello, ${name}!`;', hint: '`const greet = (name) => ...` com template literal.',
+            tests: [['greet("Ana") → "Hello, Ana!"', 'greet("Ana") === "Hello, Ana!"'], ['greet("Lukas") → "Hello, Lukas!"', 'greet("Lukas") === "Hello, Lukas!"']],
+            requires: [['Usa arrow function (`=>`)', '=>']] })),
+
+        lesson('js-params', 'Parâmetros: default, rest e spread',
+          learn('Parâmetros flexíveis', `**Default parameters** dão um valor padrão:
+
+~~~
+function greet(name = "stranger") {
+  return \`Hi, \${name}\`;
+}
+greet(); // "Hi, stranger"
+~~~
+
+**Rest parameters** juntam vários argumentos num array:
+
+~~~
+function introduce(name, ...skills) {
+  console.log(name, skills);
+}
+introduce("Ana", "js", "sql");   // Ana ["js","sql"]
+~~~
+
+**Spread** faz o contrário: espalha um array em argumentos.
+
+~~~
+const values = [4, 9, 2];
+Math.max(...values); // 9
+~~~`),
+          quiz('Em `function f(a, ...rest)`, chamando `f(1, 2, 3)`, quanto vale `rest`?', ['[1, 2, 3]', '[2, 3]', '3', '2'], 1, 'O primeiro argumento vai pra `a` e o resto é coletado no array `rest`.'),
+          code({ title: 'Junte as palavras', task: 'Crie `joinWords(...words)` que recebe quantas palavras quiser e retorna todas juntas, separadas por espaço. Sem argumentos, retorna `""` (string vazia).\n\nDica: `words` é um array, e arrays têm o method `join(" ")`.',
+            starter: 'function joinWords(...words) {\n  // your code\n}\n', solution: 'function joinWords(...words) {\n  return words.join(" ");\n}',
+            hint: '`return words.join(" ");`',
+            tests: [['joinWords("hello", "world") → "hello world"', 'joinWords("hello", "world") === "hello world"'], ['Três palavras', 'joinWords("a", "b", "c") === "a b c"'], ['Sem argumentos → ""', 'joinWords() === ""']] }),
+          code({ title: 'Preço com imposto', task: 'Crie `withTax(price, rate = 0.1)` que retorna `price` mais a taxa. Se `rate` não for passado, usa 10%.',
+            starter: 'function withTax(price, rate) {\n  // add a default value to rate\n}\n', solution: 'function withTax(price, rate = 0.1) {\n  return price + price * rate;\n}',
+            hint: 'O default vai na assinatura: `rate = 0.1`. Resultado: `price + price * rate`.',
+            tests: [['withTax(100) → 110', 'Math.abs(withTax(100) - 110) < 1e-9'], ['withTax(100, 0.2) → 120', 'Math.abs(withTax(100, 0.2) - 120) < 1e-9']] })),
+
+        lesson('js-closures', 'Scope e closures',
+          learn('Quem enxerga o quê', `**Scope** é onde uma variável existe. Variáveis criadas com \`let\`/\`const\` dentro de \`{ }\` só existem ali dentro.
+
+Uma **closure** acontece quando uma function "lembra" das variáveis de onde foi criada, mesmo depois que aquele código terminou:
+
+~~~
+function makeGreeter(greeting) {
+  return (name) => \`\${greeting}, \${name}!\`;
+}
+const hello = makeGreeter("Hello");
+hello("Ana"); // "Hello, Ana!"
+~~~
+
+A function retornada guardou \`greeting\`. Closures são a base de contadores, caches, debounce e muitos padrões de React.`),
+          quiz('Depois de `const c = makeCounter(); c(); c();`, onde fica guardada a contagem?', ['Numa variável global', 'Na closure da function retornada', 'No objeto window', 'Em lugar nenhum: reseta toda vez'], 1, 'A variável interna de `makeCounter` continua viva na closure da function que você recebeu.'),
+          code({ title: 'Contador', task: 'Crie `makeCounter()` que retorna uma function. Cada chamada dessa function incrementa e **retorna** a contagem (1, 2, 3...). Dois contadores diferentes não podem compartilhar a contagem.',
+            starter: 'function makeCounter() {\n  // your code\n}\n', solution: 'function makeCounter() {\n  let count = 0;\n  return () => {\n    count++;\n    return count;\n  };\n}',
+            hint: 'Crie `let count = 0` dentro de `makeCounter` e retorne uma arrow function que faz `count++` e retorna `count`.',
+            tests: [['Conta 1, 2, 3', '(() => { const c = makeCounter(); return c() === 1 && c() === 2 && c() === 3; })()'],
+              ['Contadores independentes', '(() => { const a = makeCounter(), b = makeCounter(); a(); a(); return b() === 1; })()']] })),
+
+        lesson('js-higher-order', 'Callbacks e higher-order functions',
+          learn('Functions como valores', `Em JavaScript, functions são valores: dá pra guardar em variável, passar como argumento e retornar.
+
+Uma function passada como argumento é um **callback**. Uma function que recebe ou retorna outra é uma **higher-order function**:
+
+~~~
+function repeat(times, action) {
+  for (let i = 0; i < times; i++) action(i);
+}
+repeat(3, (i) => console.log("round", i));
+~~~
+
+Você vai usar isso o tempo todo: \`map\`, \`filter\`, \`addEventListener\`, \`setTimeout\`... todos recebem callbacks.`),
+          quiz('Em `button.addEventListener("click", handleClick)`, o que é `handleClick`?', ['Uma string', 'Um callback', 'Um evento', 'Uma class'], 1, 'É uma function passada pra ser chamada depois, quando o clique acontecer.'),
+          code({ title: 'Aplique duas vezes', task: 'Crie `applyTwice(fn, value)` que aplica `fn` em `value` e depois aplica `fn` de novo no resultado.\n\nEx: `applyTwice(n => n + 3, 1)` → `7`.',
+            starter: 'function applyTwice(fn, value) {\n  // your code\n}\n', solution: 'function applyTwice(fn, value) {\n  return fn(fn(value));\n}', hint: '`fn(fn(value))`',
+            tests: [['n => n + 3, 1 → 7', 'applyTwice(n => n + 3, 1) === 7'], ['s => s + "!", "hey" → "hey!!"', 'applyTwice(s => s + "!", "hey") === "hey!!"']] }))
       ),
 
       unit('Decisões',
@@ -230,110 +403,6 @@ A diferença: \`0 || 1\` dá \`1\`, mas \`0 ?? 1\` dá \`0\`. O \`??\` respeita 
             hint: 'Dá pra encadear: `user?.nickname ?? user?.name ?? "Anonymous"`.',
             tests: [['Prefere nickname', 'displayName({ name: "Ana", nickname: "aninha" }) === "aninha"'], ['Usa name se não tiver nickname', 'displayName({ name: "Ana" }) === "Ana"'],
               ['Objeto vazio → "Anonymous"', 'displayName({}) === "Anonymous"'], ['undefined → "Anonymous"', 'displayName(undefined) === "Anonymous"']] }))
-      ),
-
-      unit('Functions',
-        lesson('js-functions', 'Functions',
-          learn('Blocos reutilizáveis', `Uma **function** recebe valores (parâmetros), faz algo e devolve um resultado com \`return\`:
-
-~~~
-function add(a, b) {
-  return a + b;
-}
-add(2, 3); // 5
-~~~
-
-A **arrow function** é o jeito curto, muito usado:
-
-~~~
-const add = (a, b) => a + b;
-const square = n => n * n;
-const log = () => { console.log("hi"); };
-~~~
-
-Atenção: \`console.log\` só mostra. \`return\` devolve o valor pra quem chamou.`),
-          quiz('Se uma function não tem `return`, o que ela devolve?', ['0', 'null', 'undefined', 'Uma string vazia'], 2, 'Sem `return`, toda function devolve `undefined`.'),
-          code({ title: 'Dobro', task: 'Crie `double(n)` que **retorna** o dobro de `n`.',
-            starter: 'function double(n) {\n  // your code\n}\n', solution: 'function double(n) {\n  return n * 2;\n}', hint: 'Use `return n * 2;`.',
-            tests: [['double(4) → 8', 'double(4) === 8'], ['double(-3) → -6', 'double(-3) === -6'], ['double(0.5) → 1', 'double(0.5) === 1']] }),
-          code({ title: 'Saudação com arrow function', task: 'Crie a arrow function `greet` que recebe `name` e retorna `Hello, <name>!`.',
-            starter: 'const greet = // your code\n', solution: 'const greet = (name) => `Hello, ${name}!`;', hint: '`const greet = (name) => ...` com template literal.',
-            tests: [['greet("Ana") → "Hello, Ana!"', 'greet("Ana") === "Hello, Ana!"'], ['greet("Lukas") → "Hello, Lukas!"', 'greet("Lukas") === "Hello, Lukas!"']],
-            requires: [['Usa arrow function (`=>`)', '=>']] })),
-
-        lesson('js-params', 'Parâmetros: default, rest e spread',
-          learn('Parâmetros flexíveis', `**Default parameters** dão um valor padrão:
-
-~~~
-function greet(name = "stranger") {
-  return \`Hi, \${name}\`;
-}
-greet(); // "Hi, stranger"
-~~~
-
-**Rest parameters** juntam vários argumentos num array:
-
-~~~
-function sum(...nums) {
-  return nums.reduce((acc, n) => acc + n, 0);
-}
-sum(1, 2, 3); // 6
-~~~
-
-**Spread** faz o contrário: espalha um array em argumentos.
-
-~~~
-const values = [4, 9, 2];
-Math.max(...values); // 9
-~~~`),
-          quiz('Em `function f(a, ...rest)`, chamando `f(1, 2, 3)`, quanto vale `rest`?', ['[1, 2, 3]', '[2, 3]', '3', '2'], 1, 'O primeiro argumento vai pra `a` e o resto é coletado no array `rest`.'),
-          code({ title: 'Some tudo', task: 'Crie `sumAll(...nums)` que soma quantos números receber. Sem argumentos, retorna `0`.',
-            starter: 'function sumAll(...nums) {\n  // your code\n}\n', solution: 'function sumAll(...nums) {\n  let total = 0;\n  for (const n of nums) total += n;\n  return total;\n}',
-            hint: '`nums` é um array normal: percorra com um loop e some.',
-            tests: [['sumAll(1, 2, 3) → 6', 'sumAll(1, 2, 3) === 6'], ['sumAll() → 0', 'sumAll() === 0'], ['sumAll(10) → 10', 'sumAll(10) === 10']] }),
-          code({ title: 'Preço com imposto', task: 'Crie `withTax(price, rate = 0.1)` que retorna `price` mais a taxa. Se `rate` não for passado, usa 10%.',
-            starter: 'function withTax(price, rate) {\n  // add a default value to rate\n}\n', solution: 'function withTax(price, rate = 0.1) {\n  return price + price * rate;\n}',
-            hint: 'O default vai na assinatura: `rate = 0.1`. Resultado: `price + price * rate`.',
-            tests: [['withTax(100) → 110', 'Math.abs(withTax(100) - 110) < 1e-9'], ['withTax(100, 0.2) → 120', 'Math.abs(withTax(100, 0.2) - 120) < 1e-9']] })),
-
-        lesson('js-closures', 'Scope e closures',
-          learn('Quem enxerga o quê', `**Scope** é onde uma variável existe. Variáveis criadas com \`let\`/\`const\` dentro de \`{ }\` só existem ali dentro.
-
-Uma **closure** acontece quando uma function "lembra" das variáveis de onde foi criada, mesmo depois que aquele código terminou:
-
-~~~
-function makeGreeter(greeting) {
-  return (name) => \`\${greeting}, \${name}!\`;
-}
-const hello = makeGreeter("Hello");
-hello("Ana"); // "Hello, Ana!"
-~~~
-
-A function retornada guardou \`greeting\`. Closures são a base de contadores, caches, debounce e muitos padrões de React.`),
-          quiz('Depois de `const c = makeCounter(); c(); c();`, onde fica guardada a contagem?', ['Numa variável global', 'Na closure da function retornada', 'No objeto window', 'Em lugar nenhum: reseta toda vez'], 1, 'A variável interna de `makeCounter` continua viva na closure da function que você recebeu.'),
-          code({ title: 'Contador', task: 'Crie `makeCounter()` que retorna uma function. Cada chamada dessa function incrementa e **retorna** a contagem (1, 2, 3...). Dois contadores diferentes não podem compartilhar a contagem.',
-            starter: 'function makeCounter() {\n  // your code\n}\n', solution: 'function makeCounter() {\n  let count = 0;\n  return () => {\n    count++;\n    return count;\n  };\n}',
-            hint: 'Crie `let count = 0` dentro de `makeCounter` e retorne uma arrow function que faz `count++` e retorna `count`.',
-            tests: [['Conta 1, 2, 3', '(() => { const c = makeCounter(); return c() === 1 && c() === 2 && c() === 3; })()'],
-              ['Contadores independentes', '(() => { const a = makeCounter(), b = makeCounter(); a(); a(); return b() === 1; })()']] })),
-
-        lesson('js-higher-order', 'Callbacks e higher-order functions',
-          learn('Functions como valores', `Em JavaScript, functions são valores: dá pra guardar em variável, passar como argumento e retornar.
-
-Uma function passada como argumento é um **callback**. Uma function que recebe ou retorna outra é uma **higher-order function**:
-
-~~~
-function repeat(times, action) {
-  for (let i = 0; i < times; i++) action(i);
-}
-repeat(3, (i) => console.log("round", i));
-~~~
-
-Você vai usar isso o tempo todo: \`map\`, \`filter\`, \`addEventListener\`, \`setTimeout\`... todos recebem callbacks.`),
-          quiz('Em `button.addEventListener("click", handleClick)`, o que é `handleClick`?', ['Uma string', 'Um callback', 'Um evento', 'Uma class'], 1, 'É uma function passada pra ser chamada depois, quando o clique acontecer.'),
-          code({ title: 'Aplique duas vezes', task: 'Crie `applyTwice(fn, value)` que aplica `fn` em `value` e depois aplica `fn` de novo no resultado.\n\nEx: `applyTwice(n => n + 3, 1)` → `7`.',
-            starter: 'function applyTwice(fn, value) {\n  // your code\n}\n', solution: 'function applyTwice(fn, value) {\n  return fn(fn(value));\n}', hint: '`fn(fn(value))`',
-            tests: [['n => n + 3, 1 → 7', 'applyTwice(n => n + 3, 1) === 7'], ['s => s + "!", "hey" → "hey!!"', 'applyTwice(s => s + "!", "hey") === "hey!!"']] }))
       ),
 
       unit('Arrays e loops',

@@ -351,3 +351,40 @@ kbd { font-size: 10.5px; padding: 1px 5px; border: 1px solid currentColor; opaci
 }
 
 input[type="range"] { accent-color: var(--yellow); width: 100%; }
+
+/* ---------- Método Trilha ---------- */
+.card-chunk { display: flex; flex-direction: column; gap: 12px; padding-left: 14px; border-left: 2px solid var(--line-2); }
+.card-chunk:last-child { border-left-color: var(--accent, var(--cyan)); }
+.card-chunk.fresh { animation: chunk-in .35s ease-out both; }
+@keyframes chunk-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.theory { border: 1px solid var(--line-2); background: var(--panel-2); padding: 0; }
+.theory summary { cursor: pointer; padding: 10px 14px; font-family: var(--font-display); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; font-size: 13px; color: var(--cyan); list-style: none; }
+.theory summary::before { content: "▸ "; }
+.theory[open] summary::before { content: "▾ "; }
+.theory > :not(summary) { padding: 0 14px; }
+.theory h4 { margin: 12px 0 4px; font-family: var(--font-display); font-size: 15px; color: var(--accent, var(--yellow)); }
+.theory .md { font-size: 13.5px; padding-bottom: 12px; }
+.seg { display: inline-flex; border: 1px solid var(--line-2); }
+.seg button { border: 0; background: transparent; color: var(--muted); padding: 5px 12px; font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.seg button.on { background: var(--accent, var(--yellow)); color: var(--on-accent, #000); }
+.parsons { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; height: 100%; background: var(--line); }
+.pz-col { background: #07090e; padding: 14px; display: flex; flex-direction: column; gap: 10px; overflow: auto; min-height: 0; }
+.pz-pool, .pz-answer { display: flex; flex-direction: column; gap: 6px; }
+.pz-answer { min-height: 60px; border: 1px dashed var(--line-2); padding: 8px; }
+.pz-b { text-align: left; border: 1px solid var(--line-2); background: var(--panel-2); color: #dfe7f5; padding: 7px 10px; cursor: pointer; }
+.pz-b code { font-family: var(--font-mono); font-size: 13px; white-space: pre; }
+.pz-b:hover { border-color: var(--accent, var(--cyan)); }
+.pz-answer .pz-b { border-left: 3px solid var(--accent, var(--cyan)); }
+.parsons .dim { color: var(--dim); font-size: 13px; margin: 0; }
+.explain { margin: 0 16px 12px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--cyan) 40%, var(--line)); border-left: 3px solid var(--cyan); background: color-mix(in srgb, var(--cyan) 6%, var(--panel)); font-size: 13.5px; }
+.explain code { background: color-mix(in srgb, var(--cyan) 14%, transparent); padding: 0 4px; font-size: 12.5px; }
+.origin { display: block; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); margin-top: -4px; }
+.recap { width: 100%; text-align: left; border: 1px solid var(--line-2); background: var(--panel); padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.recap ul { margin: 0; padding-left: 20px; }
+.recap li::marker { color: var(--accent); }
+.recap small { color: var(--muted); }
+.node.diamond { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); font-size: 20px; }
+.hex-ring:has(.diamond).current::before { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.node-wrap.cp { transform: none !important; }
+.review-banner { border-left-color: var(--cyan); background: linear-gradient(90deg, color-mix(in srgb, var(--cyan) 12%, var(--panel)), var(--panel) 60%); }
+@media (prefers-reduced-motion: reduce) { .card-chunk.fresh { animation: none; } }

@@ -36,17 +36,20 @@ async def main():
         steps = await page.evaluate("""(only) => TD.courses.filter(c => !only || c.id === only).flatMap(c => c.units.flatMap(u => u.lessons.flatMap(l => l.steps.map((s, i) => ({ c: c.id, l: l.id, i, t: s.t }))))).filter(x => x.t === 'code')""", ONLY)
         fails = []
         for s in steps:
-            for kind in ('solution', 'starter'):
+            kinds = ('solution', 'starter', 'blocks') if await page.evaluate("({ c, l, i }) => !!TD.ped.parsonsBlocks(TD.courses.find(x => x.id === c).units.flatMap(u => u.lessons).find(x => x.id === l).steps[i], 's')", s) else ('solution', 'starter')
+            for kind in kinds:
                 res = await page.evaluate("""async ({ c, l, i, kind }) => {
                     TD.app.startLesson(c, l);
                     const ls = TD.app.lesson; ls.i = i; const step = ls.lesson.steps[i];
-                    ls.d = { code: kind === 'solution' ? step.solution : (step.starter || '') };
+                    ls.d = kind === 'blocks'
+                      ? { mode: 'blocks', pz: { pool: [], answer: TD.ped.parsonsBlocks(step, 's').slice().sort((a, b) => Number(a.id.slice(1)) - Number(b.id.slice(1))) } }
+                      : { mode: 'write', code: kind === 'solution' ? step.solution : (step.starter || '') };
                     TD.app.renderLesson();
                     await TD.app.runCode();
                     return { r: ls.d.results.map(r => [r.name, r.pass, r.err || null]), err: ls.d.res.error || null, te: ls.d.res.typeErrors || null };
                 }""", {**s, 'kind': kind})
                 allp = all(r[1] for r in res['r'])
-                if kind == 'solution' and not allp: fails.append((s['l'], s['i'], kind, res))
+                if kind in ('solution', 'blocks') and not allp: fails.append((s['l'], s['i'], kind, res))
                 if kind == 'starter' and allp: fails.append((s['l'], s['i'], kind, 'starter passa!'))
         print('exercícios de código:', len(steps))
         for f in fails: print('FALHA', json.dumps(f, ensure_ascii=False)[:900])

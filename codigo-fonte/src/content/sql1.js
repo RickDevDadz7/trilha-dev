@@ -1,7 +1,7 @@
 /* SQL — bancos de exemplo e módulos 1 a 4: consultas, agregação, JOINs, subqueries */
 (function (TD) {
   'use strict';
-  const { learn, quiz, code, lesson, unit } = TD.C;
+  const { learn, quiz, predict, code, lesson, unit } = TD.C;
 
   const SHOP = `
 CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL, country TEXT NOT NULL, city TEXT, age INTEGER, email TEXT);
@@ -85,6 +85,7 @@ WHERE country = 'Brazil';
 - Texto entre **aspas simples**: \`'Brazil'\`.
 - Comparação: \`=\`, \`<>\` (diferente), \`>\`, \`<\`, \`>=\`, \`<=\`.`),
           quiz('Qual query retorna clientes com 40 anos ou mais?', ['... WHERE age > 40;', '... WHERE age >= 40;', '... IF age >= 40;', 'SELECT age >= 40 FROM customers;'], 1, '"40 ou mais" é `>= 40`.'),
+          predict('Quantas rows essa query retorna? (no banco tem 2 clientes de Portugal: Marta e Sofia)', "SELECT name\nFROM customers\nWHERE country = 'Portugal';", ['0', '1', '2', 'Todas as 10'], 2, 'O WHERE deixa passar só as rows em que a condição é verdadeira: as duas de Portugal.'),
           code({ title: 'Clientes na Alemanha', task: 'Selecione `name` e `age` dos customers do país `\'Germany\'`.', starter: '-- write your query\n', solution: "SELECT name, age FROM customers WHERE country = 'Germany';", hint: "`WHERE country = 'Germany'`" })),
 
         lesson('sql-filters', 'AND, OR, IN e BETWEEN',
@@ -144,6 +145,7 @@ Ordem das cláusulas: \`SELECT → FROM → WHERE → ORDER BY → LIMIT\`.
 
 \`LIMIT 10 OFFSET 20\` pula 20 rows: é a base de paginação.`),
           quiz('Qual ordem de cláusulas está correta?', ['SELECT ... LIMIT 5 WHERE ...', 'SELECT ... FROM ... ORDER BY ... WHERE ...', 'SELECT ... FROM ... WHERE ... ORDER BY ... LIMIT ...', 'FROM ... SELECT ... LIMIT ...'], 2, 'WHERE filtra, ORDER BY ordena, LIMIT corta.'),
+          predict('Qual nome aparece primeiro?', "SELECT name, age FROM customers\nORDER BY age DESC\nLIMIT 1;", ['O cliente mais novo', 'O cliente mais velho', 'O primeiro cadastrado (id 1)', 'Ordem aleatória'], 1, '`DESC` ordena do maior pro menor, e `LIMIT 1` fica só com o primeiro: o mais velho.'),
           code({ title: 'Os 3 mais velhos', task: 'Mostre `name` e `age` dos **3 customers mais velhos**, do mais velho pro mais novo.', starter: '-- write your query\n', solution: 'SELECT name, age FROM customers ORDER BY age DESC LIMIT 3;', ordered: true, hint: '`ORDER BY age DESC LIMIT 3`' })),
 
         lesson('sql-distinct-alias', 'DISTINCT e aliases',

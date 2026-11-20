@@ -711,6 +711,43 @@ kbd { font-size: 10.5px; padding: 1px 5px; border: 1px solid currentColor; opaci
 
 input[type="range"] { accent-color: var(--yellow); width: 100%; }
 
+/* ---------- Método Trilha ---------- */
+.card-chunk { display: flex; flex-direction: column; gap: 12px; padding-left: 14px; border-left: 2px solid var(--line-2); }
+.card-chunk:last-child { border-left-color: var(--accent, var(--cyan)); }
+.card-chunk.fresh { animation: chunk-in .35s ease-out both; }
+@keyframes chunk-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.theory { border: 1px solid var(--line-2); background: var(--panel-2); padding: 0; }
+.theory summary { cursor: pointer; padding: 10px 14px; font-family: var(--font-display); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; font-size: 13px; color: var(--cyan); list-style: none; }
+.theory summary::before { content: "▸ "; }
+.theory[open] summary::before { content: "▾ "; }
+.theory > :not(summary) { padding: 0 14px; }
+.theory h4 { margin: 12px 0 4px; font-family: var(--font-display); font-size: 15px; color: var(--accent, var(--yellow)); }
+.theory .md { font-size: 13.5px; padding-bottom: 12px; }
+.seg { display: inline-flex; border: 1px solid var(--line-2); }
+.seg button { border: 0; background: transparent; color: var(--muted); padding: 5px 12px; font-family: var(--font-display); font-weight: 600; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.seg button.on { background: var(--accent, var(--yellow)); color: var(--on-accent, #000); }
+.parsons { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; height: 100%; background: var(--line); }
+.pz-col { background: #07090e; padding: 14px; display: flex; flex-direction: column; gap: 10px; overflow: auto; min-height: 0; }
+.pz-pool, .pz-answer { display: flex; flex-direction: column; gap: 6px; }
+.pz-answer { min-height: 60px; border: 1px dashed var(--line-2); padding: 8px; }
+.pz-b { text-align: left; border: 1px solid var(--line-2); background: var(--panel-2); color: #dfe7f5; padding: 7px 10px; cursor: pointer; }
+.pz-b code { font-family: var(--font-mono); font-size: 13px; white-space: pre; }
+.pz-b:hover { border-color: var(--accent, var(--cyan)); }
+.pz-answer .pz-b { border-left: 3px solid var(--accent, var(--cyan)); }
+.parsons .dim { color: var(--dim); font-size: 13px; margin: 0; }
+.explain { margin: 0 16px 12px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--cyan) 40%, var(--line)); border-left: 3px solid var(--cyan); background: color-mix(in srgb, var(--cyan) 6%, var(--panel)); font-size: 13.5px; }
+.explain code { background: color-mix(in srgb, var(--cyan) 14%, transparent); padding: 0 4px; font-size: 12.5px; }
+.origin { display: block; font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); margin-top: -4px; }
+.recap { width: 100%; text-align: left; border: 1px solid var(--line-2); background: var(--panel); padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.recap ul { margin: 0; padding-left: 20px; }
+.recap li::marker { color: var(--accent); }
+.recap small { color: var(--muted); }
+.node.diamond { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); font-size: 20px; }
+.hex-ring:has(.diamond).current::before { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.node-wrap.cp { transform: none !important; }
+.review-banner { border-left-color: var(--cyan); background: linear-gradient(90deg, color-mix(in srgb, var(--cyan) 12%, var(--panel)), var(--panel) 60%); }
+@media (prefers-reduced-motion: reduce) { .card-chunk.fresh { animation: none; } }
+
 </style>
 </head>
 <body>
@@ -721,6 +758,7 @@ input[type="range"] { accent-color: var(--yellow); width: 100%; }
  * Formato de uma lição: { id, title, steps: [learn | quiz | code] }
  *  learn: { t:'learn', title, body }               (markdown simples; blocos com ~~~)
  *  quiz:  { t:'quiz', q, opts, a, why }
+ *  predict: { t:'predict', q, code, opts, a, why }   (ler código e prever o resultado)
  *  code:  { t:'code', title, task, starter, solution, hint, tests:[[nome, expressão]], requires:[[nome, regex]],
  *           runner?: 'dom', prelude?, declare?, typeTests?, db?, check?, ordered?, checkColumns? } */
 (function (TD) {
@@ -730,6 +768,8 @@ input[type="range"] { accent-color: var(--yellow); width: 100%; }
   TD.C = {
     learn: (title, body) => ({ t: 'learn', title, body }),
     quiz: (q, opts, a, why) => ({ t: 'quiz', q, opts, a, why }),
+    // PRIMM: o aluno lê o código e prevê o resultado antes de escrever o próprio
+    predict: (q, code, opts, a, why) => ({ t: 'predict', q, code, opts, a, why }),
     code: (o) => Object.assign({ t: 'code' }, o),
     lesson: (id, title, ...steps) => ({ id, title, steps }),
     unit: (title, ...lessons) => ({ title, lessons })
@@ -741,7 +781,7 @@ input[type="range"] { accent-color: var(--yellow); width: 100%; }
 /* JavaScript — módulos 1 a 4: fundamentos, decisões, functions, arrays */
 (function (TD) {
   'use strict';
-  const { learn, quiz, code, lesson, unit } = TD.C;
+  const { learn, quiz, predict, code, lesson, unit } = TD.C;
 
   TD.courses.push({
     id: 'js', name: 'JavaScript', badge: 'JS', runner: 'js',
@@ -751,123 +791,296 @@ input[type="range"] { accent-color: var(--yellow); width: 100%; }
     units: [
       unit('Fundamentos',
         lesson('js-hello', 'Hello, console',
-          learn('Seu primeiro comando', `Todo programa precisa mostrar alguma coisa. Em JavaScript, o jeito mais simples é o \`console.log()\`.
+          learn('Seu primeiro comando', `Todo programa precisa mostrar alguma coisa. Em JavaScript, o jeito mais simples é o \`console.log()\`:
 
 ~~~
 console.log("Hello, world!");
 ~~~
 
-O texto entre aspas é uma **string**. O \`console.log\` imprime o valor no console, a área de saída embaixo do editor.
+Ele imprime o que estiver dentro dos parênteses no **console**, a área de saída embaixo do editor.
 
-- Pode usar aspas duplas \`"..."\` ou simples \`'...'\`.
-- O \`;\` no final é opcional, mas é bom costume.
-- \`//\` começa um comentário: o resto da linha é ignorado.`),
-          quiz('O que o código `console.log("5" + "5")` mostra no console?', ['10', '55', '"5" + "5"', 'Um erro'], 1,
-            'As duas são strings, então o `+` junta (concatena) os textos: `"55"`. Só soma de verdade quando os dois lados são numbers.'),
-          code({ title: 'Diga olá', task: 'Use `console.log` pra mostrar exatamente `Hello, world!` no console.',
-            starter: '// write your code below\n', solution: 'console.log("Hello, world!");',
-            hint: 'Lembre das aspas em volta do texto e dos parênteses do `console.log(...)`.',
-            tests: [['Mostra "Hello, world!" no console', '__logs.includes("Hello, world!")']] })),
+O \`;\` no final é opcional, mas é bom costume. Uma linha que começa com \`//\` é um **comentário**: o computador ignora, serve pra humanos.`),
+          predict('O que aparece no console?', 'console.log("Oi");\nconsole.log("Tudo bem?");', ['Oi Tudo bem? (na mesma linha)', 'Oi, e embaixo: Tudo bem?', 'Só: Tudo bem?', 'Nada, falta um comando'], 1,
+            'Cada `console.log` imprime uma linha nova, na ordem em que aparece no código.'),
+          code({ title: 'Diga olá', task: 'Mostre exatamente `Hello, world!` no console.',
+            starter: '// show the text Hello, world! in the console\n', solution: 'console.log("Hello, world!");',
+            hint: 'O texto vai entre aspas dentro dos parênteses: `console.log("...")`.',
+            tests: [['Mostra "Hello, world!" no console', '__logs.includes("Hello, world!")']] }),
+          learn('Texto e números', `Texto entre aspas é uma **string**: \`"Rick"\`, \`'Berlin'\`. Número vai **sem** aspas: \`42\`, \`3.5\`.
 
-        lesson('js-vars', 'Variáveis: let e const',
-          learn('Guardando valores', `Uma variável é um nome que guarda um valor:
+A diferença importa:
 
 ~~~
-const name = "Rick";   // não muda depois
-let score = 0;         // pode mudar
-score = score + 10;
+console.log(2 + 3);      // 5   (soma)
+console.log("2" + "3");  // 23  (junta os textos)
 ~~~
 
-- \`const\`: o valor não pode ser reatribuído. Use por padrão.
-- \`let\`: use quando o valor vai mudar.
-- Evite \`var\`: é o jeito antigo e tem comportamentos estranhos.
+Com números, \`+\` soma. Com strings, \`+\` **junta** (concatena).`),
+          quiz('O que o código `console.log("5" + "5")` mostra?', ['10', '55', '"5" + "5"', 'Um erro'], 1,
+            'As duas são strings, então o `+` junta os textos: `55`. Só soma quando os dois lados são numbers.'),
+          code({ title: 'Duas linhas', task: 'Mostre no console:\n\n1. o texto `I am learning JavaScript`\n2. o resultado de `2026 + 1` (como número, sem aspas)',
+            starter: '// 1. show the text: I am learning JavaScript\n\n// 2. show the result of 2026 + 1 (no quotes!)\n',
+            solution: 'console.log("I am learning JavaScript");\nconsole.log(2026 + 1);',
+            hint: 'Dois `console.log`, um em cada linha. No segundo, nada de aspas: `console.log(2026 + 1);`',
+            tests: [['Mostra "I am learning JavaScript"', '__logs.includes("I am learning JavaScript")'], ['Mostra 2027', '__logs.includes("2027")']] })),
 
-Pra montar textos com variáveis, use **template literals**, com crase e \`\${...}\`:
+        lesson('js-vars', 'Variáveis: const e let',
+          learn('Guardando valores com const', `Uma **variável** é um nome que guarda um valor. Pense numa caixa com etiqueta:
 
 ~~~
-console.log(\`Hi, \${name}! Score: \${score}\`);
+const name = "Rick";
+console.log(name);   // Rick
 ~~~
 
-Convenção de nomes: **camelCase** (\`userName\`, \`totalPrice\`).`),
+- \`const\` cria a caixa
+- \`name\` é a etiqueta
+- \`=\` coloca o valor dentro
+
+Depois disso, sempre que você escreve \`name\`, o JavaScript usa o valor guardado.`),
+          code({ title: 'Sua cidade', task: 'Crie uma `const` chamada `city` com o valor `"Berlin"` e mostre `city` no console.',
+            starter: '// 1. create a const called city with the value "Berlin"\n\n// 2. show city in the console\n',
+            solution: 'const city = "Berlin";\nconsole.log(city);',
+            hint: 'Primeiro `const city = "Berlin";`, depois `console.log(city);` (sem aspas em `city`, porque é o nome da variável).',
+            tests: [['`city` vale "Berlin"', 'city === "Berlin"'], ['Mostra Berlin no console', '__logs.includes("Berlin")']], requires: [['Usa `const`', 'const\\s+city\\b']] }),
+          learn('let: valores que mudam', `Uma \`const\` não pode receber outro valor depois. Quando o valor **vai mudar**, use \`let\`:
+
+~~~
+let score = 0;
+score = 10;          // sem let de novo!
+console.log(score);  // 10
+~~~
+
+Regra prática: comece sempre com \`const\`. Só troque pra \`let\` se precisar mudar. (Existe também o \`var\`, o jeito antigo: evite.)`),
           quiz('O que acontece ao rodar `const city = "Berlin"; city = "Munich";`?', ['city passa a valer "Munich"', 'Dá erro: não dá pra reatribuir uma const', 'city vira undefined', 'Cria uma segunda variável city'], 1,
             'Uma `const` não pode receber outro valor: você recebe `TypeError: Assignment to constant variable`. Se precisa mudar, use `let`.'),
-          code({ title: 'Apresente-se', task: 'Crie uma `const` chamada `name` com o seu nome (string) e um `let` chamado `age` com a sua idade (number). Depois mostre no console `My name is <name> and I am <age> years old` usando template literal.',
-            starter: '// create name and age here\n\n', solution: 'const name = "Rick";\nlet age = 28;\nconsole.log(`My name is ${name} and I am ${age} years old`);',
-            hint: 'Template literal usa crase: `My name is ${name} ...` entre crases.',
+          code({ title: 'Perdeu uma vida', task: 'O jogador tinha `3` vidas e perdeu uma. Na linha indicada, mude o valor de `lives` pra `2`.',
+            starter: 'let lives = 3;\n\n// lose one life: change lives to 2 here\n\nconsole.log(lives);\n',
+            solution: 'let lives = 3;\nlives = 2;\nconsole.log(lives);',
+            hint: 'Só `lives = 2;`, sem `let` de novo (a variável já existe).',
+            tests: [['`lives` vale 2', 'lives === 2'], ['Mostra 2 no console', '__logs.includes("2")']] }),
+          learn('Juntando texto e variáveis', `Pra montar uma frase com variáveis, use **template literals**: o texto vai entre **crases** \`\` \` \`\` e cada variável dentro de \`\${ }\`:
+
+~~~
+const name = "Ana";
+const age = 29;
+console.log(\`Hi, \${name}! You are \${age}.\`);
+// Hi, Ana! You are 29.
+~~~
+
+A crase fica na tecla ao lado do 1 no teclado brasileiro (com Shift no ABNT2).`),
+          predict('O que aparece no console?', 'const pet = "cat";\nconsole.log(`My ${pet} is cute`);', ['My ${pet} is cute', 'My cat is cute', 'My pet is cute', 'Dá erro'], 1,
+            'Dentro da crase, `${pet}` é trocado pelo valor da variável: "cat".'),
+          code({ title: 'Apresente-se', task: 'Siga os passos do editor: crie `name` (string) e `age` (number), e mostre `My name is <name> and I am <age> years old` usando template literal.',
+            starter: '// 1. create a const called name with your name (a string)\n\n// 2. create a let called age with your age (a number)\n\n// 3. show: My name is <name> and I am <age> years old\n//    tip: use backticks ` and ${...}\n',
+            solution: 'const name = "Rick";\nlet age = 28;\nconsole.log(`My name is ${name} and I am ${age} years old`);',
+            hint: 'O passo 3 fica assim: crase, o texto, e `${name}` / `${age}` nos lugares certos.',
             tests: [['`name` é uma string', 'typeof name === "string" && name.length > 0'], ['`age` é um number', 'typeof age === "number"'],
               ['Mostra a frase completa', '__logs.includes(`My name is ${name} and I am ${age} years old`)']],
             requires: [['Usa `const` pra name', 'const\\s+name\\b'], ['Usa `let` pra age', 'let\\s+age\\b']] })),
 
         lesson('js-types', 'Tipos e operadores',
-          learn('Os tipos primitivos', `Os valores mais comuns em JavaScript:
+          learn('Os tipos de valor', `Todo valor tem um **tipo**. Os mais comuns:
 
-- **number**: \`42\`, \`3.14\` (não existe tipo separado pra inteiro)
+- **number**: \`42\`, \`3.14\`
 - **string**: \`"hello"\`
 - **boolean**: \`true\` ou \`false\`
-- **undefined**: variável sem valor
-- **null**: "nenhum valor", colocado de propósito
+- **undefined**: variável que ainda não recebeu valor
 
-O operador \`typeof\` diz o tipo:
+O \`typeof\` diz o tipo:
 
 ~~~
-typeof 42        // "number"
-typeof "42"      // "string"
-typeof true      // "boolean"
+typeof 42      // "number"
+typeof "42"    // "string"
+typeof true    // "boolean"
+~~~`),
+          quiz('Qual é o resultado de `typeof "42"`?', ['"number"', '"string"', '"text"', '"integer"'], 1, 'Está entre aspas, então é uma string, mesmo parecendo número.'),
+          learn('Fazendo contas', `Operadores matemáticos:
+
+~~~
+10 + 3    // 13
+10 - 3    // 7
+10 * 3    // 30  (multiplicação)
+10 / 4    // 2.5 (divisão)
+10 % 3    // 1   (resto da divisão)
+2 ** 3    // 8   (potência)
 ~~~
 
-Operadores: \`+\`, \`-\`, \`*\`, \`/\`, \`%\` (resto da divisão) e \`**\` (potência). \`10 % 3\` dá \`1\`, \`2 ** 3\` dá \`8\`.`),
-          quiz('Qual é o resultado de `typeof "42"`?', ['"number"', '"string"', '"text"', '"integer"'], 1, 'Está entre aspas, então é uma string, mesmo que pareça número.'),
-          code({ title: 'Carrinho de compras', task: 'Com `price` e `quantity` já criados, calcule `total` multiplicando os dois e mostre o `total` no console.',
-            starter: 'const price = 19.9;\nconst quantity = 3;\n\n// calculate total\n', solution: 'const price = 19.9;\nconst quantity = 3;\nconst total = price * quantity;\nconsole.log(total);',
-            hint: 'Multiplicação é `*`.',
-            tests: [['Existe uma variável `total`', 'typeof total === "number"'], ['`total` é price × quantity', 'Math.abs(total - price * quantity) < 1e-9'], ['Mostra o total no console', '__logs.includes(String(total))']] })),
+O \`%\` parece estranho, mas é muito usado: \`n % 2\` dá \`0\` quando o número é par.`),
+          predict('O que aparece no console?', 'const price = 10;\nconst qty = 3;\nconsole.log(price * qty);', ['13', '30', '103', 'price * qty'], 1, '`*` multiplica: 10 × 3 = 30.'),
+          code({ title: 'Carrinho de compras', task: 'Com `price` e `quantity` prontos, crie `total` (price × quantity) e mostre no console.',
+            starter: 'const price = 19.9;\nconst quantity = 3;\n\n// 1. create a const called total = price times quantity\n\n// 2. show total in the console\n',
+            solution: 'const price = 19.9;\nconst quantity = 3;\nconst total = price * quantity;\nconsole.log(total);',
+            hint: '`const total = price * quantity;` e depois `console.log(total);`',
+            tests: [['Existe uma variável `total`', 'typeof total === "number"'], ['`total` é price × quantity', 'Math.abs(total - price * quantity) < 1e-9'], ['Mostra o total no console', '__logs.includes(String(total))']] }),
+          code({ title: 'Par ou ímpar', task: 'Crie `rest` com o resto da divisão de `17` por `5` e mostre no console.',
+            starter: '// create a const called rest = the remainder of 17 divided by 5\n\n// show rest in the console\n',
+            solution: 'const rest = 17 % 5;\nconsole.log(rest);', hint: 'Resto da divisão é `%`: `17 % 5`.',
+            tests: [['`rest` vale 2', 'rest === 2'], ['Mostra 2 no console', '__logs.includes("2")']] })),
 
-        lesson('js-strings', 'Métodos de string',
-          learn('Manipulando texto', `Strings têm vários **methods** prontos:
+        lesson('js-strings', 'Methods de string',
+          learn('Transformando texto', `Strings vêm com **methods**: comandos que você chama com um ponto depois do valor.
 
 ~~~
 const s = "  Hello World  ";
-s.length;            // 15
-s.trim();            // "Hello World"
-s.toLowerCase();     // "  hello world  "
-s.includes("World"); // true
-"banana".slice(1, 3);        // "an"
-"a-b-c".split("-");          // ["a", "b", "c"]
-["a", "b"].join("+");        // "a+b"
-"hi".replaceAll("i", "o");   // "ho"
+s.length          // 15 (quantos caracteres)
+s.trim()          // "Hello World" (tira espaços das pontas)
+s.toUpperCase()   // "  HELLO WORLD  "
+s.toLowerCase()   // "  hello world  "
 ~~~
 
-Strings são **imutáveis**: os methods devolvem uma string nova e não mudam a original.`),
-          quiz('O que `"JavaScript".slice(0, 4)` retorna?', ['"Java"', '"JavaS"', '"avaS"', '"Script"'], 0, '`slice(início, fim)` pega do índice 0 até antes do 4: "Java".'),
-          code({ title: 'Gerador de slug', task: 'Crie `slugify(title)` que transforma um título em slug: remove espaços das pontas, deixa tudo minúsculo e troca os espaços por `-`.\n\nEx: `"  Learn JavaScript Fast "` → `"learn-javascript-fast"`.',
-            starter: 'function slugify(title) {\n  // your code\n}\n', solution: 'function slugify(title) {\n  return title.trim().toLowerCase().split(" ").join("-");\n}',
-            hint: 'Encadeie: `title.trim().toLowerCase()` e depois `split(" ")` + `join("-")`.',
-            tests: [['"  Learn JavaScript Fast " → "learn-javascript-fast"', 'slugify("  Learn JavaScript Fast ") === "learn-javascript-fast"'], ['"Hello" → "hello"', 'slugify("Hello") === "hello"']] })),
+Os methods **não mudam** a string original: eles devolvem uma nova. Por isso a gente guarda o resultado numa variável.`),
+          code({ title: 'Limpando um título', task: 'Com o `title` pronto:\n\n1. crie `clean` com o title **sem espaços nas pontas**\n2. crie `upper` com o `clean` em **maiúsculas**\n3. mostre `upper` no console',
+            starter: 'const title = "  Learn JavaScript  ";\n\n// 1. const clean = title without the spaces at the ends\n\n// 2. const upper = clean in uppercase\n\n// 3. show upper\n',
+            solution: 'const title = "  Learn JavaScript  ";\nconst clean = title.trim();\nconst upper = clean.toUpperCase();\nconsole.log(upper);',
+            hint: '`title.trim()` e depois `clean.toUpperCase()`.',
+            tests: [['`clean` sem espaços', 'clean === "Learn JavaScript"'], ['`upper` em maiúsculas', 'upper === "LEARN JAVASCRIPT"'], ['Mostra upper', '__logs.includes("LEARN JAVASCRIPT")']] }),
+          learn('Procurando e recortando', `Mais methods úteis:
+
+~~~
+const email = "rick@mail.com";
+email.includes("@")      // true  (contém?)
+email.slice(0, 4)        // "rick" (do índice 0 até antes do 4)
+email.replace("mail", "corp")  // "rick@corp.com"
+~~~
+
+As posições (**índices**) começam em **0**: o "r" é o índice 0, o "i" é o 1...`),
+          quiz('O que `"JavaScript".slice(0, 4)` retorna?', ['"Java"', '"JavaS"', '"avaS"', '"Script"'], 0, '`slice(0, 4)` pega do índice 0 até antes do 4: "Java".'),
+          code({ title: 'Analisando um email', task: 'Com o `email` pronto, crie:\n\n1. `hasAt`: se o email contém `"@"`\n2. `user`: os 4 primeiros caracteres\n\nE mostre os dois no console.',
+            starter: 'const email = "rick@mail.com";\n\n// 1. const hasAt = does email include "@"?\n\n// 2. const user = the first 4 characters\n\n// 3. show hasAt and user\n',
+            solution: 'const email = "rick@mail.com";\nconst hasAt = email.includes("@");\nconst user = email.slice(0, 4);\nconsole.log(hasAt);\nconsole.log(user);',
+            hint: '`email.includes("@")` e `email.slice(0, 4)`.',
+            tests: [['`hasAt` é true', 'hasAt === true'], ['`user` é "rick"', 'user === "rick"'], ['Mostra os dois', '__logs.includes("true") && __logs.includes("rick")']] })),
 
         lesson('js-math', 'Números e Math',
-          learn('Contas de verdade', `O objeto \`Math\` tem funções úteis:
+          learn('O objeto Math', `O \`Math\` tem funções prontas pra números:
 
 ~~~
-Math.round(4.6);    // 5
-Math.floor(4.6);    // 4 (pra baixo)
-Math.ceil(4.1);     // 5 (pra cima)
-Math.max(3, 9, 1);  // 9
-Math.random();      // número entre 0 e 1
-~~~
-
-Converter texto em número: \`Number("42")\` ou \`parseInt("42px")\`. Se não der, vem \`NaN\` (Not a Number).
-
-Cuidado com decimais: \`0.1 + 0.2\` dá \`0.30000000000000004\`. Pra arredondar em casas decimais:
-
-~~~
-Math.round(8.333 * 10) / 10;   // 8.3
-(8.333).toFixed(1);            // "8.3" (string!)
+Math.round(4.6)     // 5 (arredonda)
+Math.floor(4.6)     // 4 (sempre pra baixo)
+Math.ceil(4.1)      // 5 (sempre pra cima)
+Math.max(3, 9, 1)   // 9 (o maior)
+Math.min(3, 9, 1)   // 1 (o menor)
 ~~~`),
           quiz('Quanto vale `Math.floor(-2.5)`?', ['-2', '-3', '-2.5', '2'], 1, '`floor` arredonda sempre pra baixo, e abaixo de -2.5 vem -3.'),
-          code({ title: 'Média da prova', task: 'Crie `average(a, b, c)` que retorna a média dos três números **arredondada para 1 casa decimal** (como number, não string).',
-            starter: 'function average(a, b, c) {\n  // your code\n}\n', solution: 'function average(a, b, c) {\n  const avg = (a + b + c) / 3;\n  return Math.round(avg * 10) / 10;\n}',
-            hint: 'Calcule `(a + b + c) / 3` e use `Math.round(x * 10) / 10`.',
-            tests: [['`average(7, 8, 10)` → 8.3', 'average(7, 8, 10) === 8.3'], ['`average(10, 10, 10)` → 10', 'average(10, 10, 10) === 10'], ['Retorna number', 'typeof average(1, 2, 2) === "number"']] }))
+          learn('Decimais e conversão', `Contas com decimais podem sair "quebradas": \`0.1 + 0.2\` dá \`0.30000000000000004\`.
+
+Pra arredondar em 1 casa decimal:
+
+~~~
+Math.round(8.333 * 10) / 10   // 8.3
+~~~
+
+E pra transformar texto em número: \`Number("42")\` dá \`42\`. Se não der pra converter, vem \`NaN\` (Not a Number).`),
+          code({ title: 'Média da prova', task: 'Com as notas prontas, crie:\n\n1. `avg`: a média das três, arredondada em **1 casa decimal**\n2. `best`: a maior nota, com `Math.max`\n\nE mostre os dois.',
+            starter: 'const a = 7;\nconst b = 8;\nconst c = 10;\n\n// 1. const avg = average of a, b and c, rounded to 1 decimal\n//    tip: Math.round(x * 10) / 10\n\n// 2. const best = the highest grade\n\n// 3. show avg and best\n',
+            solution: 'const a = 7;\nconst b = 8;\nconst c = 10;\nconst avg = Math.round((a + b + c) / 3 * 10) / 10;\nconst best = Math.max(a, b, c);\nconsole.log(avg);\nconsole.log(best);',
+            hint: 'Média: `(a + b + c) / 3`. Depois aplique `Math.round(... * 10) / 10`. Maior: `Math.max(a, b, c)`.',
+            tests: [['`avg` vale 8.3', 'avg === 8.3'], ['`best` vale 10', 'best === 10'], ['Mostra os dois', '__logs.includes("8.3") && __logs.includes("10")']] }))
+      ),
+
+      unit('Functions',
+        lesson('js-functions', 'Functions',
+          learn('Blocos reutilizáveis', `Uma **function** recebe valores (parâmetros), faz algo e devolve um resultado com \`return\`:
+
+~~~
+function add(a, b) {
+  return a + b;
+}
+add(2, 3); // 5
+~~~
+
+A **arrow function** é o jeito curto, muito usado:
+
+~~~
+const add = (a, b) => a + b;
+const square = n => n * n;
+const log = () => { console.log("hi"); };
+~~~
+
+Atenção: \`console.log\` só mostra. \`return\` devolve o valor pra quem chamou.`),
+          quiz('Se uma function não tem `return`, o que ela devolve?', ['0', 'null', 'undefined', 'Uma string vazia'], 2, 'Sem `return`, toda function devolve `undefined`.'),
+          predict('O que aparece no console?', 'function triple(n) {\n  return n * 3;\n}\nconst x = triple(4);\nconsole.log(x + 1);', ['12', '13', '4', 'undefined'], 1, '`triple(4)` devolve 12, que vai pra `x`. Depois `x + 1` dá 13.'),
+          code({ title: 'Dobro', task: 'Crie `double(n)` que **retorna** o dobro de `n`.',
+            starter: 'function double(n) {\n  // your code\n}\n', solution: 'function double(n) {\n  return n * 2;\n}', hint: 'Use `return n * 2;`.',
+            tests: [['double(4) → 8', 'double(4) === 8'], ['double(-3) → -6', 'double(-3) === -6'], ['double(0.5) → 1', 'double(0.5) === 1']] }),
+          code({ title: 'Saudação com arrow function', task: 'Crie a arrow function `greet` que recebe `name` e retorna `Hello, <name>!`.',
+            starter: 'const greet = // your code\n', solution: 'const greet = (name) => `Hello, ${name}!`;', hint: '`const greet = (name) => ...` com template literal.',
+            tests: [['greet("Ana") → "Hello, Ana!"', 'greet("Ana") === "Hello, Ana!"'], ['greet("Lukas") → "Hello, Lukas!"', 'greet("Lukas") === "Hello, Lukas!"']],
+            requires: [['Usa arrow function (`=>`)', '=>']] })),
+
+        lesson('js-params', 'Parâmetros: default, rest e spread',
+          learn('Parâmetros flexíveis', `**Default parameters** dão um valor padrão:
+
+~~~
+function greet(name = "stranger") {
+  return \`Hi, \${name}\`;
+}
+greet(); // "Hi, stranger"
+~~~
+
+**Rest parameters** juntam vários argumentos num array:
+
+~~~
+function introduce(name, ...skills) {
+  console.log(name, skills);
+}
+introduce("Ana", "js", "sql");   // Ana ["js","sql"]
+~~~
+
+**Spread** faz o contrário: espalha um array em argumentos.
+
+~~~
+const values = [4, 9, 2];
+Math.max(...values); // 9
+~~~`),
+          quiz('Em `function f(a, ...rest)`, chamando `f(1, 2, 3)`, quanto vale `rest`?', ['[1, 2, 3]', '[2, 3]', '3', '2'], 1, 'O primeiro argumento vai pra `a` e o resto é coletado no array `rest`.'),
+          code({ title: 'Junte as palavras', task: 'Crie `joinWords(...words)` que recebe quantas palavras quiser e retorna todas juntas, separadas por espaço. Sem argumentos, retorna `""` (string vazia).\n\nDica: `words` é um array, e arrays têm o method `join(" ")`.',
+            starter: 'function joinWords(...words) {\n  // your code\n}\n', solution: 'function joinWords(...words) {\n  return words.join(" ");\n}',
+            hint: '`return words.join(" ");`',
+            tests: [['joinWords("hello", "world") → "hello world"', 'joinWords("hello", "world") === "hello world"'], ['Três palavras', 'joinWords("a", "b", "c") === "a b c"'], ['Sem argumentos → ""', 'joinWords() === ""']] }),
+          code({ title: 'Preço com imposto', task: 'Crie `withTax(price, rate = 0.1)` que retorna `price` mais a taxa. Se `rate` não for passado, usa 10%.',
+            starter: 'function withTax(price, rate) {\n  // add a default value to rate\n}\n', solution: 'function withTax(price, rate = 0.1) {\n  return price + price * rate;\n}',
+            hint: 'O default vai na assinatura: `rate = 0.1`. Resultado: `price + price * rate`.',
+            tests: [['withTax(100) → 110', 'Math.abs(withTax(100) - 110) < 1e-9'], ['withTax(100, 0.2) → 120', 'Math.abs(withTax(100, 0.2) - 120) < 1e-9']] })),
+
+        lesson('js-closures', 'Scope e closures',
+          learn('Quem enxerga o quê', `**Scope** é onde uma variável existe. Variáveis criadas com \`let\`/\`const\` dentro de \`{ }\` só existem ali dentro.
+
+Uma **closure** acontece quando uma function "lembra" das variáveis de onde foi criada, mesmo depois que aquele código terminou:
+
+~~~
+function makeGreeter(greeting) {
+  return (name) => \`\${greeting}, \${name}!\`;
+}
+const hello = makeGreeter("Hello");
+hello("Ana"); // "Hello, Ana!"
+~~~
+
+A function retornada guardou \`greeting\`. Closures são a base de contadores, caches, debounce e muitos padrões de React.`),
+          quiz('Depois de `const c = makeCounter(); c(); c();`, onde fica guardada a contagem?', ['Numa variável global', 'Na closure da function retornada', 'No objeto window', 'Em lugar nenhum: reseta toda vez'], 1, 'A variável interna de `makeCounter` continua viva na closure da function que você recebeu.'),
+          code({ title: 'Contador', task: 'Crie `makeCounter()` que retorna uma function. Cada chamada dessa function incrementa e **retorna** a contagem (1, 2, 3...). Dois contadores diferentes não podem compartilhar a contagem.',
+            starter: 'function makeCounter() {\n  // your code\n}\n', solution: 'function makeCounter() {\n  let count = 0;\n  return () => {\n    count++;\n    return count;\n  };\n}',
+            hint: 'Crie `let count = 0` dentro de `makeCounter` e retorne uma arrow function que faz `count++` e retorna `count`.',
+            tests: [['Conta 1, 2, 3', '(() => { const c = makeCounter(); return c() === 1 && c() === 2 && c() === 3; })()'],
+              ['Contadores independentes', '(() => { const a = makeCounter(), b = makeCounter(); a(); a(); return b() === 1; })()']] })),
+
+        lesson('js-higher-order', 'Callbacks e higher-order functions',
+          learn('Functions como valores', `Em JavaScript, functions são valores: dá pra guardar em variável, passar como argumento e retornar.
+
+Uma function passada como argumento é um **callback**. Uma function que recebe ou retorna outra é uma **higher-order function**:
+
+~~~
+function repeat(times, action) {
+  for (let i = 0; i < times; i++) action(i);
+}
+repeat(3, (i) => console.log("round", i));
+~~~
+
+Você vai usar isso o tempo todo: \`map\`, \`filter\`, \`addEventListener\`, \`setTimeout\`... todos recebem callbacks.`),
+          quiz('Em `button.addEventListener("click", handleClick)`, o que é `handleClick`?', ['Uma string', 'Um callback', 'Um evento', 'Uma class'], 1, 'É uma function passada pra ser chamada depois, quando o clique acontecer.'),
+          code({ title: 'Aplique duas vezes', task: 'Crie `applyTwice(fn, value)` que aplica `fn` em `value` e depois aplica `fn` de novo no resultado.\n\nEx: `applyTwice(n => n + 3, 1)` → `7`.',
+            starter: 'function applyTwice(fn, value) {\n  // your code\n}\n', solution: 'function applyTwice(fn, value) {\n  return fn(fn(value));\n}', hint: '`fn(fn(value))`',
+            tests: [['n => n + 3, 1 → 7', 'applyTwice(n => n + 3, 1) === 7'], ['s => s + "!", "hey" → "hey!!"', 'applyTwice(s => s + "!", "hey") === "hey!!"']] }))
       ),
 
       unit('Decisões',
@@ -970,110 +1183,6 @@ A diferença: \`0 || 1\` dá \`1\`, mas \`0 ?? 1\` dá \`0\`. O \`??\` respeita 
             hint: 'Dá pra encadear: `user?.nickname ?? user?.name ?? "Anonymous"`.',
             tests: [['Prefere nickname', 'displayName({ name: "Ana", nickname: "aninha" }) === "aninha"'], ['Usa name se não tiver nickname', 'displayName({ name: "Ana" }) === "Ana"'],
               ['Objeto vazio → "Anonymous"', 'displayName({}) === "Anonymous"'], ['undefined → "Anonymous"', 'displayName(undefined) === "Anonymous"']] }))
-      ),
-
-      unit('Functions',
-        lesson('js-functions', 'Functions',
-          learn('Blocos reutilizáveis', `Uma **function** recebe valores (parâmetros), faz algo e devolve um resultado com \`return\`:
-
-~~~
-function add(a, b) {
-  return a + b;
-}
-add(2, 3); // 5
-~~~
-
-A **arrow function** é o jeito curto, muito usado:
-
-~~~
-const add = (a, b) => a + b;
-const square = n => n * n;
-const log = () => { console.log("hi"); };
-~~~
-
-Atenção: \`console.log\` só mostra. \`return\` devolve o valor pra quem chamou.`),
-          quiz('Se uma function não tem `return`, o que ela devolve?', ['0', 'null', 'undefined', 'Uma string vazia'], 2, 'Sem `return`, toda function devolve `undefined`.'),
-          code({ title: 'Dobro', task: 'Crie `double(n)` que **retorna** o dobro de `n`.',
-            starter: 'function double(n) {\n  // your code\n}\n', solution: 'function double(n) {\n  return n * 2;\n}', hint: 'Use `return n * 2;`.',
-            tests: [['double(4) → 8', 'double(4) === 8'], ['double(-3) → -6', 'double(-3) === -6'], ['double(0.5) → 1', 'double(0.5) === 1']] }),
-          code({ title: 'Saudação com arrow function', task: 'Crie a arrow function `greet` que recebe `name` e retorna `Hello, <name>!`.',
-            starter: 'const greet = // your code\n', solution: 'const greet = (name) => `Hello, ${name}!`;', hint: '`const greet = (name) => ...` com template literal.',
-            tests: [['greet("Ana") → "Hello, Ana!"', 'greet("Ana") === "Hello, Ana!"'], ['greet("Lukas") → "Hello, Lukas!"', 'greet("Lukas") === "Hello, Lukas!"']],
-            requires: [['Usa arrow function (`=>`)', '=>']] })),
-
-        lesson('js-params', 'Parâmetros: default, rest e spread',
-          learn('Parâmetros flexíveis', `**Default parameters** dão um valor padrão:
-
-~~~
-function greet(name = "stranger") {
-  return \`Hi, \${name}\`;
-}
-greet(); // "Hi, stranger"
-~~~
-
-**Rest parameters** juntam vários argumentos num array:
-
-~~~
-function sum(...nums) {
-  return nums.reduce((acc, n) => acc + n, 0);
-}
-sum(1, 2, 3); // 6
-~~~
-
-**Spread** faz o contrário: espalha um array em argumentos.
-
-~~~
-const values = [4, 9, 2];
-Math.max(...values); // 9
-~~~`),
-          quiz('Em `function f(a, ...rest)`, chamando `f(1, 2, 3)`, quanto vale `rest`?', ['[1, 2, 3]', '[2, 3]', '3', '2'], 1, 'O primeiro argumento vai pra `a` e o resto é coletado no array `rest`.'),
-          code({ title: 'Some tudo', task: 'Crie `sumAll(...nums)` que soma quantos números receber. Sem argumentos, retorna `0`.',
-            starter: 'function sumAll(...nums) {\n  // your code\n}\n', solution: 'function sumAll(...nums) {\n  let total = 0;\n  for (const n of nums) total += n;\n  return total;\n}',
-            hint: '`nums` é um array normal: percorra com um loop e some.',
-            tests: [['sumAll(1, 2, 3) → 6', 'sumAll(1, 2, 3) === 6'], ['sumAll() → 0', 'sumAll() === 0'], ['sumAll(10) → 10', 'sumAll(10) === 10']] }),
-          code({ title: 'Preço com imposto', task: 'Crie `withTax(price, rate = 0.1)` que retorna `price` mais a taxa. Se `rate` não for passado, usa 10%.',
-            starter: 'function withTax(price, rate) {\n  // add a default value to rate\n}\n', solution: 'function withTax(price, rate = 0.1) {\n  return price + price * rate;\n}',
-            hint: 'O default vai na assinatura: `rate = 0.1`. Resultado: `price + price * rate`.',
-            tests: [['withTax(100) → 110', 'Math.abs(withTax(100) - 110) < 1e-9'], ['withTax(100, 0.2) → 120', 'Math.abs(withTax(100, 0.2) - 120) < 1e-9']] })),
-
-        lesson('js-closures', 'Scope e closures',
-          learn('Quem enxerga o quê', `**Scope** é onde uma variável existe. Variáveis criadas com \`let\`/\`const\` dentro de \`{ }\` só existem ali dentro.
-
-Uma **closure** acontece quando uma function "lembra" das variáveis de onde foi criada, mesmo depois que aquele código terminou:
-
-~~~
-function makeGreeter(greeting) {
-  return (name) => \`\${greeting}, \${name}!\`;
-}
-const hello = makeGreeter("Hello");
-hello("Ana"); // "Hello, Ana!"
-~~~
-
-A function retornada guardou \`greeting\`. Closures são a base de contadores, caches, debounce e muitos padrões de React.`),
-          quiz('Depois de `const c = makeCounter(); c(); c();`, onde fica guardada a contagem?', ['Numa variável global', 'Na closure da function retornada', 'No objeto window', 'Em lugar nenhum: reseta toda vez'], 1, 'A variável interna de `makeCounter` continua viva na closure da function que você recebeu.'),
-          code({ title: 'Contador', task: 'Crie `makeCounter()` que retorna uma function. Cada chamada dessa function incrementa e **retorna** a contagem (1, 2, 3...). Dois contadores diferentes não podem compartilhar a contagem.',
-            starter: 'function makeCounter() {\n  // your code\n}\n', solution: 'function makeCounter() {\n  let count = 0;\n  return () => {\n    count++;\n    return count;\n  };\n}',
-            hint: 'Crie `let count = 0` dentro de `makeCounter` e retorne uma arrow function que faz `count++` e retorna `count`.',
-            tests: [['Conta 1, 2, 3', '(() => { const c = makeCounter(); return c() === 1 && c() === 2 && c() === 3; })()'],
-              ['Contadores independentes', '(() => { const a = makeCounter(), b = makeCounter(); a(); a(); return b() === 1; })()']] })),
-
-        lesson('js-higher-order', 'Callbacks e higher-order functions',
-          learn('Functions como valores', `Em JavaScript, functions são valores: dá pra guardar em variável, passar como argumento e retornar.
-
-Uma function passada como argumento é um **callback**. Uma function que recebe ou retorna outra é uma **higher-order function**:
-
-~~~
-function repeat(times, action) {
-  for (let i = 0; i < times; i++) action(i);
-}
-repeat(3, (i) => console.log("round", i));
-~~~
-
-Você vai usar isso o tempo todo: \`map\`, \`filter\`, \`addEventListener\`, \`setTimeout\`... todos recebem callbacks.`),
-          quiz('Em `button.addEventListener("click", handleClick)`, o que é `handleClick`?', ['Uma string', 'Um callback', 'Um evento', 'Uma class'], 1, 'É uma function passada pra ser chamada depois, quando o clique acontecer.'),
-          code({ title: 'Aplique duas vezes', task: 'Crie `applyTwice(fn, value)` que aplica `fn` em `value` e depois aplica `fn` de novo no resultado.\n\nEx: `applyTwice(n => n + 3, 1)` → `7`.',
-            starter: 'function applyTwice(fn, value) {\n  // your code\n}\n', solution: 'function applyTwice(fn, value) {\n  return fn(fn(value));\n}', hint: '`fn(fn(value))`',
-            tests: [['n => n + 3, 1 → 7', 'applyTwice(n => n + 3, 1) === 7'], ['s => s + "!", "hey" → "hey!!"', 'applyTwice(s => s + "!", "hey") === "hey!!"']] }))
       ),
 
       unit('Arrays e loops',
@@ -2013,7 +2122,7 @@ Código bom aqui é código legível: nomes claros, functions pequenas.`),
 /* TypeScript — módulos 1 a 4: tipos básicos, objects, unions, functions e generics */
 (function (TD) {
   'use strict';
-  const { learn, quiz, code, lesson, unit } = TD.C;
+  const { learn, quiz, predict, code, lesson, unit } = TD.C;
 
   TD.courses.push({
     id: 'ts', name: 'TypeScript', badge: 'TS', runner: 'ts',
@@ -2036,6 +2145,7 @@ Quase sempre o TypeScript **infere** o tipo sozinho: \`let age = 30\` já faz \`
 
 No fim, o TypeScript é **compilado** pra JavaScript comum: os tipos somem e o código roda em qualquer lugar.`),
           quiz('Em `let city = "Berlin"`, qual tipo o TypeScript infere pra `city`?', ['any', 'string', '"Berlin"', 'unknown'], 1, 'Com `let`, ele infere o tipo geral `string`. Com `const` seria o literal `"Berlin"`.'),
+          predict('Esse código compila?', 'let total: number = 10;\ntotal = total + 5;\ntotal = "15";', ['Compila sem erros', 'Erro na linha 2', 'Erro na linha 3: string não é number', 'Erro na linha 1'], 2, 'Somar 5 continua number. Na linha 3, `"15"` é string, e `total` foi declarado como number.'),
           code({ title: 'Conserte o tipo', task: 'O código tem um type error. Corrija pra que `age` seja um `number` com valor `30` e compile sem erros.',
             starter: 'let age: number = "30";\nconsole.log(age + 1);\n', solution: 'let age: number = 30;\nconsole.log(age + 1);', hint: 'Tire as aspas: `30` é number, `"30"` é string.',
             tests: [['`age` vale 30', 'age === 30'], ['Mostra 31 no console', '__logs.includes("31")']] })),
@@ -2059,6 +2169,7 @@ function log(msg: string): void { console.log(msg); }   // não retorna nada
 
 No modo \`strict\`, parâmetro sem tipo é erro (\`implicitly has an 'any' type\`).`),
           quiz('Qual assinatura recebe uma string e retorna um boolean?', ['(s: boolean): string', '(s: string): boolean', '(string): boolean', '(s): string => boolean'], 1, 'Parâmetro `s: string`, retorno `: boolean`.'),
+          predict('Com `function add(a: number, b: number): number`, qual chamada dá type error?', 'add(1, 2);\nadd(1.5, 2);\nadd("1", 2);\nadd(-1, 0);', ['add(1, 2)', 'add(1.5, 2)', 'add("1", 2)', 'add(-1, 0)'], 2, 'Decimais e negativos são number. `"1"` é string.'),
           code({ title: 'Área do retângulo', task: 'Tipe `width` e `height` como `number` e o retorno como `number`.',
             starter: 'function area(width, height) {\n  return width * height;\n}\n', solution: 'function area(width: number, height: number): number {\n  return width * height;\n}', hint: 'Cada parâmetro com `: number` e o retorno depois dos parênteses: `): number {`.',
             tests: [['area(3, 4) → 12', 'area(3, 4) === 12']], requires: [['Parâmetros tipados', 'width\\s*:\\s*number[\\s\\S]*height\\s*:\\s*number'], ['Retorno tipado', '\\)\\s*:\\s*number\\s*\\{']] })),
@@ -2677,7 +2788,7 @@ Pense nos tipos primeiro. Com eles certos, a implementação quase se escreve so
 /* SQL — bancos de exemplo e módulos 1 a 4: consultas, agregação, JOINs, subqueries */
 (function (TD) {
   'use strict';
-  const { learn, quiz, code, lesson, unit } = TD.C;
+  const { learn, quiz, predict, code, lesson, unit } = TD.C;
 
   const SHOP = `
 CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL, country TEXT NOT NULL, city TEXT, age INTEGER, email TEXT);
@@ -2761,6 +2872,7 @@ WHERE country = 'Brazil';
 - Texto entre **aspas simples**: \`'Brazil'\`.
 - Comparação: \`=\`, \`<>\` (diferente), \`>\`, \`<\`, \`>=\`, \`<=\`.`),
           quiz('Qual query retorna clientes com 40 anos ou mais?', ['... WHERE age > 40;', '... WHERE age >= 40;', '... IF age >= 40;', 'SELECT age >= 40 FROM customers;'], 1, '"40 ou mais" é `>= 40`.'),
+          predict('Quantas rows essa query retorna? (no banco tem 2 clientes de Portugal: Marta e Sofia)', "SELECT name\nFROM customers\nWHERE country = 'Portugal';", ['0', '1', '2', 'Todas as 10'], 2, 'O WHERE deixa passar só as rows em que a condição é verdadeira: as duas de Portugal.'),
           code({ title: 'Clientes na Alemanha', task: 'Selecione `name` e `age` dos customers do país `\'Germany\'`.', starter: '-- write your query\n', solution: "SELECT name, age FROM customers WHERE country = 'Germany';", hint: "`WHERE country = 'Germany'`" })),
 
         lesson('sql-filters', 'AND, OR, IN e BETWEEN',
@@ -2820,6 +2932,7 @@ Ordem das cláusulas: \`SELECT → FROM → WHERE → ORDER BY → LIMIT\`.
 
 \`LIMIT 10 OFFSET 20\` pula 20 rows: é a base de paginação.`),
           quiz('Qual ordem de cláusulas está correta?', ['SELECT ... LIMIT 5 WHERE ...', 'SELECT ... FROM ... ORDER BY ... WHERE ...', 'SELECT ... FROM ... WHERE ... ORDER BY ... LIMIT ...', 'FROM ... SELECT ... LIMIT ...'], 2, 'WHERE filtra, ORDER BY ordena, LIMIT corta.'),
+          predict('Qual nome aparece primeiro?', "SELECT name, age FROM customers\nORDER BY age DESC\nLIMIT 1;", ['O cliente mais novo', 'O cliente mais velho', 'O primeiro cadastrado (id 1)', 'Ordem aleatória'], 1, '`DESC` ordena do maior pro menor, e `LIMIT 1` fica só com o primeiro: o mais velho.'),
           code({ title: 'Os 3 mais velhos', task: 'Mostre `name` e `age` dos **3 customers mais velhos**, do mais velho pro mais novo.', starter: '-- write your query\n', solution: 'SELECT name, age FROM customers ORDER BY age DESC LIMIT 3;', ordered: true, hint: '`ORDER BY age DESC LIMIT 3`' })),
 
         lesson('sql-distinct-alias', 'DISTINCT e aliases',
@@ -3324,7 +3437,7 @@ Monte em etapas com CTEs, confira cada uma, e só então junte. Arredonde valore
 /* HTML & CSS — módulos 1 a 4: HTML, semântica e acessibilidade, formulários, CSS base */
 (function (TD) {
   'use strict';
-  const { learn, quiz, code, lesson, unit } = TD.C;
+  const { learn, quiz, predict, code, lesson, unit } = TD.C;
 
   TD.courses.push({
     id: 'web', name: 'HTML & CSS', badge: '</>', runner: 'web',
@@ -3347,6 +3460,7 @@ Monte em etapas com CTEs, confira cada uma, e só então junte. Arredonde valore
 
 Use cada tag pelo **significado**, não pela aparência. Visual é trabalho do CSS.`),
           quiz('Qual tag representa o título principal do conteúdo?', ['<title>', '<head>', '<h1>', '<header>'], 2, '`<h1>` é o heading principal. `<title>` é o nome na aba do browser.'),
+          predict('Como o browser mostra isso?', '<h1>Jobs</h1>\n<p>Find a <strong>remote</strong> job.</p>', ['Tudo do mesmo tamanho, numa linha', 'Um título grande e, embaixo, um parágrafo com "remote" em negrito', 'Só o título aparece', 'As tags aparecem como texto'], 1, 'Cada tag tem um significado e um visual padrão: h1 é título grande, p é parágrafo, strong destaca.'),
           code({ title: 'Minha primeira página', task: 'Crie um `<h1>` com o texto `My first page` e, abaixo, um `<p>` que contenha um trecho em `<strong>`.',
             starter: '<!-- write your HTML -->\n', solution: '<h1>My first page</h1>\n<p>I am learning <strong>HTML</strong> today.</p>', hint: 'Coloque o `<strong>` dentro do `<p>`.',
             tests: [['`<h1>` com "My first page"', '$("h1") && $("h1").textContent.trim() === "My first page"'], ['`<p>` com um `<strong>` dentro', '!!$("p strong")']] })),
@@ -3469,16 +3583,16 @@ Semântica ajuda leitores de tela, SEO e quem mantém o código. \`<div>\` e \`<
             tests: [['caption "Plans"', '$("table caption") && $("table caption").textContent.trim() === "Plans"'], ['Cabeçalho Plan e Price', '$$("thead th").map(t => t.textContent.trim()).join() === "Plan,Price"'], ['3 rows no tbody', '$$("tbody tr").length === 3'], ['Cada row com 2 células', '$$("tbody tr").every(tr => tr.querySelectorAll("td").length === 2)']] })),
 
         lesson('web-a11y', 'Acessibilidade',
-          learn('Web pra todo mundo', `Acessibilidade (a11y) é fazer a página funcionar com leitor de tela, teclado e para quem enxerga pouco. O básico já resolve muito:
+          learn('Web pra todo mundo', `Acessibilidade (a11y) é fazer a página funcionar com leitor de tela, teclado e para quem enxerga pouco.
+
+O básico já resolve muito:
 
 - Imagens com \`alt\` (ou \`alt=""\` se forem só decorativas).
 - Campos de formulário com \`<label for="id">\`.
 - Ações com \`<button>\`, não \`<div onclick>\`: botões já recebem foco e funcionam com Enter.
 - Headings em ordem (h1 → h2 → h3), sem pular níveis.
 - Botões só com ícone precisam de nome: \`<button aria-label="Close">×</button>\`.
-- Contraste suficiente entre texto e fundo.
-
-Bônus: acessibilidade também melhora SEO e a experiência de todo mundo.`),
+- Contraste suficiente entre texto e fundo.`),
           quiz('Por que usar `<button>` em vez de `<div>` clicável?', ['É mais bonito', 'Já é focável e acionável por teclado e leitores de tela', 'Carrega mais rápido', 'Div não aceita click'], 1, 'Botão nativo vem com foco, teclado e semântica.'),
           code({ title: 'Conserte a acessibilidade', task: 'Corrija o HTML:\n\n- dê um `alt` à imagem\n- ligue o texto "Email" ao input com `<label for>` (o input tem `id="email"`)\n- troque a `div` clicável por um `<button>`\n- dê `aria-label="Close"` ao botão de fechar (×)',
             starter: '<img src="avatar.png">\n\nEmail\n<input id="email" type="email">\n\n<div class="btn">Subscribe</div>\n<button>×</button>\n',
@@ -3602,6 +3716,7 @@ p { color: gray; }          /* 0-0-1 */
 
 **Herança**: algumas properties (cor, fonte) passam do pai pros filhos; outras (margin, border) não.`),
           quiz('`<p class="intro" id="lead">` com as regras acima fica de que cor?', ['gray', 'blue', 'red', 'black'], 2, 'O id tem a maior especificidade.'),
+          predict('De que cor fica o texto do `<p class="intro" id="lead">`?', 'p { color: gray; }\n#lead { color: red; }\n.intro { color: blue; }', ['gray', 'blue', 'red', 'preto (padrão)'], 2, 'O id tem a maior especificidade e ganha, mesmo vindo antes da regra da class.'),
           code({ title: 'Ganhe a briga', task: 'O botão `.btn-danger` deveria ser vermelho (`rgb(255, 42, 109)`, ou seja `#ff2a6d`), mas a regra `#app button` está ganhando. Sem usar `!important` e sem mexer na regra `#app button`, faça o `.btn-danger` ficar com `background-color: #ff2a6d`.',
             starter: '<style>\n  #app button { background-color: gray; color: white; }\n  .btn-danger { background-color: #ff2a6d; }\n</style>\n\n<div id="app">\n  <button>Save</button>\n  <button class="btn-danger">Delete</button>\n</div>\n',
             solution: '<style>\n  #app button { background-color: gray; color: white; }\n  #app .btn-danger { background-color: #ff2a6d; }\n</style>\n\n<div id="app">\n  <button>Save</button>\n  <button class="btn-danger">Delete</button>\n</div>',
@@ -4599,6 +4714,169 @@ type Expect<T extends true> = T;
 })(globalThis.TD = globalThis.TD || {});
 
 </script>
+<script>/* pedagogy.js */
+/* Método Trilha: o motor pedagógico. Vale pra QUALQUER trilha, inclusive as que forem criadas no futuro,
+ * porque trabalha só com o formato das lições (learn / quiz / predict / code) e nunca com uma linguagem específica.
+ *
+ * Base em pesquisa (detalhes em PEDAGOGIA.md):
+ *  - Segmentação / carga cognitiva: teoria em cartões pequenos, revelados um de cada vez.
+ *  - Worked examples: a teoria da lição fica à mão durante o exercício.
+ *  - Parsons problems: "montar com blocos" gerado da solução, como ajuda (Hou & Ericson).
+ *  - PRIMM: passos "prever a saída" antes de escrever código.
+ *  - Retrieval practice + spacing: revisão espaçada automática (caixas de Leitner).
+ *  - Interleaving: revisões e checkpoints misturam assuntos.
+ *  - Mastery learning: checkpoint por módulo antes de liberar o próximo.
+ *  - Mensagens de erro explicadas (Becker). */
+(function (TD) {
+  'use strict';
+  const DAY = 86400000;
+  const INTERVALS = [1, 3, 7, 14, 30, 60]; // dias por caixa
+  const CHECKPOINT_PASS = 0.7;
+  const REVIEW_CAP = 12;
+
+  /* ---------- 1. teoria em cartões ---------- */
+  const words = (s) => (s.replace(/(~~~|```)[\s\S]*?(~~~|```)/g, ' ').match(/\S+/g) || []).length;
+  function chunkBody(body) {
+    const parts = String(body).split(/((?:~~~|```)[a-z]*\n[\s\S]*?(?:~~~|```))/);
+    const blocks = [];
+    parts.forEach((p, i) => {
+      if (i % 2 === 1) blocks.push({ code: true, text: p });
+      else p.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean).forEach((b) => blocks.push({ code: false, text: b }));
+    });
+    const chunks = []; let cur = [];
+    const close = () => { if (cur.length) { chunks.push(cur.map((b) => b.text).join('\n\n')); cur = []; } };
+    for (const b of blocks) {
+      cur.push(b);
+      const textWords = cur.filter((x) => !x.code).reduce((a, x) => a + words(x.text), 0);
+      if (b.code || textWords > 70) close();
+    }
+    if (cur.length) {
+      const w = cur.reduce((a, x) => a + words(x.text), 0);
+      if (chunks.length && w < 25) chunks[chunks.length - 1] += '\n\n' + cur.map((b) => b.text).join('\n\n');
+      else close();
+    }
+    return chunks.length ? chunks : [String(body)];
+  }
+
+  /* ---------- 2. Parsons: montar com blocos ---------- */
+  function seeded(seed) { let h = 2166136261; for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619); } return () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 100000) / 100000; }; }
+  function parsonsBlocks(step, seed) {
+    const lines = String(step.solution || '').split('\n').filter((l) => l.trim() !== '');
+    if (lines.length < 2 || lines.length > 28) return null;
+    const blocks = lines.map((text, i) => ({ id: 'b' + i, text }));
+    const rnd = seeded(seed || step.title || 'x');
+    const order = blocks.slice();
+    for (let tries = 0; tries < 6; tries++) {
+      for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+      if (order.some((b, i) => b.id !== blocks[i].id)) break;
+    }
+    return order;
+  }
+
+  /* ---------- 3. mensagens de erro explicadas ---------- */
+  const ERRORS = {
+    js: [
+      [/is not defined/, 'Você usou um nome que não existe. Confira se escreveu igualzinho (maiúsculas contam) e se criou a variável ou function antes de usar.'],
+      [/Assignment to constant variable/, 'Você tentou mudar o valor de uma `const`. Se o valor precisa mudar, declare com `let`.'],
+      [/has already been declared/, 'Você declarou o mesmo nome duas vezes. Use `let`/`const` só na primeira vez; depois é só `nome = valor`.'],
+      [/is not a function/, 'Você chamou com `()` algo que não é function. Confira o nome do method (ex: `toUpperCase`, não `toUppercase`).'],
+      [/Cannot read propert(y|ies) of (undefined|null)/, 'Você tentou ler uma property de algo que é `undefined`/`null`. O valor antes do ponto não existe: mostre ele com `console.log` ou use `?.`.'],
+      [/Unexpected end of input/, 'O código terminou "no meio": provavelmente falta fechar uma `}` ou `)`.'],
+      [/missing \) after argument list/, 'Falta fechar um parêntese `)` ou separar argumentos com vírgula.'],
+      [/Invalid or unexpected token|Unterminated string/, 'Tem uma aspa aberta sem fechar, ou um caractere estranho. Confira as aspas `"`, `\'` e a crase.'],
+      [/Unexpected (token|identifier|string|number)/, 'Erro de sintaxe: sobrou ou faltou algum símbolo (vírgula, parêntese, chave, aspas). Olhe a linha e a anterior.'],
+      [/Maximum call stack/, 'Uma function chamou a si mesma sem parar. Confira o caso base da recursão.'],
+      [/loop infinito/, 'Algum loop nunca termina. Confira se a condição do `while`/`for` em algum momento fica `false`.']
+    ],
+    ts: [
+      [/is not assignable to (type|parameter)/, 'O valor não bate com o tipo declarado. Compare o tipo do valor com o tipo que você anotou.'],
+      [/implicitly has an 'any' type/, 'Faltou anotar o tipo desse parâmetro: escreva `nome: tipo` (ex: `width: number`).'],
+      [/Cannot find name/, 'Esse nome não existe. Confira a grafia e se você declarou o type/interface/variável.'],
+      [/Property '.+' does not exist on type/, 'Essa property não existe nesse tipo. Confira o nome ou adicione a property na interface.'],
+      [/is missing the following properties|is missing in type/, 'Faltam properties obrigatórias no object. Confira a interface.'],
+      [/Unused '@ts-expect-error' directive/, 'Um teste de tipo esperava um erro e ele não aconteceu: seu tipo está aceitando valores que deveria recusar.'],
+      [/lacks ending return statement|Not all code paths return a value/, 'Algum caminho da function termina sem `return`. Trate todos os casos.']
+    ],
+    sql: [
+      [/no such column/, 'Essa column não existe. Confira o nome na descrição do banco (e o alias da table, como `c.name`).'],
+      [/no such table/, 'Essa table não existe. Confira o nome na descrição do banco.'],
+      [/ambiguous column name/, 'A column existe nas duas tables do JOIN. Diga de qual é, com o alias: `c.id` ou `o.id`.'],
+      [/misuse of aggregate/, 'Você usou `COUNT`/`SUM`/`AVG` no `WHERE`. Condições sobre aggregates vão no `HAVING`.'],
+      [/UNIQUE constraint failed/, 'Já existe uma row com esse valor (ex: o mesmo `id`). Use outro valor.'],
+      [/NOT NULL constraint failed/, 'Uma column obrigatória ficou sem valor. Inclua ela no INSERT.'],
+      [/CHECK constraint failed/, 'O valor viola uma regra `CHECK` da table (ex: saldo negativo).'],
+      [/incomplete input/, 'O comando terminou no meio: falta fechar um parêntese ou uma aspa.'],
+      [/syntax error/, 'Erro de sintaxe SQL. Confira: vírgula entre columns, texto em aspas simples e a ordem SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY → LIMIT.']
+    ],
+    web: [], dom: []
+  };
+  ERRORS.dom = ERRORS.js;
+  function explainError(runner, msg) {
+    if (!msg) return null;
+    const list = (ERRORS[runner] || []).concat(runner === 'ts' ? ERRORS.js : []);
+    const hit = list.find(([re]) => re.test(msg));
+    return hit ? hit[1] : null;
+  }
+
+  /* ---------- 4. revisão espaçada (Leitner) ---------- */
+  const isPracticeStep = (s) => s.t === 'quiz' || s.t === 'predict' || s.t === 'code';
+  function schedule(item, correct, now) {
+    const box = correct ? Math.min((item ? item.box : 0) + 1, INTERVALS.length - 1) : 0;
+    return { box, due: now + INTERVALS[box] * DAY, seen: ((item && item.seen) || 0) + 1, last: correct ? 1 : 0 };
+  }
+  function enrollLesson(progress, lesson, results, now) {
+    progress.srs = progress.srs || {};
+    lesson.steps.forEach((s, i) => {
+      if (!isPracticeStep(s)) return;
+      const key = lesson.id + '#' + i;
+      if (progress.srs[key] && results[i] === undefined) return;
+      progress.srs[key] = results[i] === undefined ? { box: 0, due: now + DAY, seen: 0 } : schedule(progress.srs[key], results[i], now);
+    });
+  }
+  function findStep(courses, key) {
+    const [lid, idx] = key.split('#');
+    for (const c of courses) for (const u of c.units) for (const l of u.lessons) if (l.id === lid) return { c, l, step: l.steps[Number(idx)], i: Number(idx) };
+    return null;
+  }
+  function dueItems(progress, courses, now) {
+    const srs = progress.srs || {};
+    const due = Object.keys(srs).filter((k) => srs[k].due <= now).map((k) => ({ key: k, ...findStep(courses, k), meta: srs[k] })).filter((x) => x.step);
+    due.sort((a, b) => a.meta.due - b.meta.due);
+    // interleaving: alterna entre trilhas e lições
+    const byCourse = {}; due.forEach((d) => (byCourse[d.c.id] = byCourse[d.c.id] || []).push(d));
+    const out = []; const queues = Object.values(byCourse);
+    while (out.length < REVIEW_CAP && queues.some((q) => q.length)) for (const q of queues) if (q.length && out.length < REVIEW_CAP) out.push(q.shift());
+    return out;
+  }
+  function nextDue(progress) {
+    const v = Object.values(progress.srs || {}).map((x) => x.due);
+    return v.length ? Math.min(...v) : null;
+  }
+
+  /* ---------- 5. checkpoint do módulo (mastery + interleaving) ---------- */
+  const unitKey = (c, ui) => c.id + '-u' + ui;
+  function checkpointLesson(c, ui, seed) {
+    const u = c.units[ui];
+    const rnd = seeded('cp' + c.id + ui + (seed || ''));
+    const refs = [];
+    u.lessons.forEach((l) => l.steps.forEach((s, i) => { if (s.t === 'quiz' || s.t === 'predict') refs.push({ l, s, i }); }));
+    const codes = [];
+    u.lessons.forEach((l) => l.steps.forEach((s, i) => { if (s.t === 'code' && parsonsBlocks(s, 'x')) codes.push({ l, s, i }); }));
+    const pick = (arr, n) => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, n); };
+    const chosen = pick(refs, 6).concat(pick(codes, 2));
+    const steps = pick(chosen, chosen.length).map((x) => Object.assign({}, x.s, { _from: x.l.id + '#' + x.i, _fromTitle: x.l.title, _blocks: x.s.t === 'code' }));
+    if (!steps.length) return null;
+    return { id: unitKey(c, ui) + '-check', title: 'Checkpoint: ' + u.title, steps, checkpoint: { course: c.id, unit: ui } };
+  }
+  function unitMastered(progress, c, ui) {
+    const m = (progress.mastery || {})[unitKey(c, ui)];
+    return !!m && m.best >= CHECKPOINT_PASS;
+  }
+
+  TD.ped = { chunkBody, parsonsBlocks, explainError, schedule, enrollLesson, dueItems, nextDue, checkpointLesson, unitMastered, unitKey, isPracticeStep, words, CHECKPOINT_PASS, INTERVALS, DAY };
+})(globalThis.TD = globalThis.TD || {});
+
+</script>
 <script>/* sfx.js */
 /* Efeitos sonoros do Trilha Dev: sintetizados na hora com Web Audio (nenhum arquivo de áudio).
  * Estética synth/neon: blips de interface, arpejos, ruído filtrado e eco. */
@@ -4721,7 +4999,7 @@ type Expect<T extends true> = T;
   'use strict';
   const COURSES = TD.courses || [];
   const byId = Object.fromEntries(COURSES.map((c) => [c.id, c]));
-  const XP = { quiz: 5, code: 10, clean: 5, lesson: 10, review: 5 };
+  const XP = { quiz: 5, code: 10, clean: 5, lesson: 10, review: 5, reviewItem: 3, reviewDone: 5, checkpoint: 20 };
   const RANKS = [
     [0, 'Novato'], [150, 'Script Kiddie'], [400, 'Codificador de Rua'], [800, 'Hacker de Aluguel'],
     [1400, 'Engenheiro de Campo'], [2200, 'Arquiteto de Sistemas'], [3200, 'Fantasma da Rede'], [4500, 'Lenda Viva']
@@ -4776,12 +5054,27 @@ type Expect<T extends true> = T;
   const allLessons = (c) => c.units.flatMap((u) => u.lessons);
   const courseDone = (c) => allLessons(c).filter((l) => P().done[l.id]).length;
   const coursePct = (c) => Math.round((courseDone(c) / Math.max(1, allLessons(c).length)) * 100);
+  // Mastery learning: o 1º lição de cada módulo exige o checkpoint do módulo anterior.
   const isUnlocked = (c, lesson) => {
-    if (P().settings.unlockAll) return true;
+    if (P().settings.unlockAll || P().done[lesson.id]) return true;
     const ls = allLessons(c); const i = ls.findIndex((l) => l.id === lesson.id);
-    return i === 0 || !!P().done[ls[i - 1].id] || !!P().done[lesson.id];
+    if (i === 0) return true;
+    if (!P().done[ls[i - 1].id]) return false;
+    const ui = c.units.findIndex((u) => u.lessons[0].id === lesson.id);
+    return ui <= 0 || TD.ped.unitMastered(P(), c, ui - 1) || !TD.ped.checkpointLesson(c, ui - 1, 'x');
   };
-  const nextLesson = (c) => allLessons(c).find((l) => !P().done[l.id]) || null;
+  const unitDone = (c, ui) => c.units[ui].lessons.every((l) => P().done[l.id]);
+  const checkpointOpen = (c, ui) => P().settings.unlockAll || unitDone(c, ui);
+  // próxima coisa a fazer na trilha: lição pendente ou checkpoint pendente
+  function nextTarget(c) {
+    for (let ui = 0; ui < c.units.length; ui++) {
+      const pending = c.units[ui].lessons.find((l) => !P().done[l.id]);
+      if (pending) return isUnlocked(c, pending) ? pending : null;
+      if (!TD.ped.unitMastered(P(), c, ui) && TD.ped.checkpointLesson(c, ui, 'x')) return { id: '@cp' + ui, title: 'Checkpoint: ' + c.units[ui].title, checkpoint: ui };
+    }
+    return null;
+  }
+  const nextLesson = (c) => nextTarget(c);
   const liveStreak = () => (P().lastDay === dayKey() || P().lastDay === yesterday() ? P().streak : 0);
   const todayXP = () => (P().days[dayKey()] || {}).xp || 0;
   const goal = () => P().settings.goal || 30;
@@ -4862,6 +5155,14 @@ type Expect<T extends true> = T;
     if (doneN < 3 || now() - last < 7 * 86400000) return '';
     return `<div class="banner warn cut"><div class="grow"><span class="hud" style="color:var(--magenta)">Backup</span><strong>${last ? 'Seu último backup em arquivo tem mais de 7 dias' : 'Você ainda não exportou nenhum backup em arquivo'}</strong></div><a class="btn" href="#dados">Fazer backup</a></div>`;
   }
+  function reviewBanner() {
+    const due = TD.ped.dueItems(P(), COURSES, now());
+    const total = Object.keys(P().srs || {}).length;
+    if (!total) return '';
+    if (due.length) return `<div class="banner cut review-banner"><div class="grow"><span class="hud" style="color:var(--cyan)">Revisão espaçada</span><strong>Revisão do dia: ${due.length} ${due.length === 1 ? 'item' : 'itens'} pra fixar</strong><span style="color:var(--muted);font-size:14px">Perguntas e exercícios de lições anteriores, misturados. Leva poucos minutos e é o que faz você não esquecer.</span></div><button class="btn primary" data-start="x:@review" style="--accent:var(--cyan)">Revisar agora ${ICON.play}</button></div>`;
+    const nd = TD.ped.nextDue(P());
+    return `<div class="banner cut review-banner"><div class="grow"><span class="hud" style="color:var(--cyan)">Revisão espaçada</span><strong>Memória em dia</strong><span style="color:var(--muted);font-size:14px">${total} itens no seu ciclo de revisão. Próxima revisão: ${nd ? esc(new Date(nd).toLocaleDateString('pt-BR')) : '-'}.</span></div></div>`;
+  }
   function homeHTML() {
     const last = P().last && byId[P().last] ? byId[P().last] : null;
     const nl = last ? nextLesson(last) : null;
@@ -4874,6 +5175,7 @@ type Expect<T extends true> = T;
           <p>Do zero ao avançado em JavaScript, TypeScript, SQL e HTML/CSS. Lições curtas, código que roda na hora, testes automáticos e um tutor de IA pra destravar. Explicações em português, código em inglês.</p>
         </header>
         ${backupNudge()}
+        ${reviewBanner()}
         ${last && nl ? `
           <div class="banner cut" data-course="${last.id}">
             <span class="chip lg">${esc(last.badge)}</span>
@@ -4897,6 +5199,14 @@ type Expect<T extends true> = T;
   }
 
   /* ---------- mapa da trilha ---------- */
+  function checkpointNodeHTML(c, ui) {
+    if (!TD.ped.checkpointLesson(c, ui, 'x')) return '';
+    const m = (P().mastery || {})[TD.ped.unitKey(c, ui)];
+    const passed = TD.ped.unitMastered(P(), c, ui);
+    const open = checkpointOpen(c, ui);
+    const status = passed ? `dominado · ${Math.round(m.best * 100)}%` : m ? `melhor: ${Math.round(m.best * 100)}% · precisa de ${Math.round(TD.ped.CHECKPOINT_PASS * 100)}%` : open ? 'liberado · revisão misturada do módulo' : 'termine as lições do módulo';
+    return `<div class="node-wrap cp ${open ? '' : 'locked'}"><span class="hex-ring ${open && !passed ? 'current' : ''}"><button class="node diamond ${passed ? 'done' : open ? '' : 'locked'}" ${open ? `data-start="${c.id}:@cp${ui}"` : 'disabled'} aria-label="Checkpoint do módulo ${ui + 1}">${passed ? ICON.check : open ? '◆' : ICON.lock}</button></span><div class="node-label"><strong>Checkpoint do módulo</strong><small>${status}</small></div></div>`;
+  }
   const OFFS = [0, 60, 90, 60, 0, -60, -90, -60];
   function courseHTML(c) {
     const nl = nextLesson(c);
@@ -4928,6 +5238,7 @@ type Expect<T extends true> = T;
                       <div class="node-label"><strong>${esc(l.title)}</strong><small>${dn ? 'completa · revisar' : un ? (cur ? 'próxima missão' : 'disponível') : 'bloqueada'} · ${l.steps.length} etapas${codeN ? ` · ${codeN} código` : ''}</small></div>
                     </div>`;
                   }).join('')}
+                  ${checkpointNodeHTML(c, ui)}
                 </div>
               </section>`;
             }).join('')}
@@ -4941,7 +5252,7 @@ type Expect<T extends true> = T;
               ${nl ? `<button class="btn primary" data-start="${c.id}:${nl.id}">${d ? 'Continuar' : 'Começar'} ${ICON.play}</button>` : ''}
             </div>
             ${c.notes ? `<div class="card cut"><span class="hud">Briefing</span>${md(c.notes)}</div>` : ''}
-            <div class="card cut"><span class="hud">Como funciona</span><p>Cada lição tem explicação, quiz e exercícios. Os testes rodam na hora. Travou? Peça uma dica ao tutor de IA. Quer pular o que já sabe? Libere todas as lições em Configurações.</p></div>
+            <div class="card cut"><span class="hud">Método Trilha</span><p>Teoria em pedaços curtos, quiz pra puxar da memória, exercício com a teoria à mão e modo guiado com blocos. No fim de cada módulo, um checkpoint misturando tudo. E a Revisão do dia traz de volta o que você estudou, no tempo certo pra não esquecer.</p></div>
           </aside>
         </div>
       </div>`;
@@ -5062,39 +5373,80 @@ type Expect<T extends true> = T;
       </div>`;
   }
 
-  /* ---------- player de lição ---------- */
+  /* ---------- player de lição (Método Trilha: ver pedagogy.js e PEDAGOGIA.md) ---------- */
+  const isAsk = (s) => s && (s.t === 'quiz' || s.t === 'predict');
   function findLesson(cid, lid) { const c = byId[cid]; const l = c && allLessons(c).find((x) => x.id === lid); return l ? { c, l } : null; }
+  function newLessonState(c, lesson, kind) {
+    return { c, lesson, kind, i: 0, earned: 0, correct: 0, graded: 0, results: {}, review: kind === 'lesson' && !!P().done[lesson.id], phase: 'step', d: {} };
+  }
   function startLesson(cid, lid) {
+    if (lid === '@review') return startReview();
+    const c = byId[cid]; if (!c) return;
+    if (lid && lid.startsWith('@cp')) {
+      const ui = Number(lid.slice(3));
+      const cp = TD.ped.checkpointLesson(c, ui, String(now()));
+      if (!cp) return;
+      cp.steps = cp.steps.map((s) => Object.assign(s, { _c: c }));
+      S.lesson = newLessonState(c, cp, 'checkpoint');
+      renderLesson(); return;
+    }
     const f = findLesson(cid, lid); if (!f) return;
     P().last = cid; saveProgress();
-    S.lesson = { c: f.c, lesson: f.l, i: 0, earned: 0, correct: 0, graded: 0, review: !!P().done[lid], phase: 'step', d: {} };
+    S.lesson = newLessonState(f.c, f.l, 'lesson');
+    renderLesson();
+  }
+  function startReview() {
+    const items = TD.ped.dueItems(P(), COURSES, now());
+    if (!items.length) { toast('Nada pra revisar agora.'); return; }
+    const steps = items.map((it) => Object.assign({}, it.step, { _c: it.c, _from: it.key, _fromTitle: it.l.title, _blocks: it.step.t === 'code' }));
+    const lesson = { id: '@review', title: 'Revisão do dia', steps };
+    S.lesson = newLessonState(items[0].c, lesson, 'review');
     renderLesson();
   }
   function closeLesson(rerender = true) { S.lesson = null; S.editor = null; if (rerender) render(); }
+  const courseOf = (ls, step) => (step && step._c) || ls.c;
   function stepRunner(c, step) { return step.runner || c.runner; }
   function stepsBar(ls) { return `<div class="steps-bar" aria-hidden="true">${ls.lesson.steps.map((_, i) => `<i class="${i < ls.i || ls.phase === 'complete' ? 'on' : i === ls.i ? 'now' : ''}"></i>`).join('')}</div>`; }
+  function sourceLesson(step, ls) {
+    if (step._from) { const f = TD.ped && step._c ? allLessons(step._c).find((l) => l.id === step._from.split('#')[0]) : null; return f || null; }
+    return ls.lesson;
+  }
+  function theoryHTML(step, ls) {
+    const src = sourceLesson(step, ls); if (!src) return '';
+    const learns = src.steps.filter((s) => s.t === 'learn'); if (!learns.length) return '';
+    return `<details class="theory"${ls.d.theoryOpen ? ' open' : ''}><summary>Revisar a teoria${step._fromTitle ? ': ' + esc(step._fromTitle) : ' desta lição'}</summary>${learns.map((s) => `<h4>${esc(s.title)}</h4>${md(s.body)}`).join('')}</details>`;
+  }
 
   function renderLesson() {
     const ls = S.lesson; app.className = 'app in-lesson';
     const step = ls.lesson.steps[ls.i];
-    const top = `<div class="lesson-top"><button class="icon-btn" data-act="quit" aria-label="Sair da lição">${ICON.close}</button><span class="title">${esc(ls.lesson.title)}</span>${stepsBar(ls)}<span class="xp-chip">+${ls.earned} XP</span></div>`;
+    const c = courseOf(ls, step);
+    const label = ls.kind === 'review' ? 'Revisão do dia' : ls.kind === 'checkpoint' ? ls.lesson.title : ls.lesson.title;
+    const top = `<div class="lesson-top"><button class="icon-btn" data-act="quit" aria-label="Sair">${ICON.close}</button><span class="title">${esc(label)}</span>${stepsBar(ls)}<span class="xp-chip">+${ls.earned} XP</span></div>`;
     let body = '', foot = '';
     if (ls.phase === 'complete') {
       body = completeHTML(ls);
-      foot = `<div class="lesson-foot"><div class="msg"></div><button class="btn" data-act="back">Voltar ao mapa</button>${ls.nextId ? `<button class="btn primary" data-start="${ls.c.id}:${ls.nextId}">Próxima lição ${ICON.play}</button>` : ''}</div>`;
+      foot = `<div class="lesson-foot"><div class="msg"></div><button class="btn" data-act="back">${ls.kind === 'review' ? 'Voltar ao início' : 'Voltar ao mapa'}</button>${ls.nextStart ? `<button class="btn primary" data-start="${ls.nextStart}">${ls.nextLabel || 'Próxima lição'} ${ICON.play}</button>` : ''}</div>`;
     } else if (step.t === 'learn') {
-      body = `<div class="reading"><span class="hud" style="color:var(--accent)">Briefing ${ls.i + 1}/${ls.lesson.steps.length}</span><h2>${esc(step.title)}</h2>${md(step.body)}</div>`;
-      foot = `<div class="lesson-foot"><div class="msg"><span>Leia com calma. O código de exemplo é o padrão usado no mercado.</span></div><button class="btn primary" data-act="next">Continuar <kbd>Enter</kbd></button></div>`;
-    } else if (step.t === 'quiz') { body = quizHTML(step, ls); foot = quizFoot(step, ls); }
+      const chunks = TD.ped.chunkBody(step.body);
+      const shown = Math.min(ls.d.shown || 1, chunks.length);
+      const more = shown < chunks.length;
+      body = `<div class="reading"><span class="hud" style="color:var(--accent)">Briefing${chunks.length > 1 ? ` · parte ${shown}/${chunks.length}` : ''}</span><h2>${esc(step.title)}</h2>${chunks.slice(0, shown).map((ch, k) => `<div class="card-chunk${k === shown - 1 && k > 0 ? ' fresh' : ''}" id="chunk-${k}">${md(ch)}</div>`).join('')}</div>`;
+      foot = `<div class="lesson-foot"><div class="msg"><span>${more ? 'Leia este pedaço e continue quando entender.' : 'Fechou a ideia? Bora praticar.'}</span></div><button class="btn primary" data-act="${more ? 'reveal' : 'next'}">${more ? 'Continuar' : 'Entendi'} <kbd>Enter</kbd></button></div>`;
+    } else if (isAsk(step)) { body = quizHTML(step, ls); foot = quizFoot(step, ls); }
     else { body = codeHTML(step, ls); foot = codeFoot(step, ls); }
-    app.innerHTML = `<main class="main lesson" data-course="${ls.c.id}">${top}<div class="lesson-body">${body}</div>${foot}</main>`;
+    app.innerHTML = `<main class="main lesson" data-course="${c.id}">${top}<div class="lesson-body">${body}</div>${foot}</main>`;
     if (step && step.t === 'code' && ls.phase !== 'complete') mountEditor(step, ls);
     else { const pb = app.querySelector('.lesson-foot .btn.primary:not(:disabled)'); if (pb) pb.focus({ preventScroll: true }); }
+    const fresh = app.querySelector('.card-chunk.fresh'); if (fresh) fresh.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
+  function originTag(step) { return step._fromTitle ? `<span class="origin">de: ${esc(step._c ? step._c.name + ' · ' : '')}${esc(step._fromTitle)}</span>` : ''; }
   function quizHTML(step, ls) {
     const d = ls.d;
-    return `<div class="reading"><span class="hud" style="color:var(--accent)">Quiz</span><div class="quiz-q">${inline(step.q)}</div>
+    const kind = step.t === 'predict' ? 'Preveja o resultado' : 'Quiz';
+    return `<div class="reading"><span class="hud" style="color:var(--accent)">${kind}</span>${originTag(step)}<div class="quiz-q">${inline(step.q)}</div>
+      ${step.code ? `<div class="md"><pre><code>${esc(step.code)}</code></pre></div>` : ''}
       <div class="opts">${step.opts.map((o, i) => {
         let cls = ''; if (d.checked) cls = i === step.a ? 'right' : i === d.sel ? 'wrong' : ''; else if (d.sel === i) cls = 'sel';
         return `<button class="opt ${cls}" data-opt="${i}" ${d.checked ? 'disabled' : ''}><span class="k">${i + 1}</span><code>${esc(o)}</code></button>`;
@@ -5102,23 +5454,40 @@ type Expect<T extends true> = T;
   }
   function quizFoot(step, ls) {
     const d = ls.d;
-    if (!d.checked) return `<div class="lesson-foot"><div class="msg"><span>Escolha uma opção (teclas 1 a ${step.opts.length})</span></div><button class="btn primary" data-act="check" ${d.sel == null ? 'disabled' : ''}>Verificar <kbd>Enter</kbd></button></div>`;
+    if (!d.checked) return `<div class="lesson-foot"><div class="msg"><span>${step.t === 'predict' ? 'Leia o código e pense no que ele faz antes de escolher.' : 'Escolha uma opção'} (teclas 1 a ${step.opts.length})</span></div><button class="btn primary" data-act="check" ${d.sel == null ? 'disabled' : ''}>Verificar <kbd>Enter</kbd></button></div>`;
     const ok = d.sel === step.a;
-    return `<div class="lesson-foot ${ok ? 'good' : 'badf'}"><div class="msg"><strong>${ok ? 'Acesso liberado' : 'Resposta errada'}</strong>${md(step.why)}</div><button class="btn primary" data-act="next">Continuar <kbd>Enter</kbd></button></div>`;
+    return `<div class="lesson-foot ${ok ? 'good' : 'badf'}"><div class="msg"><strong>${ok ? 'Acesso liberado' : 'Resposta errada'}</strong>${md(step.why)}${ok ? '' : '<span>Essa pergunta volta na sua revisão, pra fixar.</span>'}</div><button class="btn primary" data-act="next">Continuar <kbd>Enter</kbd></button></div>`;
   }
 
-  function fileName(r) { return { js: 'main.js', ts: 'main.ts', sql: 'query.sql', web: 'index.html', dom: 'index.html' }[r]; }
+  function fileName(r) { return { js: 'main.js', ts: 'main.ts', sql: 'query.sql', web: 'index.html', dom: 'index.html' }[r] || 'main.txt'; }
+  function unitIndexOf(c, lessonId) { return c.units.findIndex((u) => u.lessons.some((l) => l.id === lessonId)); }
+  function defaultMode(step, ls) {
+    if (step._blocks) return TD.ped.parsonsBlocks(step, 'x') ? 'blocks' : 'write';
+    if (ls.kind === 'lesson' && unitIndexOf(ls.c, ls.lesson.id) === 0 && !ls.review && TD.ped.parsonsBlocks(step, 'x')) return 'blocks';
+    return 'write';
+  }
+  function ensurePz(step, ls) {
+    const d = ls.d;
+    if (!d.pz) { const blocks = TD.ped.parsonsBlocks(step, (step._from || ls.lesson.id) + '#' + ls.i); d.pz = blocks ? { pool: blocks, answer: [] } : null; }
+    return d.pz;
+  }
+  const pzCode = (d) => d.pz ? d.pz.answer.map((b) => b.text).join('\n') : '';
+
   function codeHTML(step, ls) {
-    const c = ls.c, d = ls.d, r = stepRunner(c, step);
-    const saved = (S.store.state.code[ls.lesson.id] || {}).steps || {};
+    const c = courseOf(ls, step), d = ls.d, r = stepRunner(c, step);
+    if (!d.mode) d.mode = defaultMode(step, ls);
+    const canBlocks = !!TD.ped.parsonsBlocks(step, 'x');
+    const saved = ls.kind === 'lesson' ? ((S.store.state.code[ls.lesson.id] || {}).steps || {}) : {};
     return `
       <div class="workspace">
         <section class="brief">
-          <span class="hud" style="color:var(--accent)">Exercício</span>
+          <span class="hud" style="color:var(--accent)">${d.mode === 'blocks' ? 'Exercício · modo guiado' : 'Exercício'}</span>${originTag(step)}
           <h2>${esc(step.title)}</h2>
           ${md(step.task)}
+          ${d.mode === 'blocks' ? '<div class="hint"><strong>Modo guiado:</strong> clique nos blocos na ordem certa pra montar o código. Depois rode. Quando se sentir seguro, troque pra <strong>Escrever</strong>.</div>' : ''}
           ${r === 'sql' && c.dbNotes && c.dbNotes[step.db || 'shop'] ? `<div class="hint">${md(c.dbNotes[step.db || 'shop'])}</div>` : ''}
           <div><span class="hud" style="display:block;margin-bottom:8px">Testes</span><ul class="tests" id="tests">${testList(step, c, d)}</ul></div>
+          ${theoryHTML(step, ls)}
           ${d.showHint ? `<div class="hint"><strong>Dica:</strong> ${inline(step.hint)}</div>` : `<button class="btn sm" data-act="hint">Mostrar dica</button>`}
           ${tutorAvailable() && ls.tutorOff !== true ? `
           <div class="tutor cut">
@@ -5132,7 +5501,8 @@ type Expect<T extends true> = T;
         <section class="editor-col">
           <div class="ed-bar">
             <span class="file">${fileName(r)}</span>
-            ${saved[ls.i] != null ? '<button class="btn ghost sm" data-act="load-saved">Meu código salvo</button>' : ''}
+            ${canBlocks ? `<span class="seg" role="group" aria-label="Modo"><button class="${d.mode === 'blocks' ? 'on' : ''}" data-act="mode-blocks">Blocos</button><button class="${d.mode === 'write' ? 'on' : ''}" data-act="mode-write">Escrever</button></span>` : ''}
+            ${d.mode === 'write' && saved[ls.i] != null ? '<button class="btn ghost sm" data-act="load-saved">Meu código salvo</button>' : ''}
             <button class="btn ghost sm" data-act="reset">Recomeçar</button>
             ${d.fails >= 2 || d.passed ? `<button class="btn ghost sm" data-act="solution">${d.showSolution ? 'Esconder' : 'Ver'} solução</button>` : ''}
             <button class="btn primary sm" data-act="run" ${d.running ? 'disabled' : ''}>${ICON.play} ${d.running ? 'Rodando...' : 'Rodar'} <kbd>Ctrl ↵</kbd></button>
@@ -5172,39 +5542,65 @@ type Expect<T extends true> = T;
     if (!t) return '<pre class="console"><span class="dim">Nenhuma row.</span></pre>';
     return `<table class="rtable">${caption ? `<caption>${esc(caption)}</caption>` : ''}<thead><tr>${t.columns.map((x) => `<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${t.values.slice(0, 200).map((row) => `<tr>${row.map((v) => `<td>${v === null ? 'NULL' : esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   }
-  function consoleHTML(res, empty) {
+  function explainHTML(r, res) {
+    if (!res) return '';
+    const msg = [res.error, ...(res.typeErrors || [])].filter(Boolean).join('\n');
+    const tip = TD.ped.explainError(r, msg);
+    return tip ? `<div class="explain"><strong>O que esse erro quer dizer:</strong> ${inline(tip)}</div>` : '';
+  }
+  function consoleHTML(res, empty, r) {
     if (!res) return `<pre class="console"><span class="dim">${empty}</span></pre>`;
     const lines = [];
     if (res.typeErrors && res.typeErrors.length) lines.push(...res.typeErrors.map((e) => `<span class="err">${esc(e)}</span>`));
     if (res.output && res.output.length) lines.push(...res.output.map((x) => `<span class="prompt">›</span> ${esc(x)}`));
     if (res.error) lines.push(`<span class="err">${esc(res.error)}</span>`);
     if (!lines.length) lines.push('<span class="dim">(nada no console)</span>');
-    return `<pre class="console">${lines.join('\n')}</pre>`;
+    return `<pre class="console">${lines.join('\n')}</pre>${explainHTML(r, res)}`;
   }
   function outBody(r, d) {
     const tab = d.tab || (r === 'sql' ? 'result' : r === 'web' || r === 'dom' ? 'preview' : 'console');
     if (r === 'web' || r === 'dom') {
-      return `<iframe class="preview-frame ${tab === 'preview' ? '' : 'hidden'}" id="preview" title="Preview"></iframe><div id="dom-console" class="${tab === 'console' ? '' : 'hidden'}">${consoleHTML(d.res, 'console.log aparece aqui depois de rodar.')}</div>`;
+      return `<iframe class="preview-frame ${tab === 'preview' ? '' : 'hidden'}" id="preview" title="Preview"></iframe><div id="dom-console" class="${tab === 'console' ? '' : 'hidden'}">${consoleHTML(d.res, 'console.log aparece aqui depois de rodar.', r)}</div>`;
     }
     const res = d.res;
     if (r === 'sql') {
       if (tab === 'expected') return res ? tableHTML(res.expectedTable, 'Resultado esperado') : '<pre class="console"><span class="dim">Rode a query pra comparar com o esperado.</span></pre>';
       if (!res) return '<pre class="console"><span class="dim">Rode a query pra ver o resultado aqui.</span></pre>';
-      if (res.error) return `<pre class="console"><span class="err">${esc(res.error)}</span></pre>`;
+      if (res.error) return `<pre class="console"><span class="err">${esc(res.error)}</span></pre>${explainHTML(r, res)}`;
       return (res.output ? `<pre class="console"><span class="dim">${esc(res.output.join('\n'))}</span></pre>` : '') + (res.table ? tableHTML(res.table) : '');
     }
-    return consoleHTML(res, 'A saída do console.log aparece aqui.');
+    return consoleHTML(res, 'A saída do console.log aparece aqui.', r);
   }
   function codeFoot(step, ls) {
     const d = ls.d;
-    if (d.passed) return `<div class="lesson-foot good"><div class="msg"><strong>Todos os testes passaram</strong><span>${d.usedSolution ? 'Reescreva depois sem olhar, pra fixar.' : 'Código limpo. Bora pra próxima.'}</span></div><button class="btn primary" data-act="next">Continuar <kbd>Enter</kbd></button></div>`;
-    if (d.results) return `<div class="lesson-foot badf"><div class="msg"><strong>${d.results.filter((r) => r.pass).length} de ${d.results.length} testes passando</strong><span>Ajuste e rode de novo.${d.fails >= 2 ? ' A solução já está liberada se precisar.' : ''}</span></div><button class="btn primary" data-act="run">Rodar de novo</button></div>`;
-    return `<div class="lesson-foot"><div class="msg"><span>Escreva o código e clique em Rodar.</span></div><button class="btn primary" data-act="run">Rodar</button></div>`;
+    if (d.passed) {
+      const msg = d.usedSolution ? 'Reescreva depois sem olhar, pra fixar.' : d.mode === 'blocks' && ls.kind === 'lesson' ? 'Montou certinho. Quer fixar? Tente escrever do zero.' : 'Código limpo. Bora pra próxima.';
+      const extra = d.mode === 'blocks' && ls.kind === 'lesson' && !d.rewritten ? '<button class="btn" data-act="rewrite">Escrever do zero</button>' : '';
+      return `<div class="lesson-foot good"><div class="msg"><strong>Todos os testes passaram</strong><span>${msg}</span></div>${extra}<button class="btn primary" data-act="next">Continuar <kbd>Enter</kbd></button></div>`;
+    }
+    if (d.results) {
+      const offer = d.mode === 'write' && TD.ped.parsonsBlocks(step, 'x') ? ' Travou? Troque pra <strong>Blocos</strong> e monte o código.' : '';
+      return `<div class="lesson-foot badf"><div class="msg"><strong>${d.results.filter((r) => r.pass).length} de ${d.results.length} testes passando</strong><span>Ajuste e rode de novo.${offer}${d.fails >= 2 ? ' A solução já está liberada se precisar.' : ''}</span></div>${offer ? '<button class="btn" data-act="mode-blocks">Montar com blocos</button>' : ''}<button class="btn primary" data-act="run">Rodar de novo</button></div>`;
+    }
+    return `<div class="lesson-foot"><div class="msg"><span>${d.mode === 'blocks' ? 'Monte o código com os blocos e clique em Rodar.' : 'Escreva o código e clique em Rodar.'}</span></div><button class="btn primary" data-act="run">Rodar</button></div>`;
   }
-  const cmMode = (r) => ({ js: 'javascript', ts: 'text/typescript', sql: 'text/x-sqlite', web: 'htmlmixed', dom: 'htmlmixed' }[r]);
+  const cmMode = (r) => ({ js: 'javascript', ts: 'text/typescript', sql: 'text/x-sqlite', web: 'htmlmixed', dom: 'htmlmixed' }[r] || null);
 
+  function blocksHTML(d) {
+    const pz = d.pz;
+    const blk = (b, act) => `<button class="pz-b" data-pz="${act}:${b.id}"><code>${esc(b.text)}</code></button>`;
+    return `<div class="parsons">
+      <div class="pz-col"><span class="hud">Blocos disponíveis</span><div class="pz-pool">${pz.pool.map((b) => blk(b, 'add')).join('') || '<p class="dim">Todos os blocos foram usados.</p>'}</div></div>
+      <div class="pz-col"><span class="hud">Seu código · clique pra devolver</span><div class="pz-answer">${pz.answer.map((b) => blk(b, 'rm')).join('') || '<p class="dim">Clique nos blocos à esquerda, na ordem.</p>'}</div></div>
+    </div>`;
+  }
   function mountEditor(step, ls) {
-    const host = document.getElementById('ed-host'); const d = ls.d; const r = stepRunner(ls.c, step);
+    const host = document.getElementById('ed-host'); const d = ls.d; const r = stepRunner(courseOf(ls, step), step);
+    if (d.mode === 'blocks' && !d.showSolution && ensurePz(step, ls)) {
+      host.innerHTML = blocksHTML(d);
+      S.editor = { getValue: () => pzCode(d), focus: () => {} };
+      return;
+    }
     if (d.code == null) d.code = step.starter || '';
     const value = d.showSolution ? step.solution : d.code;
     if (window.CodeMirror) {
@@ -5214,7 +5610,7 @@ type Expect<T extends true> = T;
         extraKeys: { 'Ctrl-Enter': () => runCode(), 'Cmd-Enter': () => runCode(), Tab: (cm) => (cm.somethingSelected() ? cm.indentSelection('add') : cm.replaceSelection('  ', 'end')) }
       });
       S.editor.on('change', () => { if (!d.showSolution) d.code = S.editor.getValue(); });
-      if (!d.showSolution) setTimeout(() => { if (!S.editor) return; S.editor.refresh(); S.editor.focus(); S.editor.setCursor(S.editor.lineCount(), 0); }, 0);
+      if (!d.showSolution) setTimeout(() => { if (!S.editor || !S.editor.refresh) return; S.editor.refresh(); S.editor.focus(); S.editor.setCursor(S.editor.lineCount(), 0); }, 0);
     } else {
       const ta = document.createElement('textarea');
       ta.className = 'plain'; ta.spellcheck = false; ta.id = 'code-input'; ta.setAttribute('aria-label', 'Editor de código');
@@ -5228,18 +5624,18 @@ type Expect<T extends true> = T;
       S.editor = { getValue: () => ta.value, focus: () => ta.focus() };
       if (!d.showSolution) ta.focus();
     }
-    if (r === 'web' || r === 'dom') { const f = document.getElementById('preview'); if (f && r === 'web') f.srcdoc = TD.runners.wrapHTML(value); }
+    if (r === 'web') { const f = document.getElementById('preview'); if (f) f.srcdoc = TD.runners.wrapHTML(value); }
   }
   function refreshCodeChrome() {
-    const ls = S.lesson, step = ls.lesson.steps[ls.i], d = ls.d, r = stepRunner(ls.c, step);
-    const tests = document.getElementById('tests'); if (tests) tests.innerHTML = testList(step, ls.c, d);
+    const ls = S.lesson, step = ls.lesson.steps[ls.i], d = ls.d, r = stepRunner(courseOf(ls, step), step);
+    const tests = document.getElementById('tests'); if (tests) tests.innerHTML = testList(step, courseOf(ls, step), d);
     const tabs = document.getElementById('out-tabs'); if (tabs) tabs.innerHTML = outTabs(r, d);
     const ob = document.getElementById('out-body');
     if (ob) {
       if (r === 'web' || r === 'dom') {
         const tab = d.tab || 'preview';
         const f = document.getElementById('preview'); if (f) f.classList.toggle('hidden', tab !== 'preview');
-        const dc = document.getElementById('dom-console'); if (dc) { dc.classList.toggle('hidden', tab !== 'console'); dc.innerHTML = consoleHTML(d.res, 'console.log aparece aqui depois de rodar.'); }
+        const dc = document.getElementById('dom-console'); if (dc) { dc.classList.toggle('hidden', tab !== 'console'); dc.innerHTML = consoleHTML(d.res, 'console.log aparece aqui depois de rodar.', r); }
       } else ob.innerHTML = outBody(r, d);
     }
     const bar = app.querySelector('.ed-bar');
@@ -5256,8 +5652,10 @@ type Expect<T extends true> = T;
     const step = ls.lesson.steps[ls.i]; if (!step || step.t !== 'code') return;
     const d = ls.d; if (d.running) return;
     if (d.showSolution) { d.showSolution = false; renderLesson(); }
-    const code = S.editor ? S.editor.getValue() : d.code; d.code = code;
-    const r = stepRunner(ls.c, step);
+    const c = courseOf(ls, step);
+    const code = S.editor ? S.editor.getValue() : d.code;
+    if (d.mode !== 'blocks') d.code = code;
+    const r = stepRunner(c, step);
     d.running = true;
     sfx('run');
     d.statusText = r === 'ts' && !window.ts ? 'carregando compilador...' : r === 'sql' && !window.initSqlJs ? 'carregando banco...' : 'executando...';
@@ -5267,7 +5665,7 @@ type Expect<T extends true> = T;
       const R = TD.runners;
       if (r === 'js') res = await R.runJS(code, step);
       else if (r === 'ts') res = await R.runTS(code, step);
-      else if (r === 'sql') res = await R.runSQL(code, step, ls.c);
+      else if (r === 'sql') res = await R.runSQL(code, step, c);
       else res = await R.runWeb(code, step, document.getElementById('preview'));
     } catch (e) {
       res = { output: [], results: [{ name: 'Não foi possível rodar', pass: false, err: e.message }], error: 'Não consegui carregar o que esse exercício precisa. Tente de novo.' };
@@ -5275,45 +5673,50 @@ type Expect<T extends true> = T;
     d.running = false; d.res = res; d.results = res.results;
     d.statusText = `${Math.round(performance.now() - t0)} ms`;
     if (r === 'sql') d.tab = 'result';
-    if (r === 'dom' && res.output && res.output.length && !res.results.every((x) => x.pass)) d.tab = d.tab || 'preview';
     const allPass = res.results.length > 0 && res.results.every((x) => x.pass);
     sfx(allPass ? 'pass' : 'wrong');
     if (allPass && !d.passed) {
       d.passed = true;
-      if (!ls.review) ls.earned += XP.code + (d.usedSolution || d.fails ? 0 : XP.clean);
-      if (!d.fails && !d.usedSolution) ls.correct++;
+      const clean = !d.fails && !d.usedSolution;
+      if (ls.results[ls.i] === undefined) ls.results[ls.i] = clean;
+      if (!ls.review) ls.earned += ls.kind === 'lesson' ? XP.code + (clean && d.mode === 'write' ? XP.clean : 0) : (clean ? XP.reviewItem : 0);
+      if (clean) ls.correct++;
       ls.graded++;
-      const rec = S.store.state.code[ls.lesson.id] || { lesson: ls.lesson.id, steps: {} };
-      rec.steps[ls.i] = code; rec.at = now();
-      S.store.state.code[ls.lesson.id] = rec;
-      S.store.saveCode(ls.lesson.id).catch(() => {});
+      if (ls.kind === 'lesson') {
+        const rec = S.store.state.code[ls.lesson.id] || { lesson: ls.lesson.id, steps: {} };
+        rec.steps[ls.i] = code; rec.at = now();
+        S.store.state.code[ls.lesson.id] = rec;
+        S.store.saveCode(ls.lesson.id).catch(() => {});
+      }
     } else if (!allPass) d.fails = (d.fails || 0) + 1;
     refreshCodeChrome();
   }
 
   async function askTutor() {
     const ls = S.lesson, step = ls.lesson.steps[ls.i], d = ls.d;
+    const c = courseOf(ls, step);
     const q = document.getElementById('tutor-q'); d.tutorQ = q ? q.value.trim() : '';
     const sample = S.caps.sample; if (!sample) return;
-    d.code = S.editor ? S.editor.getValue() : d.code;
+    if (d.mode !== 'blocks') d.code = S.editor ? S.editor.getValue() : d.code;
     d.tutorBusy = true; d.tutorWait = true; d.tutorA = '...';
     rerenderBrief();
     const tests = (d.results || []).map((r) => `- [${r.pass ? 'ok' : 'falhou'}] ${r.name}${r.err ? ' (' + r.err + ')' : ''}`).join('\n') || '(o aluno ainda não rodou o código)';
     const errs = d.res ? [d.res.error, ...(d.res.typeErrors || [])].filter(Boolean).join('\n') : '';
-    const r = stepRunner(ls.c, step);
-    const prompt = `Você é o tutor do app Trilha Dev e está ensinando ${ls.c.name} para um brasileiro (inglês intermediário).
+    const r = stepRunner(c, step);
+    const prompt = `Você é o tutor do app Trilha Dev e está ensinando ${c.name} para um brasileiro iniciante (inglês intermediário).
 Regras:
 - Responda em português do Brasil, direto e amigável, com um toque de humor cyberpunk se couber.
 - Termos técnicos e código ficam em inglês (string, array, function, loop, query, selector, property, type...). Não traduza esses termos.
-- NÃO entregue a solução completa. Aponte o problema e dê uma dica concreta. No máximo 1 ou 2 linhas de código, se for essencial.
+- NÃO entregue a solução completa. Faça no máximo uma pergunta que guie o raciocínio e dê uma dica concreta. No máximo 1 ou 2 linhas de código, se for essencial.
+- Ligue a dica ao conceito da lição, pra ele lembrar da teoria.
 - No máximo 120 palavras. Use crases para código inline.
 
-Lição: ${ls.lesson.title}
+Lição: ${step._fromTitle || ls.lesson.title}
 Exercício: ${step.task}
-${r === 'sql' && ls.c.dbNotes ? 'Banco: ' + ls.c.dbNotes[step.db || 'shop'] + '\n' : ''}
+${r === 'sql' && c.dbNotes ? 'Banco: ' + c.dbNotes[step.db || 'shop'] + '\n' : ''}
 Código atual do aluno:
 \`\`\`
-${d.code}
+${d.mode === 'blocks' ? pzCode(d) : d.code}
 \`\`\`
 
 Testes:
@@ -5348,40 +5751,80 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
   function completeHTML(ls) {
     const pct = ls.graded ? Math.round((ls.correct / ls.graded) * 100) : 100;
     const r = rankOf(P().xp);
-    return `<div class="complete"><div class="trophy">${ICON.trophy}</div><span class="hud" style="color:var(--accent)">Missão concluída</span><h2 class="glitch">${ls.review ? 'Revisão feita' : 'Lição completa'}</h2><p>${esc(ls.lesson.title)} · ${esc(ls.c.name)}</p>
+    let headline = ls.review ? 'Revisão feita' : 'Lição completa', sub = esc(ls.lesson.title) + ' · ' + esc(ls.c.name), extra = '';
+    if (ls.kind === 'review') { headline = 'Memória reforçada'; sub = `${ls.graded} itens revisados`; extra = `<p>${ls.correct} de ${ls.graded} de primeira. O que você errou volta amanhã; o que acertou, só daqui a alguns dias.</p>`; }
+    if (ls.kind === 'checkpoint') {
+      headline = ls.passed ? 'Módulo dominado' : 'Quase lá';
+      extra = ls.passed ? `<p>Você acertou ${pct}% de primeira. O próximo módulo está liberado.</p>` : `<p>Você acertou ${pct}% de primeira e precisa de ${Math.round(TD.ped.CHECKPOINT_PASS * 100)}%. Revise a teoria das lições do módulo e tente de novo: as perguntas mudam.</p>`;
+    }
+    const learned = ls.kind === 'lesson' ? ls.lesson.steps.filter((s) => s.t === 'learn').map((s) => s.title) : [];
+    return `<div class="complete"><div class="trophy">${ICON.trophy}</div><span class="hud" style="color:var(--accent)">${ls.kind === 'checkpoint' ? 'Checkpoint' : 'Missão concluída'}</span><h2 class="glitch">${headline}</h2><p>${sub}</p>
       <div class="tiles"><div class="tile"><small>XP ganho</small><b>+${ls.earned}</b></div><div class="tile"><small>De primeira</small><b>${pct}%</b></div><div class="tile"><small>Sequência</small><b>${liveStreak()}d</b></div></div>
+      ${extra}
+      ${learned.length ? `<div class="recap"><span class="hud">Nesta missão</span><ul>${learned.map((t) => `<li>${esc(t)}</li>`).join('')}</ul><small>Esses pontos voltam na sua Revisão do dia nos próximos dias. É assim que eles vão pra memória de longo prazo.</small></div>` : ''}
       <p>Rank atual: <strong style="color:var(--yellow)">${esc(r.name)}</strong>${r.next ? ` · faltam ${r.next - P().xp} XP pro próximo` : ''}</p>
-      ${ls.rankUp ? `<p style="color:var(--yellow);font-family:var(--font-display);font-size:20px;text-transform:uppercase">Novo rank desbloqueado</p>` : ''}
-      ${ls.nextId ? '' : `<p>Você zerou a trilha de ${esc(ls.c.name)}.</p>`}</div>`;
+      ${ls.rankUp ? `<p style="color:var(--yellow);font-family:var(--font-display);font-size:20px;text-transform:uppercase">Novo rank desbloqueado</p>` : ''}</div>`;
+  }
+  function addXP(p, amount) {
+    p.xp += amount;
+    const t = dayKey();
+    const day = p.days[t] || (p.days[t] = { xp: 0, lessons: 0 });
+    day.xp += amount; day.lessons++;
+    const keys = Object.keys(p.days).sort(); while (keys.length > 400) delete p.days[keys.shift()];
+    if (p.lastDay !== t) { p.streak = p.lastDay === yesterday() ? (p.streak || 0) + 1 : 1; p.lastDay = t; }
+    p.bestStreak = Math.max(p.bestStreak || 0, p.streak);
   }
   function finishLesson() {
     const ls = S.lesson, p = P();
     const before = rankOf(p.xp).level;
-    ls.earned += ls.review ? XP.review : XP.lesson;
-    p.done[ls.lesson.id] = { at: now(), xp: ls.earned };
-    p.xp += ls.earned;
-    const t = dayKey();
-    const day = p.days[t] || (p.days[t] = { xp: 0, lessons: 0 });
-    day.xp += ls.earned; day.lessons++;
-    const keys = Object.keys(p.days).sort(); while (keys.length > 400) delete p.days[keys.shift()];
-    if (p.lastDay !== t) { p.streak = p.lastDay === yesterday() ? (p.streak || 0) + 1 : 1; p.lastDay = t; }
-    p.bestStreak = Math.max(p.bestStreak || 0, p.streak);
+    if (ls.kind === 'lesson') {
+      ls.earned += ls.review ? XP.review : XP.lesson;
+      p.done[ls.lesson.id] = { at: now(), xp: ls.earned };
+      TD.ped.enrollLesson(p, ls.lesson, ls.results, now());
+      const nt = nextTarget(ls.c);
+      if (nt) { ls.nextStart = ls.c.id + ':' + nt.id; ls.nextLabel = nt.checkpoint != null ? 'Checkpoint do módulo' : 'Próxima lição'; }
+    } else if (ls.kind === 'review') {
+      p.srs = p.srs || {};
+      ls.lesson.steps.forEach((s, i) => { p.srs[s._from] = TD.ped.schedule(p.srs[s._from], !!ls.results[i], now()); });
+      ls.earned += XP.reviewDone;
+    } else if (ls.kind === 'checkpoint') {
+      const cp = ls.lesson.checkpoint, key = TD.ped.unitKey(ls.c, cp.unit);
+      const score = ls.graded ? ls.correct / ls.graded : 0;
+      p.mastery = p.mastery || {};
+      const prev = p.mastery[key];
+      ls.passed = score >= TD.ped.CHECKPOINT_PASS;
+      p.mastery[key] = { best: Math.max(prev ? prev.best : 0, score), last: score, at: now() };
+      p.srs = p.srs || {};
+      ls.lesson.steps.forEach((s, i) => { if (s._from) p.srs[s._from] = TD.ped.schedule(p.srs[s._from], !!ls.results[i], now()); });
+      if (ls.passed && !(prev && prev.best >= TD.ped.CHECKPOINT_PASS)) ls.earned += XP.checkpoint;
+      const nt = nextTarget(ls.c);
+      if (nt) { ls.nextStart = ls.c.id + ':' + nt.id; ls.nextLabel = nt.checkpoint != null ? 'Tentar de novo' : 'Próxima lição'; }
+    }
+    addXP(p, ls.earned);
     ls.rankUp = rankOf(p.xp).level > before;
-    sfx(ls.rankUp ? 'rankup' : 'complete');
+    sfx(ls.rankUp ? 'rankup' : ls.kind === 'checkpoint' && !ls.passed ? 'wrong' : 'complete');
     saveProgress();
-    const nl = nextLesson(ls.c); ls.nextId = nl ? nl.id : null;
     ls.phase = 'complete'; renderLesson();
   }
   function nextStep() {
     const ls = S.lesson, step = ls.lesson.steps[ls.i];
     if (step.t === 'code' && !ls.d.passed) return;
-    if (step.t === 'quiz' && !ls.d.checked) return;
+    if (isAsk(step) && !ls.d.checked) return;
+    if (step.t === 'learn') { const n = TD.ped.chunkBody(step.body).length; if ((ls.d.shown || 1) < n) { ls.d.shown = (ls.d.shown || 1) + 1; renderLesson(); return; } }
     if (ls.i + 1 >= ls.lesson.steps.length) { finishLesson(); return; }
     ls.i++; ls.d = {}; S.editor = null; renderLesson();
   }
 
   /* ---------- eventos ---------- */
   app.addEventListener('click', async (e) => {
+    const pzBtn = e.target.closest('[data-pz]');
+    if (pzBtn && S.lesson && S.lesson.d.pz) {
+      const [op, id] = pzBtn.getAttribute('data-pz').split(':'); const pz = S.lesson.d.pz;
+      const from = op === 'add' ? pz.pool : pz.answer, to = op === 'add' ? pz.answer : pz.pool;
+      const k = from.findIndex((b) => b.id === id); if (k >= 0) to.push(from.splice(k, 1)[0]);
+      sfx('select'); const host = document.getElementById('ed-host'); if (host) host.innerHTML = blocksHTML(S.lesson.d);
+      return;
+    }
     const t = e.target.closest('[data-go],[data-start],[data-act],[data-opt],[data-tab],[data-restore-auto]');
     if (!t) { if (e.target.closest('a.rail-item, a.btn, label.btn')) sfx('nav'); return; }
     const act0 = t.getAttribute('data-act');
@@ -5399,12 +5842,22 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
     }
     const act = t.getAttribute('data-act'); const ls = S.lesson;
     switch (act) {
-      case 'quit': case 'back': { const cid = ls.c.id; closeLesson(false); if (location.hash === '#' + cid) route(); else location.hash = cid; break; }
-      case 'next': nextStep(); break;
-      case 'check': { const step = ls.lesson.steps[ls.i]; if (ls.d.sel == null) return; ls.d.checked = true; ls.graded++; sfx(ls.d.sel === step.a ? 'correct' : 'wrong'); if (ls.d.sel === step.a) { ls.correct++; if (!ls.review) ls.earned += XP.quiz; } renderLesson(); break; }
+      case 'quit': case 'back': { const dest = ls.kind === 'review' ? '' : ls.c.id; closeLesson(false); if (location.hash.replace('#', '') === dest) route(); else location.hash = dest; break; }
+      case 'next': case 'reveal': nextStep(); break;
+      case 'check': {
+        const step = ls.lesson.steps[ls.i]; if (ls.d.sel == null) return;
+        const ok = ls.d.sel === step.a;
+        ls.d.checked = true; ls.graded++; if (ls.results[ls.i] === undefined) ls.results[ls.i] = ok;
+        sfx(ok ? 'correct' : 'wrong');
+        if (ok) { ls.correct++; if (!ls.review) ls.earned += ls.kind === 'lesson' ? XP.quiz : XP.reviewItem; }
+        renderLesson(); break;
+      }
+      case 'mode-blocks': if (ls.d.mode !== 'blocks') { if (S.editor && S.editor.getValue && ls.d.mode === 'write') ls.d.code = S.editor.getValue(); ls.d.mode = 'blocks'; ls.d.showSolution = false; renderLesson(); } break;
+      case 'mode-write': if (ls.d.mode !== 'write') { ls.d.mode = 'write'; if (ls.d.code == null) ls.d.code = ls.lesson.steps[ls.i].starter || ''; renderLesson(); } break;
+      case 'rewrite': ls.d = { mode: 'write', rewritten: true, passed: false, code: ls.lesson.steps[ls.i].starter || '' }; S.editor = null; renderLesson(); break;
       case 'run': runCode(); break;
       case 'hint': ls.d.showHint = true; ls.d.code = S.editor ? S.editor.getValue() : ls.d.code; renderLesson(); break;
-      case 'reset': ls.d.code = ls.lesson.steps[ls.i].starter || ''; ls.d.showSolution = false; renderLesson(); break;
+      case 'reset': if (ls.d.mode === 'blocks') ls.d.pz = null; else ls.d.code = ls.lesson.steps[ls.i].starter || ''; ls.d.showSolution = false; renderLesson(); break;
       case 'load-saved': { const s = (S.store.state.code[ls.lesson.id] || {}).steps || {}; if (s[ls.i] != null) { ls.d.code = s[ls.i]; ls.d.showSolution = false; renderLesson(); } break; }
       case 'solution': { const d = ls.d; if (!d.showSolution) { d.code = S.editor ? S.editor.getValue() : d.code; d.showSolution = true; if (!d.passed) d.usedSolution = true; } else d.showSolution = false; renderLesson(); break; }
       case 'tutor': askTutor(); break;
@@ -5449,10 +5902,10 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
     const inField = e.target.closest && e.target.closest('textarea, input, select, .CodeMirror');
     if (e.key === 'Escape' && !inField) { const q = app.querySelector('[data-act="quit"]'); if (q) q.click(); return; }
     if (ls.phase === 'complete') return;
-    if (step.t === 'quiz' && !ls.d.checked && /^[1-9]$/.test(e.key) && !inField) { const n = Number(e.key) - 1; if (n < step.opts.length) { ls.d.sel = n; sfx('select'); renderLesson(); } return; }
+    if (isAsk(step) && !ls.d.checked && /^[1-9]$/.test(e.key) && !inField) { const n = Number(e.key) - 1; if (n < step.opts.length) { ls.d.sel = n; sfx('select'); renderLesson(); } return; }
     if (e.key === 'Enter' && !inField && !(e.target.closest && e.target.closest('button,a'))) {
       e.preventDefault();
-      if (step.t === 'quiz' && !ls.d.checked) { if (ls.d.sel != null) app.querySelector('[data-act="check"]').click(); }
+      if (isAsk(step) && !ls.d.checked) { if (ls.d.sel != null) app.querySelector('[data-act="check"]').click(); }
       else if (step.t !== 'code' || ls.d.passed) nextStep();
     }
   });

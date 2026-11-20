@@ -1,7 +1,7 @@
 /* TypeScript — módulos 1 a 4: tipos básicos, objects, unions, functions e generics */
 (function (TD) {
   'use strict';
-  const { learn, quiz, code, lesson, unit } = TD.C;
+  const { learn, quiz, predict, code, lesson, unit } = TD.C;
 
   TD.courses.push({
     id: 'ts', name: 'TypeScript', badge: 'TS', runner: 'ts',
@@ -24,6 +24,7 @@ Quase sempre o TypeScript **infere** o tipo sozinho: \`let age = 30\` já faz \`
 
 No fim, o TypeScript é **compilado** pra JavaScript comum: os tipos somem e o código roda em qualquer lugar.`),
           quiz('Em `let city = "Berlin"`, qual tipo o TypeScript infere pra `city`?', ['any', 'string', '"Berlin"', 'unknown'], 1, 'Com `let`, ele infere o tipo geral `string`. Com `const` seria o literal `"Berlin"`.'),
+          predict('Esse código compila?', 'let total: number = 10;\ntotal = total + 5;\ntotal = "15";', ['Compila sem erros', 'Erro na linha 2', 'Erro na linha 3: string não é number', 'Erro na linha 1'], 2, 'Somar 5 continua number. Na linha 3, `"15"` é string, e `total` foi declarado como number.'),
           code({ title: 'Conserte o tipo', task: 'O código tem um type error. Corrija pra que `age` seja um `number` com valor `30` e compile sem erros.',
             starter: 'let age: number = "30";\nconsole.log(age + 1);\n', solution: 'let age: number = 30;\nconsole.log(age + 1);', hint: 'Tire as aspas: `30` é number, `"30"` é string.',
             tests: [['`age` vale 30', 'age === 30'], ['Mostra 31 no console', '__logs.includes("31")']] })),
@@ -47,6 +48,7 @@ function log(msg: string): void { console.log(msg); }   // não retorna nada
 
 No modo \`strict\`, parâmetro sem tipo é erro (\`implicitly has an 'any' type\`).`),
           quiz('Qual assinatura recebe uma string e retorna um boolean?', ['(s: boolean): string', '(s: string): boolean', '(string): boolean', '(s): string => boolean'], 1, 'Parâmetro `s: string`, retorno `: boolean`.'),
+          predict('Com `function add(a: number, b: number): number`, qual chamada dá type error?', 'add(1, 2);\nadd(1.5, 2);\nadd("1", 2);\nadd(-1, 0);', ['add(1, 2)', 'add(1.5, 2)', 'add("1", 2)', 'add(-1, 0)'], 2, 'Decimais e negativos são number. `"1"` é string.'),
           code({ title: 'Área do retângulo', task: 'Tipe `width` e `height` como `number` e o retorno como `number`.',
             starter: 'function area(width, height) {\n  return width * height;\n}\n', solution: 'function area(width: number, height: number): number {\n  return width * height;\n}', hint: 'Cada parâmetro com `: number` e o retorno depois dos parênteses: `): number {`.',
             tests: [['area(3, 4) → 12', 'area(3, 4) === 12']], requires: [['Parâmetros tipados', 'width\\s*:\\s*number[\\s\\S]*height\\s*:\\s*number'], ['Retorno tipado', '\\)\\s*:\\s*number\\s*\\{']] })),

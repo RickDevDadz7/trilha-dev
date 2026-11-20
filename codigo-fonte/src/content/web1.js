@@ -1,7 +1,7 @@
 /* HTML & CSS — módulos 1 a 4: HTML, semântica e acessibilidade, formulários, CSS base */
 (function (TD) {
   'use strict';
-  const { learn, quiz, code, lesson, unit } = TD.C;
+  const { learn, quiz, predict, code, lesson, unit } = TD.C;
 
   TD.courses.push({
     id: 'web', name: 'HTML & CSS', badge: '</>', runner: 'web',
@@ -24,6 +24,7 @@
 
 Use cada tag pelo **significado**, não pela aparência. Visual é trabalho do CSS.`),
           quiz('Qual tag representa o título principal do conteúdo?', ['<title>', '<head>', '<h1>', '<header>'], 2, '`<h1>` é o heading principal. `<title>` é o nome na aba do browser.'),
+          predict('Como o browser mostra isso?', '<h1>Jobs</h1>\n<p>Find a <strong>remote</strong> job.</p>', ['Tudo do mesmo tamanho, numa linha', 'Um título grande e, embaixo, um parágrafo com "remote" em negrito', 'Só o título aparece', 'As tags aparecem como texto'], 1, 'Cada tag tem um significado e um visual padrão: h1 é título grande, p é parágrafo, strong destaca.'),
           code({ title: 'Minha primeira página', task: 'Crie um `<h1>` com o texto `My first page` e, abaixo, um `<p>` que contenha um trecho em `<strong>`.',
             starter: '<!-- write your HTML -->\n', solution: '<h1>My first page</h1>\n<p>I am learning <strong>HTML</strong> today.</p>', hint: 'Coloque o `<strong>` dentro do `<p>`.',
             tests: [['`<h1>` com "My first page"', '$("h1") && $("h1").textContent.trim() === "My first page"'], ['`<p>` com um `<strong>` dentro', '!!$("p strong")']] })),
@@ -146,16 +147,16 @@ Semântica ajuda leitores de tela, SEO e quem mantém o código. \`<div>\` e \`<
             tests: [['caption "Plans"', '$("table caption") && $("table caption").textContent.trim() === "Plans"'], ['Cabeçalho Plan e Price', '$$("thead th").map(t => t.textContent.trim()).join() === "Plan,Price"'], ['3 rows no tbody', '$$("tbody tr").length === 3'], ['Cada row com 2 células', '$$("tbody tr").every(tr => tr.querySelectorAll("td").length === 2)']] })),
 
         lesson('web-a11y', 'Acessibilidade',
-          learn('Web pra todo mundo', `Acessibilidade (a11y) é fazer a página funcionar com leitor de tela, teclado e para quem enxerga pouco. O básico já resolve muito:
+          learn('Web pra todo mundo', `Acessibilidade (a11y) é fazer a página funcionar com leitor de tela, teclado e para quem enxerga pouco.
+
+O básico já resolve muito:
 
 - Imagens com \`alt\` (ou \`alt=""\` se forem só decorativas).
 - Campos de formulário com \`<label for="id">\`.
 - Ações com \`<button>\`, não \`<div onclick>\`: botões já recebem foco e funcionam com Enter.
 - Headings em ordem (h1 → h2 → h3), sem pular níveis.
 - Botões só com ícone precisam de nome: \`<button aria-label="Close">×</button>\`.
-- Contraste suficiente entre texto e fundo.
-
-Bônus: acessibilidade também melhora SEO e a experiência de todo mundo.`),
+- Contraste suficiente entre texto e fundo.`),
           quiz('Por que usar `<button>` em vez de `<div>` clicável?', ['É mais bonito', 'Já é focável e acionável por teclado e leitores de tela', 'Carrega mais rápido', 'Div não aceita click'], 1, 'Botão nativo vem com foco, teclado e semântica.'),
           code({ title: 'Conserte a acessibilidade', task: 'Corrija o HTML:\n\n- dê um `alt` à imagem\n- ligue o texto "Email" ao input com `<label for>` (o input tem `id="email"`)\n- troque a `div` clicável por um `<button>`\n- dê `aria-label="Close"` ao botão de fechar (×)',
             starter: '<img src="avatar.png">\n\nEmail\n<input id="email" type="email">\n\n<div class="btn">Subscribe</div>\n<button>×</button>\n',
@@ -279,6 +280,7 @@ p { color: gray; }          /* 0-0-1 */
 
 **Herança**: algumas properties (cor, fonte) passam do pai pros filhos; outras (margin, border) não.`),
           quiz('`<p class="intro" id="lead">` com as regras acima fica de que cor?', ['gray', 'blue', 'red', 'black'], 2, 'O id tem a maior especificidade.'),
+          predict('De que cor fica o texto do `<p class="intro" id="lead">`?', 'p { color: gray; }\n#lead { color: red; }\n.intro { color: blue; }', ['gray', 'blue', 'red', 'preto (padrão)'], 2, 'O id tem a maior especificidade e ganha, mesmo vindo antes da regra da class.'),
           code({ title: 'Ganhe a briga', task: 'O botão `.btn-danger` deveria ser vermelho (`rgb(255, 42, 109)`, ou seja `#ff2a6d`), mas a regra `#app button` está ganhando. Sem usar `!important` e sem mexer na regra `#app button`, faça o `.btn-danger` ficar com `background-color: #ff2a6d`.',
             starter: '<style>\n  #app button { background-color: gray; color: white; }\n  .btn-danger { background-color: #ff2a6d; }\n</style>\n\n<div id="app">\n  <button>Save</button>\n  <button class="btn-danger">Delete</button>\n</div>\n',
             solution: '<style>\n  #app button { background-color: gray; color: white; }\n  #app .btn-danger { background-color: #ff2a6d; }\n</style>\n\n<div id="app">\n  <button>Save</button>\n  <button class="btn-danger">Delete</button>\n</div>',
