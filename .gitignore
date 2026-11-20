@@ -1,0 +1,7 @@
+node_modules/
+release/
+codigo-fonte/test/shots/
+codigo-fonte/test/__pycache__/
+*.tmp
+codigo-fonte/dist/
+codigo-fonte/desktop/app/
