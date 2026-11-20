@@ -73,6 +73,7 @@
     return { level: i + 1, name: cur[1], next: nxt ? nxt[0] : null, base: cur[0], pct: nxt ? Math.round(((xp - cur[0]) / (nxt[0] - cur[0])) * 100) : 100 };
   }
   const tutorAvailable = () => !!(S.caps.sample);
+  const sfx = (n, a) => TD.sfx && TD.sfx.play(n, a);
 
   /* ---------- salvamento ---------- */
   function renderSaveState() {
@@ -318,6 +319,11 @@
             <label class="toggle"><input type="checkbox" id="cfg-unlock" ${st.unlockAll ? 'checked' : ''}> Liberar todas as lições (pular o que já sei)</label>
           </div>
           <div class="card cut">
+            <span class="hud">Áudio</span><h3>Efeitos sonoros</h3>
+            <label class="toggle"><input type="checkbox" id="cfg-sound" ${st.sound !== false ? 'checked' : ''}> Sons da interface ligados</label>
+            <div class="field"><label for="cfg-volume">Volume</label><input id="cfg-volume" type="range" min="0" max="100" step="5" value="${Math.round((st.volume ?? 0.6) * 100)}"></div>
+          </div>
+          <div class="card cut">
             <span class="hud">Tutor de IA</span><h3>${inClaude ? 'Usando o Claude da sua conta' : 'Chave da API (opcional)'}</h3>
             ${inClaude ? '<p>Dentro do Claude o tutor usa a sua conta, sem configuração. Na primeira pergunta ele pede sua permissão.</p>' : `
             <p>Fora do Claude, o tutor usa a API da Anthropic com a <strong>sua</strong> chave (cobrada por uso, separada da assinatura). Crie em console.anthropic.com → API Keys. A chave fica só neste aparelho e nunca entra nos backups.</p>
@@ -535,6 +541,7 @@
     const code = S.editor ? S.editor.getValue() : d.code; d.code = code;
     const r = stepRunner(ls.c, step);
     d.running = true;
+    sfx('run');
     d.statusText = r === 'ts' && !window.ts ? 'carregando compilador...' : r === 'sql' && !window.initSqlJs ? 'carregando banco...' : 'executando...';
     refreshCodeChrome();
     const t0 = performance.now(); let res;
@@ -552,6 +559,7 @@
     if (r === 'sql') d.tab = 'result';
     if (r === 'dom' && res.output && res.output.length && !res.results.every((x) => x.pass)) d.tab = d.tab || 'preview';
     const allPass = res.results.length > 0 && res.results.every((x) => x.pass);
+    sfx(allPass ? 'pass' : 'wrong');
     if (allPass && !d.passed) {
       d.passed = true;
       if (!ls.review) ls.earned += XP.code + (d.usedSolution || d.fails ? 0 : XP.clean);
@@ -641,6 +649,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
     if (p.lastDay !== t) { p.streak = p.lastDay === yesterday() ? (p.streak || 0) + 1 : 1; p.lastDay = t; }
     p.bestStreak = Math.max(p.bestStreak || 0, p.streak);
     ls.rankUp = rankOf(p.xp).level > before;
+    sfx(ls.rankUp ? 'rankup' : 'complete');
     saveProgress();
     const nl = nextLesson(ls.c); ls.nextId = nl ? nl.id : null;
     ls.phase = 'complete'; renderLesson();
@@ -655,7 +664,12 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
 
   /* ---------- eventos ---------- */
   app.addEventListener('click', async (e) => {
-    const t = e.target.closest('[data-go],[data-start],[data-act],[data-opt],[data-tab],[data-restore-auto]'); if (!t) return;
+    const t = e.target.closest('[data-go],[data-start],[data-act],[data-opt],[data-tab],[data-restore-auto]');
+    if (!t) { if (e.target.closest('a.rail-item, a.btn, label.btn')) sfx('nav'); return; }
+    const act0 = t.getAttribute('data-act');
+    if (t.hasAttribute('data-start') || t.hasAttribute('data-go')) sfx('nav');
+    else if (t.hasAttribute('data-opt')) sfx('select');
+    else if (!['check', 'run', 'sound'].includes(act0)) sfx('click');
     if (t.hasAttribute('data-start')) { const [cid, lid] = t.getAttribute('data-start').split(':'); startLesson(cid, lid); return; }
     if (t.hasAttribute('data-go')) { const id = t.getAttribute('data-go'); if ('#' + id === location.hash) route(); else location.hash = id; return; }
     if (t.hasAttribute('data-tab')) { S.lesson.d.tab = t.getAttribute('data-tab'); refreshCodeChrome(); return; }
@@ -669,7 +683,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
     switch (act) {
       case 'quit': case 'back': { const cid = ls.c.id; closeLesson(false); if (location.hash === '#' + cid) route(); else location.hash = cid; break; }
       case 'next': nextStep(); break;
-      case 'check': { const step = ls.lesson.steps[ls.i]; if (ls.d.sel == null) return; ls.d.checked = true; ls.graded++; if (ls.d.sel === step.a) { ls.correct++; if (!ls.review) ls.earned += XP.quiz; } renderLesson(); break; }
+      case 'check': { const step = ls.lesson.steps[ls.i]; if (ls.d.sel == null) return; ls.d.checked = true; ls.graded++; sfx(ls.d.sel === step.a ? 'correct' : 'wrong'); if (ls.d.sel === step.a) { ls.correct++; if (!ls.review) ls.earned += XP.quiz; } renderLesson(); break; }
       case 'run': runCode(); break;
       case 'hint': ls.d.showHint = true; ls.d.code = S.editor ? S.editor.getValue() : ls.d.code; renderLesson(); break;
       case 'reset': ls.d.code = ls.lesson.steps[ls.i].starter || ''; ls.d.showSolution = false; renderLesson(); break;
@@ -702,15 +716,22 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
       try { askRestore(JSON.parse(await f.text()), 'o arquivo ' + f.name); } catch (err) { toast('Arquivo inválido: não é um JSON.'); }
       e.target.value = '';
     } else if (e.target.id === 'cfg-goal') { P().settings.goal = Number(e.target.value); await saveProgress(); toast('Meta diária: ' + e.target.value + ' XP'); }
+    else if (e.target.id === 'cfg-sound') { P().settings.sound = e.target.checked; TD.sfx.configure({ on: e.target.checked }); if (e.target.checked) sfx('toggle', true); await saveProgress(); }
+    else if (e.target.id === 'cfg-volume') { P().settings.volume = Number(e.target.value) / 100; TD.sfx.configure({ vol: P().settings.volume }); sfx('correct'); await saveProgress(); }
     else if (e.target.id === 'cfg-unlock') { P().settings.unlockAll = e.target.checked; await saveProgress(); toast(e.target.checked ? 'Todas as lições liberadas.' : 'Lições em sequência de novo.'); }
   });
+  app.addEventListener('mouseover', (e) => {
+    const t = e.target.closest('.course-card, .node:not(:disabled), .opt:not(:disabled), .rail-item, .btn.primary');
+    if (t && !t.contains(e.relatedTarget)) sfx('hover');
+  });
+  document.addEventListener('pointerdown', () => TD.sfx && TD.sfx.unlock(), { once: true });
   document.addEventListener('keydown', (e) => {
     const ls = S.lesson; if (!ls) return;
     const step = ls.lesson.steps[ls.i];
     const inField = e.target.closest && e.target.closest('textarea, input, select, .CodeMirror');
     if (e.key === 'Escape' && !inField) { const q = app.querySelector('[data-act="quit"]'); if (q) q.click(); return; }
     if (ls.phase === 'complete') return;
-    if (step.t === 'quiz' && !ls.d.checked && /^[1-9]$/.test(e.key) && !inField) { const n = Number(e.key) - 1; if (n < step.opts.length) { ls.d.sel = n; renderLesson(); } return; }
+    if (step.t === 'quiz' && !ls.d.checked && /^[1-9]$/.test(e.key) && !inField) { const n = Number(e.key) - 1; if (n < step.opts.length) { ls.d.sel = n; sfx('select'); renderLesson(); } return; }
     if (e.key === 'Enter' && !inField && !(e.target.closest && e.target.closest('button,a'))) {
       e.preventDefault();
       if (step.t === 'quiz' && !ls.d.checked) { if (ls.d.sel != null) app.querySelector('[data-act="check"]').click(); }
@@ -768,6 +789,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
         await saveProgress();
       }
     } catch (e) { /* */ }
+    if (TD.sfx) TD.sfx.configure({ on: P().settings.sound !== false, vol: P().settings.volume ?? 0.6 });
     S.booted = true;
     window.addEventListener('hashchange', route);
     route();

@@ -655,7 +655,43 @@ kbd { font-size: 10.5px; padding: 1px 5px; border: 1px solid currentColor; opaci
 .toast { position: fixed; right: 20px; bottom: 20px; z-index: 60; background: var(--panel-2); border: 1px solid var(--cyan); color: var(--ink); padding: 12px 16px; font-size: 14px; max-width: 380px; box-shadow: 0 0 24px rgba(0, 229, 255, .2); }
 .loading { display: grid; place-items: center; height: 100%; color: var(--cyan); font-family: var(--font-mono); letter-spacing: .14em; text-transform: uppercase; font-size: 12px; }
 
+/* efeitos visuais de feedback */
+@keyframes glitch-shake {
+  0% { transform: translate(0); clip-path: none; }
+  15% { transform: translate(-6px, 1px); filter: hue-rotate(40deg); }
+  30% { transform: translate(5px, -1px); clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%); }
+  45% { transform: translate(-3px, 0); clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%); }
+  60% { transform: translate(3px, 1px); clip-path: none; filter: none; }
+  100% { transform: translate(0); }
+}
+@keyframes neon-flash {
+  0% { box-shadow: inset 0 0 0 0 transparent; }
+  25% { box-shadow: inset 0 0 60px 0 color-mix(in srgb, var(--ok) 45%, transparent); }
+  100% { box-shadow: inset 0 0 0 0 transparent; }
+}
+@keyframes boot-in {
+  0% { opacity: 0; transform: scale(.85); filter: blur(6px) brightness(2); }
+  40% { opacity: 1; transform: scale(1.06); filter: blur(0) brightness(1.6); }
+  55% { transform: scale(.98) translateX(-4px); }
+  70% { transform: scale(1.01) translateX(3px); }
+  100% { transform: scale(1); filter: none; }
+}
+@keyframes scan-sweep { from { transform: translateY(-100%); } to { transform: translateY(100vh); } }
+.lesson-foot.badf { animation: glitch-shake .35s steps(2, end) 1; }
+.lesson-foot.good { animation: neon-flash .7s ease-out 1; }
+.opt.wrong { animation: glitch-shake .35s steps(2, end) 1; }
+.opt.right { animation: neon-flash .7s ease-out 1; }
+.complete .trophy { animation: boot-in .7s ease-out 1; }
+.complete h2 { animation: boot-in .8s .1s ease-out both; }
+.tests li.pass { animation: neon-flash .6s ease-out 1; }
+.lesson::after { content: ""; position: fixed; left: 0; right: 0; top: 0; height: 120px; pointer-events: none; z-index: 40;
+  background: linear-gradient(180deg, transparent, rgba(0, 229, 255, .05), transparent); animation: scan-sweep 7s linear infinite; }
+.node:not(:disabled):hover { filter: brightness(1.15) drop-shadow(0 0 10px var(--accent)); }
+.course-card:hover::before { width: 5px; }
+.btn.primary:active { transform: translateY(1px); }
 @media (prefers-reduced-motion: reduce) {
+  .lesson-foot.badf, .lesson-foot.good, .opt.wrong, .opt.right, .complete .trophy, .complete h2, .tests li.pass { animation: none; }
+  .lesson::after { display: none; }
   .hex-ring.current::before { animation: none; }
   .course-card, .meter > i, .node { transition: none; }
 }
@@ -671,6 +707,8 @@ kbd { font-size: 10.5px; padding: 1px 5px; border: 1px solid currentColor; opaci
   .workspace { grid-template-columns: 1fr; grid-template-rows: auto 72vh; height: auto; }
   .node-wrap { width: auto; }
 }
+
+input[type="range"] { accent-color: var(--yellow); width: 100%; }
 
 </style>
 </head>
@@ -4560,6 +4598,122 @@ type Expect<T extends true> = T;
 })(globalThis.TD = globalThis.TD || {});
 
 </script>
+<script>/* sfx.js */
+/* Efeitos sonoros do Trilha Dev: sintetizados na hora com Web Audio (nenhum arquivo de áudio).
+ * Estética synth/neon: blips de interface, arpejos, ruído filtrado e eco. */
+(function (TD) {
+  'use strict';
+  let ctx = null, master = null, echo = null, noiseBuf = null;
+  let enabled = true, volume = 0.6;
+  let lastHover = 0;
+
+  function init() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    try { ctx = new AC(); } catch (e) { return null; }
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.ratio.value = 4;
+    master = ctx.createGain(); master.gain.value = volume;
+    master.connect(comp); comp.connect(ctx.destination);
+    // eco curto (delay com feedback) pros sons "grandes"
+    const d = ctx.createDelay(1); d.delayTime.value = 0.16;
+    const fb = ctx.createGain(); fb.gain.value = 0.32;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3200;
+    echo = ctx.createGain(); echo.gain.value = 0.35;
+    echo.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(master);
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.5, ctx.sampleRate);
+    const ch = noiseBuf.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+    return ctx;
+  }
+  function ready() {
+    if (!enabled) return null;
+    const c = init(); if (!c) return null;
+    if (c.state === 'suspended') c.resume().catch(() => {});
+    return c;
+  }
+
+  function tone({ f = 440, to = null, type = 'square', dur = 0.08, vol = 0.2, at = 0, attack = 0.004, wet = false, cutoff = 6000, detune = 0 }) {
+    const c = ready(); if (!c) return;
+    const t = c.currentTime + at;
+    const o = c.createOscillator(), g = c.createGain(), flt = c.createBiquadFilter();
+    o.type = type; o.frequency.setValueAtTime(f, t); o.detune.value = detune;
+    if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
+    flt.type = 'lowpass'; flt.frequency.value = cutoff;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(flt); flt.connect(g); g.connect(master); if (wet) g.connect(echo);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  function noise({ dur = 0.1, vol = 0.15, at = 0, from = 800, to = 800, q = 4, type = 'bandpass', wet = false }) {
+    const c = ready(); if (!c) return;
+    const t = c.currentTime + at;
+    const s = c.createBufferSource(), g = c.createGain(), flt = c.createBiquadFilter();
+    s.buffer = noiseBuf;
+    flt.type = type; flt.Q.value = q;
+    flt.frequency.setValueAtTime(from, t); flt.frequency.exponentialRampToValueAtTime(to, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(flt); flt.connect(g); g.connect(master); if (wet) g.connect(echo);
+    s.start(t); s.stop(t + dur + 0.02);
+  }
+
+  const N = (semi) => 440 * Math.pow(2, (semi - 9) / 12); // semitons a partir do C4
+  const SFX = {
+    click() { tone({ f: 1850, to: 1200, type: 'square', dur: 0.035, vol: 0.06, cutoff: 4000 }); noise({ dur: 0.02, vol: 0.03, from: 5000, to: 3000 }); },
+    hover() { const n = performance.now(); if (n - lastHover < 70) return; lastHover = n; tone({ f: 2600, type: 'sine', dur: 0.025, vol: 0.025 }); },
+    select() { tone({ f: 900, to: 1400, type: 'triangle', dur: 0.06, vol: 0.08 }); },
+    nav() { tone({ f: 420, to: 840, type: 'sawtooth', dur: 0.09, vol: 0.05, cutoff: 2200 }); noise({ dur: 0.12, vol: 0.04, from: 600, to: 3500, q: 2 }); },
+    run() { noise({ dur: 0.28, vol: 0.11, from: 300, to: 4200, q: 6 }); tone({ f: 220, to: 660, type: 'sawtooth', dur: 0.22, vol: 0.05, cutoff: 1800 }); },
+    correct() {
+      [0, 4, 7, 12].forEach((s, i) => tone({ f: N(12 + s), type: 'square', dur: 0.11, vol: 0.07, at: i * 0.055, cutoff: 3500, wet: true }));
+      tone({ f: N(36), type: 'sine', dur: 0.35, vol: 0.04, at: 0.2, wet: true });
+    },
+    wrong() {
+      tone({ f: 150, to: 70, type: 'square', dur: 0.26, vol: 0.12, cutoff: 900 });
+      tone({ f: 157, to: 74, type: 'sawtooth', dur: 0.26, vol: 0.08, cutoff: 900 });
+      [0, 0.06, 0.13].forEach((at) => noise({ dur: 0.04, vol: 0.12, at, from: 1800, to: 900, q: 1.5 }));
+    },
+    pass() {
+      tone({ f: N(19), type: 'sawtooth', dur: 0.18, vol: 0.06, cutoff: 2600, wet: true });
+      tone({ f: N(26), type: 'sawtooth', dur: 0.22, vol: 0.05, at: 0.07, cutoff: 3000, wet: true });
+      tone({ f: N(31), type: 'square', dur: 0.3, vol: 0.05, at: 0.14, cutoff: 4000, wet: true });
+      noise({ dur: 0.3, vol: 0.05, from: 2000, to: 8000, q: 1, at: 0.05 });
+    },
+    complete() {
+      tone({ f: N(-12), to: N(-24), type: 'sawtooth', dur: 0.5, vol: 0.1, cutoff: 700 });
+      const seq = [0, 3, 7, 10, 12, 15, 19, 24];
+      seq.forEach((s, i) => tone({ f: N(12 + s), type: i % 2 ? 'square' : 'sawtooth', dur: 0.14, vol: 0.06, at: 0.08 + i * 0.07, cutoff: 3000 + i * 300, wet: true }));
+      tone({ f: N(24), type: 'triangle', dur: 0.9, vol: 0.07, at: 0.7, wet: true });
+      tone({ f: N(31), type: 'triangle', dur: 0.9, vol: 0.05, at: 0.7, wet: true });
+      noise({ dur: 0.6, vol: 0.05, from: 800, to: 9000, q: 1, at: 0.05 });
+    },
+    rankup() {
+      noise({ dur: 0.5, vol: 0.12, from: 200, to: 6000, q: 3 });
+      tone({ f: N(-24), to: N(-12), type: 'sawtooth', dur: 0.6, vol: 0.12, cutoff: 900 });
+      [0, 7, 12, 16, 19, 24, 28, 31].forEach((s, i) => tone({ f: N(12 + s), type: 'square', dur: 0.16, vol: 0.06, at: 0.45 + i * 0.06, cutoff: 5000, wet: true }));
+    },
+    boot() {
+      noise({ dur: 0.35, vol: 0.06, from: 150, to: 2500, q: 5 });
+      [0, 7, 12].forEach((s, i) => tone({ f: N(s), type: 'sawtooth', dur: 0.12, vol: 0.05, at: 0.12 + i * 0.08, cutoff: 2000, wet: true }));
+    },
+    toggle(on) { tone({ f: on ? 700 : 1200, to: on ? 1400 : 600, type: 'square', dur: 0.08, vol: 0.07, cutoff: 3000 }); }
+  };
+
+  TD.sfx = {
+    play(name, arg) { if (!enabled) return false; try { if (!SFX[name]) return false; SFX[name](arg); return true; } catch (e) { return false; } },
+    unlock() { if (enabled) ready(); },
+    configure({ on, vol }) {
+      if (typeof on === 'boolean') enabled = on;
+      if (typeof vol === 'number') { volume = Math.max(0, Math.min(1, vol)); if (master) master.gain.value = volume; }
+    },
+    get enabled() { return enabled; },
+    get volume() { return volume; }
+  };
+})(globalThis.TD = globalThis.TD || {});
+
+</script>
 <script>/* app.js */
 /* Trilha Dev — interface. Depende de: TD.courses (conteúdo), TD.store, TD.runners, TD.local. */
 (function (TD) {
@@ -4636,6 +4790,7 @@ type Expect<T extends true> = T;
     return { level: i + 1, name: cur[1], next: nxt ? nxt[0] : null, base: cur[0], pct: nxt ? Math.round(((xp - cur[0]) / (nxt[0] - cur[0])) * 100) : 100 };
   }
   const tutorAvailable = () => !!(S.caps.sample);
+  const sfx = (n, a) => TD.sfx && TD.sfx.play(n, a);
 
   /* ---------- salvamento ---------- */
   function renderSaveState() {
@@ -4881,6 +5036,11 @@ type Expect<T extends true> = T;
             <label class="toggle"><input type="checkbox" id="cfg-unlock" ${st.unlockAll ? 'checked' : ''}> Liberar todas as lições (pular o que já sei)</label>
           </div>
           <div class="card cut">
+            <span class="hud">Áudio</span><h3>Efeitos sonoros</h3>
+            <label class="toggle"><input type="checkbox" id="cfg-sound" ${st.sound !== false ? 'checked' : ''}> Sons da interface ligados</label>
+            <div class="field"><label for="cfg-volume">Volume</label><input id="cfg-volume" type="range" min="0" max="100" step="5" value="${Math.round((st.volume ?? 0.6) * 100)}"></div>
+          </div>
+          <div class="card cut">
             <span class="hud">Tutor de IA</span><h3>${inClaude ? 'Usando o Claude da sua conta' : 'Chave da API (opcional)'}</h3>
             ${inClaude ? '<p>Dentro do Claude o tutor usa a sua conta, sem configuração. Na primeira pergunta ele pede sua permissão.</p>' : `
             <p>Fora do Claude, o tutor usa a API da Anthropic com a <strong>sua</strong> chave (cobrada por uso, separada da assinatura). Crie em console.anthropic.com → API Keys. A chave fica só neste aparelho e nunca entra nos backups.</p>
@@ -5098,6 +5258,7 @@ type Expect<T extends true> = T;
     const code = S.editor ? S.editor.getValue() : d.code; d.code = code;
     const r = stepRunner(ls.c, step);
     d.running = true;
+    sfx('run');
     d.statusText = r === 'ts' && !window.ts ? 'carregando compilador...' : r === 'sql' && !window.initSqlJs ? 'carregando banco...' : 'executando...';
     refreshCodeChrome();
     const t0 = performance.now(); let res;
@@ -5115,6 +5276,7 @@ type Expect<T extends true> = T;
     if (r === 'sql') d.tab = 'result';
     if (r === 'dom' && res.output && res.output.length && !res.results.every((x) => x.pass)) d.tab = d.tab || 'preview';
     const allPass = res.results.length > 0 && res.results.every((x) => x.pass);
+    sfx(allPass ? 'pass' : 'wrong');
     if (allPass && !d.passed) {
       d.passed = true;
       if (!ls.review) ls.earned += XP.code + (d.usedSolution || d.fails ? 0 : XP.clean);
@@ -5204,6 +5366,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
     if (p.lastDay !== t) { p.streak = p.lastDay === yesterday() ? (p.streak || 0) + 1 : 1; p.lastDay = t; }
     p.bestStreak = Math.max(p.bestStreak || 0, p.streak);
     ls.rankUp = rankOf(p.xp).level > before;
+    sfx(ls.rankUp ? 'rankup' : 'complete');
     saveProgress();
     const nl = nextLesson(ls.c); ls.nextId = nl ? nl.id : null;
     ls.phase = 'complete'; renderLesson();
@@ -5218,7 +5381,12 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
 
   /* ---------- eventos ---------- */
   app.addEventListener('click', async (e) => {
-    const t = e.target.closest('[data-go],[data-start],[data-act],[data-opt],[data-tab],[data-restore-auto]'); if (!t) return;
+    const t = e.target.closest('[data-go],[data-start],[data-act],[data-opt],[data-tab],[data-restore-auto]');
+    if (!t) { if (e.target.closest('a.rail-item, a.btn, label.btn')) sfx('nav'); return; }
+    const act0 = t.getAttribute('data-act');
+    if (t.hasAttribute('data-start') || t.hasAttribute('data-go')) sfx('nav');
+    else if (t.hasAttribute('data-opt')) sfx('select');
+    else if (!['check', 'run', 'sound'].includes(act0)) sfx('click');
     if (t.hasAttribute('data-start')) { const [cid, lid] = t.getAttribute('data-start').split(':'); startLesson(cid, lid); return; }
     if (t.hasAttribute('data-go')) { const id = t.getAttribute('data-go'); if ('#' + id === location.hash) route(); else location.hash = id; return; }
     if (t.hasAttribute('data-tab')) { S.lesson.d.tab = t.getAttribute('data-tab'); refreshCodeChrome(); return; }
@@ -5232,7 +5400,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
     switch (act) {
       case 'quit': case 'back': { const cid = ls.c.id; closeLesson(false); if (location.hash === '#' + cid) route(); else location.hash = cid; break; }
       case 'next': nextStep(); break;
-      case 'check': { const step = ls.lesson.steps[ls.i]; if (ls.d.sel == null) return; ls.d.checked = true; ls.graded++; if (ls.d.sel === step.a) { ls.correct++; if (!ls.review) ls.earned += XP.quiz; } renderLesson(); break; }
+      case 'check': { const step = ls.lesson.steps[ls.i]; if (ls.d.sel == null) return; ls.d.checked = true; ls.graded++; sfx(ls.d.sel === step.a ? 'correct' : 'wrong'); if (ls.d.sel === step.a) { ls.correct++; if (!ls.review) ls.earned += XP.quiz; } renderLesson(); break; }
       case 'run': runCode(); break;
       case 'hint': ls.d.showHint = true; ls.d.code = S.editor ? S.editor.getValue() : ls.d.code; renderLesson(); break;
       case 'reset': ls.d.code = ls.lesson.steps[ls.i].starter || ''; ls.d.showSolution = false; renderLesson(); break;
@@ -5265,15 +5433,22 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
       try { askRestore(JSON.parse(await f.text()), 'o arquivo ' + f.name); } catch (err) { toast('Arquivo inválido: não é um JSON.'); }
       e.target.value = '';
     } else if (e.target.id === 'cfg-goal') { P().settings.goal = Number(e.target.value); await saveProgress(); toast('Meta diária: ' + e.target.value + ' XP'); }
+    else if (e.target.id === 'cfg-sound') { P().settings.sound = e.target.checked; TD.sfx.configure({ on: e.target.checked }); if (e.target.checked) sfx('toggle', true); await saveProgress(); }
+    else if (e.target.id === 'cfg-volume') { P().settings.volume = Number(e.target.value) / 100; TD.sfx.configure({ vol: P().settings.volume }); sfx('correct'); await saveProgress(); }
     else if (e.target.id === 'cfg-unlock') { P().settings.unlockAll = e.target.checked; await saveProgress(); toast(e.target.checked ? 'Todas as lições liberadas.' : 'Lições em sequência de novo.'); }
   });
+  app.addEventListener('mouseover', (e) => {
+    const t = e.target.closest('.course-card, .node:not(:disabled), .opt:not(:disabled), .rail-item, .btn.primary');
+    if (t && !t.contains(e.relatedTarget)) sfx('hover');
+  });
+  document.addEventListener('pointerdown', () => TD.sfx && TD.sfx.unlock(), { once: true });
   document.addEventListener('keydown', (e) => {
     const ls = S.lesson; if (!ls) return;
     const step = ls.lesson.steps[ls.i];
     const inField = e.target.closest && e.target.closest('textarea, input, select, .CodeMirror');
     if (e.key === 'Escape' && !inField) { const q = app.querySelector('[data-act="quit"]'); if (q) q.click(); return; }
     if (ls.phase === 'complete') return;
-    if (step.t === 'quiz' && !ls.d.checked && /^[1-9]$/.test(e.key) && !inField) { const n = Number(e.key) - 1; if (n < step.opts.length) { ls.d.sel = n; renderLesson(); } return; }
+    if (step.t === 'quiz' && !ls.d.checked && /^[1-9]$/.test(e.key) && !inField) { const n = Number(e.key) - 1; if (n < step.opts.length) { ls.d.sel = n; sfx('select'); renderLesson(); } return; }
     if (e.key === 'Enter' && !inField && !(e.target.closest && e.target.closest('button,a'))) {
       e.preventDefault();
       if (step.t === 'quiz' && !ls.d.checked) { if (ls.d.sel != null) app.querySelector('[data-act="check"]').click(); }
@@ -5331,6 +5506,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
         await saveProgress();
       }
     } catch (e) { /* */ }
+    if (TD.sfx) TD.sfx.configure({ on: P().settings.sound !== false, vol: P().settings.volume ?? 0.6 });
     S.booted = true;
     window.addEventListener('hashchange', route);
     route();
