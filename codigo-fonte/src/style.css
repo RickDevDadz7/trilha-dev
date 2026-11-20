@@ -63,9 +63,10 @@ a { color: var(--cyan); }
 /* ---------- Rail ---------- */
 .rail { background: rgba(9, 11, 17, .96); border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 16px; padding: 18px 14px; overflow-y: auto; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 2px 6px; text-decoration: none; color: var(--ink); }
-.brand-mark { width: 34px; height: 34px; background: var(--yellow); color: #000; display: grid; place-items: center; font-family: var(--font-mono); font-weight: 800; font-size: 13px; clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%); }
+.brand-mark { width: 34px; height: 34px; display: block; flex: none; }
+.brand-mark svg { display: block; }
 .brand-name { font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: .04em; text-transform: uppercase; }
-.brand-name b { color: var(--yellow); }
+.brand-name b { color: #ff3ea5; }
 .rank { border: 1px solid var(--line); background: var(--panel); padding: 12px 14px; display: grid; gap: 8px; }
 .rank .who { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .rank .who strong { font-family: var(--font-display); font-size: 16px; color: var(--yellow); text-transform: uppercase; letter-spacing: .03em; }

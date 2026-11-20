@@ -6,8 +6,8 @@
 <title>Trilha Dev</title>
 <meta name="theme-color" content="#06070b">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%20%3Crect%20width%3D%22512%22%20height%3D%22512%22%20fill%3D%22%230b0510%22%2F%3E%20%3Cpath%20d%3D%22M56%2056%20H400%20L456%20112%20V456%20H112%20L56%20400%20Z%22%20fill%3D%22%23ff3ea5%22%2F%3E%20%3Cpolyline%20points%3D%22214%2C166%20132%2C256%20214%2C346%22%20fill%3D%22none%22%20stroke%3D%22%230b0510%22%20stroke-width%3D%2242%22%20stroke-linecap%3D%22square%22%2F%3E%20%3Cpolyline%20points%3D%22298%2C166%20380%2C256%20298%2C346%22%20fill%3D%22none%22%20stroke%3D%22%230b0510%22%20stroke-width%3D%2242%22%20stroke-linecap%3D%22square%22%2F%3E%20%3Crect%20x%3D%2224%22%20y%3D%22226%22%20width%3D%22210%22%20height%3D%2220%22%20fill%3D%22%2300e5ff%22%2F%3E%20%3Crect%20x%3D%22300%22%20y%3D%22300%22%20width%3D%22188%22%20height%3D%2214%22%20fill%3D%22%23ffffff%22%2F%3E%20%3C%2Fsvg%3E%20">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
@@ -422,9 +422,10 @@ a { color: var(--cyan); }
 /* ---------- Rail ---------- */
 .rail { background: rgba(9, 11, 17, .96); border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 16px; padding: 18px 14px; overflow-y: auto; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 2px 6px; text-decoration: none; color: var(--ink); }
-.brand-mark { width: 34px; height: 34px; background: var(--yellow); color: #000; display: grid; place-items: center; font-family: var(--font-mono); font-weight: 800; font-size: 13px; clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%); }
+.brand-mark { width: 34px; height: 34px; display: block; flex: none; }
+.brand-mark svg { display: block; }
 .brand-name { font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: .04em; text-transform: uppercase; }
-.brand-name b { color: var(--yellow); }
+.brand-name b { color: #ff3ea5; }
 .rank { border: 1px solid var(--line); background: var(--panel); padding: 12px 14px; display: grid; gap: 8px; }
 .rank .who { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .rank .who strong { font-family: var(--font-display); font-size: 16px; color: var(--yellow); text-transform: uppercase; letter-spacing: .03em; }
@@ -4820,7 +4821,7 @@ type Expect<T extends true> = T;
     const v = S.view;
     return `
       <aside class="rail" aria-label="Navegação">
-        <a class="brand" href="#"><span class="brand-mark">TD</span><span class="brand-name">Trilha<b>.dev</b></span></a>
+        <a class="brand" href="#"><span class="brand-mark" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 512 512"><path d="M56 56 H400 L456 112 V456 H112 L56 400 Z" fill="#ff3ea5"/><polyline points="214,166 132,256 214,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><polyline points="298,166 380,256 298,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><rect x="24" y="226" width="210" height="20" fill="#00e5ff"/><rect x="300" y="300" width="188" height="14" fill="#ffffff"/></svg></span><span class="brand-name">Trilha<b>.dev</b></span></a>
         <div class="rank cut">
           <span class="hud">Rank ${String(r.level).padStart(2, '0')}</span>
           <div class="who"><strong>${esc(r.name)}</strong><span>${p.xp} XP</span></div>

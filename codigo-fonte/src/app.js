@@ -103,7 +103,7 @@
     const v = S.view;
     return `
       <aside class="rail" aria-label="Navegação">
-        <a class="brand" href="#"><span class="brand-mark">TD</span><span class="brand-name">Trilha<b>.dev</b></span></a>
+        <a class="brand" href="#"><span class="brand-mark" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 512 512"><path d="M56 56 H400 L456 112 V456 H112 L56 400 Z" fill="#ff3ea5"/><polyline points="214,166 132,256 214,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><polyline points="298,166 380,256 298,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><rect x="24" y="226" width="210" height="20" fill="#00e5ff"/><rect x="300" y="300" width="188" height="14" fill="#ffffff"/></svg></span><span class="brand-name">Trilha<b>.dev</b></span></a>
         <div class="rank cut">
           <span class="hud">Rank ${String(r.level).padStart(2, '0')}</span>
           <div class="who"><strong>${esc(r.name)}</strong><span>${p.xp} XP</span></div>

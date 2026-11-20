@@ -36,7 +36,8 @@ function page({ pwa }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Trilha Dev</title>
 <meta name="theme-color" content="#06070b">
-${pwa ? '<link rel="manifest" href="manifest.webmanifest">\n<link rel="icon" href="icon.svg" type="image/svg+xml">\n<link rel="apple-touch-icon" href="icon-180.png">' : ''}
+${pwa ? '<link rel="manifest" href="manifest.webmanifest">\n<link rel="apple-touch-icon" href="icon-180.png">' : ''}
+<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(readFileSync(join(here, 'assets', 'icon.svg'), 'utf8').replace(/\s+/g, ' '))}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
@@ -73,7 +74,7 @@ for (const n of [180, 192, 512]) copyFileSync(join(here, 'assets', `icon-${n}.pn
 writeFileSync(join(root, 'manifest.webmanifest'), JSON.stringify({
   name: 'Trilha Dev', short_name: 'Trilha Dev', description: 'Aprenda JavaScript, TypeScript, SQL e HTML/CSS',
   id: '/trilha-dev/', start_url: './', scope: './', display: 'standalone',
-  background_color: '#06070b', theme_color: '#06070b', lang: 'pt-BR',
+  background_color: '#0b0510', theme_color: '#0b0510', lang: 'pt-BR',
   icons: [
     { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
     { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
