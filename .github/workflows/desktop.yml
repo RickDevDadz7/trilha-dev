@@ -1,0 +1,36 @@
+name: Instalador Windows
+
+on:
+  push:
+    branches: [main]
+    paths: ['codigo-fonte/**', '.github/workflows/desktop.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Instalar dependências
+        working-directory: codigo-fonte/desktop
+        run: npm install
+      - name: Gerar instalador
+        working-directory: codigo-fonte/desktop
+        run: npm run dist:win
+      - name: Publicar release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Trilha Dev 1.0.${{ github.run_number }}
+          make_latest: true
+          body: |
+            Instalador do Trilha Dev para Windows.
+            Baixe o **Trilha-Dev-Setup.exe**, execute e siga o instalador.
+            Como o programa não tem assinatura digital paga, o Windows pode mostrar "O Windows protegeu o computador": clique em **Mais informações** → **Executar assim mesmo**.
+          files: release/Trilha-Dev-Setup.exe

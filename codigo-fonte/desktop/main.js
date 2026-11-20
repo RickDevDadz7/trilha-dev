@@ -65,7 +65,7 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1440, height: 920, minWidth: 1000, minHeight: 640,
     backgroundColor: '#06070b', title: 'Trilha Dev', autoHideMenuBar: true,
-    icon: path.join(__dirname, 'app', 'icon.svg'),
+    icon: path.join(__dirname, 'app', 'icon-512.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true }
   });
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });

@@ -2,21 +2,42 @@
   "name": "trilha-dev",
   "productName": "Trilha Dev",
   "version": "1.0.0",
-  "description": "Trilha Dev: aprenda JavaScript, TypeScript, SQL e HTML/CSS (programa de PC)",
+  "description": "Trilha Dev: aprenda JavaScript, TypeScript, SQL e HTML/CSS",
+  "author": "Rick",
   "main": "main.js",
   "private": true,
   "scripts": {
     "prestart": "node ../build.mjs",
     "start": "electron .",
-    "predist:win": "node ../build.mjs",
-    "dist:win": "electron-packager . \"Trilha Dev\" --platform=win32 --arch=x64 --out=../../release --overwrite --ignore=\"^/node_modules/\\.cache\"",
-    "predist:mac": "node ../build.mjs",
-    "dist:mac": "electron-packager . \"Trilha Dev\" --platform=darwin --arch=arm64 --out=../../release --overwrite",
-    "predist:linux": "node ../build.mjs",
-    "dist:linux": "electron-packager . \"Trilha Dev\" --platform=linux --arch=x64 --out=../../release --overwrite"
+    "dist:win": "node ../build.mjs && electron-builder --win nsis --x64 --publish never"
   },
   "devDependencies": {
     "electron": "^31.7.7",
-    "@electron/packager": "^18.3.6"
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "dev.trilha.app",
+    "productName": "Trilha Dev",
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**/*"
+    ],
+    "directories": {
+      "output": "../../release"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "app/icon-512.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Trilha Dev",
+      "artifactName": "Trilha-Dev-Setup.${ext}"
+    }
   }
 }

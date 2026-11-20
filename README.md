@@ -51,7 +51,7 @@ Precisa do [Node.js](https://nodejs.org) instalado.
 cd codigo-fonte/desktop
 npm install
 npm start            # gera o app e abre
-npm run dist:win     # gera a pasta release/Trilha Dev-win32-x64 com o .exe
+npm run dist:win     # gera release/Trilha-Dev-Setup.exe
 ```
 
 ## Desenvolvimento

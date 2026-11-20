@@ -91,6 +91,7 @@ mkdirSync(appDir, { recursive: true });
 writeFileSync(join(appDir, 'index.html'), page({ pwa: false }));
 copyVendor(appDir);
 copyFileSync(join(here, 'assets', 'icon.svg'), join(appDir, 'icon.svg'));
+copyFileSync(join(here, 'assets', 'icon-512.png'), join(appDir, 'icon-512.png'));
 
 const lessons = scripts.length;
 console.log(`ok: ${contentFiles.length} arquivos de conteúdo, ${lessons} scripts -> dist/, raiz (PWA) e desktop/app/`);
