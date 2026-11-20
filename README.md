@@ -1,5 +1,7 @@
 # Trilha Dev
 
+**App:** https://rickdevdadz7.github.io/trilha-dev/ — abra no Chrome ou Edge do computador e clique em **Instalar** (ícone na barra de endereço). Ele vira um programa com ícone próprio, abre em janela separada e funciona offline.
+
 App pra aprender programação do zero ao avançado, no estilo Mimo/Duolingo, com visual cyberpunk.
 
 **4 trilhas · 131 lições · 141 exercícios de código com correção automática**

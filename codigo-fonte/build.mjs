@@ -36,7 +36,7 @@ function page({ pwa }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Trilha Dev</title>
 <meta name="theme-color" content="#06070b">
-${pwa ? '<link rel="manifest" href="manifest.webmanifest">\n<link rel="icon" href="icon.svg" type="image/svg+xml">' : ''}
+${pwa ? '<link rel="manifest" href="manifest.webmanifest">\n<link rel="icon" href="icon.svg" type="image/svg+xml">\n<link rel="apple-touch-icon" href="icon-180.png">' : ''}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
@@ -69,10 +69,18 @@ const version = readFileSync(join(here, 'src', 'content', '_base.js'), 'utf8').m
 writeFileSync(join(root, 'index.html'), page({ pwa: true }));
 copyVendor(root);
 copyFileSync(join(here, 'assets', 'icon.svg'), join(root, 'icon.svg'));
+for (const n of [180, 192, 512]) copyFileSync(join(here, 'assets', `icon-${n}.png`), join(root, `icon-${n}.png`));
 writeFileSync(join(root, 'manifest.webmanifest'), JSON.stringify({
-  name: 'Trilha Dev', short_name: 'Trilha Dev', start_url: './', display: 'standalone',
+  name: 'Trilha Dev', short_name: 'Trilha Dev', description: 'Aprenda JavaScript, TypeScript, SQL e HTML/CSS',
+  id: './', start_url: './', scope: './', display: 'standalone',
   background_color: '#06070b', theme_color: '#06070b', lang: 'pt-BR',
-  icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }]
+  icons: [
+    { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+    { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+    { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+    { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+    { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }
+  ]
 }, null, 2));
 writeFileSync(join(root, 'sw.js'), readFileSync(join(here, 'pwa-sw.js'), 'utf8').replace('__VERSION__', version + '-' + Date.now()));
 if (!existsSync(join(root, '.nojekyll'))) writeFileSync(join(root, '.nojekyll'), '');
