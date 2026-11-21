@@ -29,7 +29,7 @@ for (const c of TD.courses) {
     for (const s of codes) {
       if (!s.hint) errors.push(`${where}: exercício "${s.title}" sem hint`);
       if (c.runner !== 'sql' && !s.tests?.length && !s.typeTests?.length && !s.check) errors.push(`${where}: exercício "${s.title}" sem testes`);
-      if (ui === 0 && !/\/\/|--|<!--|\/\*|^\s*#/m.test(s.starter || '')) warns.push(`${where}: "${s.title}" na 1ª unidade sem starter guiado por comentários`);
+      if (ui === 0 && !/\/\/|--|<!--|\/\*|^\s*#|^[A-Z][\w ]*:\s*$/m.test(s.starter || '')) warns.push(`${where}: "${s.title}" na 1ª unidade sem starter guiado por comentários`);
     }
     // teoria antes da prática: o primeiro passo da lição é sempre learn
     if (l.steps[0]?.t !== 'learn') errors.push(`${where}: a lição deve começar com teoria`);

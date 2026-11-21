@@ -414,7 +414,7 @@
 
   /* ---------- runner de texto (inglês e carreira) ---------- */
   function runText(code, step) {
-    const text = code.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n').trim();
+    const text = code.split('\n').filter((l) => !/^\s*#(?!#)/.test(l)).join('\n').trim();
     const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
     const words = (text.match(/[A-Za-zÀ-ÿ0-9'’-]+/g) || []);
     const api = { text, lines, words, lower: text.toLowerCase(), has: (w) => new RegExp('\\b' + w + '\\b', 'i').test(text) };

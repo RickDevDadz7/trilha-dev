@@ -4579,6 +4579,343 @@ Use as mensagens no padrão Conventional Commits.`),
 })(window.TD);
 
 </script>
+<script>/* content/eng1.js */
+/* Inglês pra devs — runner 'text': o aluno escreve em inglês e checagens objetivas conferem a estrutura. */
+(function (TD) {
+  'use strict';
+  const { learn, quiz, predict, code, lesson, unit } = TD.C;
+
+  TD.courses.push({
+    id: 'eng', name: 'Inglês pra devs', badge: 'ENG', runner: 'text',
+    tagline: 'O inglês que cai no trabalho',
+    desc: 'Ler documentação, escrever commits, PRs, bug reports e mensagens pro time, e se virar numa entrevista técnica em inglês. Feito pra quem tem inglês intermediário e quer trabalhar fora.',
+    notes: 'Nos exercícios você **escreve em inglês** no editor. O app confere a **estrutura** (seções, palavras-chave, tamanho), não a gramática perfeita. Se ativar o tutor de IA em Configurações, ele também revisa o seu texto.',
+    units: [
+      unit('Lendo documentação',
+        lesson('eng-docs-words', 'Palavras que toda doc usa',
+          learn('O vocabulário das docs', `Documentação técnica repete sempre as mesmas palavras. Aprenda elas e você lê qualquer doc:
+
+- **returns**: o que a function devolve
+- **throws**: o erro que ela pode lançar
+- **optional / required**: opcional / obrigatório
+- **default**: valor padrão, se você não passar nada
+- **deprecated**: ainda funciona, mas vai ser removido. Não use em código novo.`),
+          learn('Mais algumas', `- **since v2.0**: existe a partir da versão 2.0
+- **breaking change**: mudança que quebra código antigo
+- **under the hood**: por baixo dos panos, como funciona por dentro
+- **out of the box**: funciona sem configurar nada
+- **edge case**: caso extremo, raro (lista vazia, número negativo...)
+- **workaround**: gambiarra, solução temporária`),
+          predict('Leia o trecho da doc. O que acontece se você chamar `fetchUser()` sem argumentos?', 'fetchUser(id, options?)\n\nid: string (required)\noptions.timeout: number, default 5000\nThrows TypeError if id is missing.', ['Usa o timeout padrão de 5000', 'Lança um TypeError', 'Retorna undefined', 'Busca todos os usuários'], 1, '`id` é required e a doc diz: throws TypeError if id is missing.'),
+          quiz('A doc diz: "`componentWillMount` is **deprecated**". O que fazer?', ['Usar normalmente, é o recomendado', 'Evitar em código novo: vai ser removido', 'Só funciona em produção', 'É um erro de digitação da doc'], 1, 'Deprecated = ainda funciona, mas está com os dias contados.'),
+          code({ title: 'Explique uma function', task: 'Escreva em inglês, **uma frase por linha**, a documentação de `divide(a, b)`:\n\n1. uma linha começando com `Returns` (o que ela devolve)\n2. uma linha começando com `Throws` (quando dá erro: se `b` for zero)\n3. uma linha dizendo que `b` é **required**',
+            starter: '# one sentence per line\n# 1. Returns ...\n\n# 2. Throws ...\n\n# 3. b is required ...\n',
+            solution: 'Returns the result of a divided by b.\nThrows an Error if b is zero.\nThe parameter b is required.',
+            hint: 'Ex.: `Returns the result of a divided by b.` / `Throws an Error if b is zero.` / `The parameter b is required.`',
+            tests: [['Linha com Returns', 'lines.some((l) => /^returns\\b/i.test(l))'], ['Linha com Throws falando de zero', 'lines.some((l) => /^throws\\b/i.test(l) && /zero|0/i.test(l))'], ['Diz que b é required', 'lines.some((l) => /\\bb\\b/.test(l) && /required/i.test(l))']] })),
+
+        lesson('eng-false-friends', 'Falsos cognatos',
+          learn('Parece, mas não é', `Erros clássicos de brasileiro em reunião:
+
+- **actually** = na verdade (não "atualmente": isso é *currently*)
+- **eventually** = no fim das contas (não "eventualmente": isso é *occasionally*)
+- **pretend** = fingir (não "pretender": isso é *intend* / *plan to*)
+- **realize** = perceber (não "realizar": isso é *carry out*)
+- **assist** = ajudar (não "assistir": isso é *watch*)`),
+          learn('No contexto de TI', `- **library** = biblioteca de código (não "livraria")
+- **support** = dar suporte; mas *"we support Node 20"* = funciona com Node 20
+- **application** = app, mas também *job application* = candidatura
+- **resume** (americano) = currículo; *CV* no Reino Unido e na Europa
+- **push back** = discordar, questionar (não "empurrar de volta")`),
+          quiz('"I\'m **currently** working on the login page" quer dizer:', ['Eventualmente vou trabalhar no login', 'Atualmente estou trabalhando no login', 'Na verdade estou no login', 'Já terminei o login'], 1, '*Currently* = atualmente. *Actually* = na verdade.'),
+          quiz('Como dizer "Eu pretendo me mudar pra Alemanha"?', ['I pretend to move to Germany', 'I plan to move to Germany', 'I realize to move to Germany', 'I assist to move to Germany'], 1, '*Pretend* é fingir! Use *plan to*, *intend to* ou *I\'m going to*.'),
+          code({ title: 'Corrija as frases', task: 'Reescreva as 3 frases em inglês correto, uma por linha:\n\n1. "Atualmente eu trabalho com React"\n2. "Eu pretendo estudar TypeScript"\n3. "Eu percebi que o bug estava no cache"',
+            starter: '# 1. Atualmente eu trabalho com React\n\n# 2. Eu pretendo estudar TypeScript\n\n# 3. Eu percebi que o bug estava no cache\n',
+            solution: 'I currently work with React.\nI plan to study TypeScript.\nI realized the bug was in the cache.',
+            hint: 'Use *currently*, *plan to* (ou *intend to*) e *realized*.',
+            tests: [['Usa currently (não actually)', 'has("currently") && !has("actually")'], ['Usa plan/intend/going to (não pretend)', '/\\b(plan|intend|going)\\b/i.test(text) && !has("pretend")'], ['Usa realized/noticed', '/\\b(realized|realised|noticed)\\b/i.test(text)'], ['Três frases', 'lines.length >= 3']] }))
+      ),
+
+      unit('Escrevendo no trabalho',
+        lesson('eng-pr', 'Descrição de pull request',
+          learn('A estrutura de um bom PR', `Uma descrição de PR boa responde três perguntas:
+
+~~~
+## Summary
+Adds a search bar to the header.
+
+## Changes
+- New SearchBar component
+- Debounced API call (300 ms)
+
+## How to test
+1. Open the home page
+2. Type "shoes" in the search bar
+~~~`),
+          learn('Frases prontas', `- *This PR adds / fixes / removes...*
+- *Closes #42* (fecha a issue 42 automaticamente)
+- *I'm not sure about X, open to suggestions.*
+- *Could you take a look?* (pedindo review)
+- Respondendo review: *Good catch, fixed!* / *Done.* / *I went with X because Y.*`),
+          quiz('Você recebeu o comentário "nit: rename this variable". O que é **nit**?', ['Um erro grave', 'Um detalhe pequeno, sugestão opcional', 'Um pedido pra apagar o PR', 'Um elogio'], 1, '*Nit* (de *nitpick*) é um detalhe pequeno. Pode ajustar ou não, sem drama.'),
+          code({ title: 'Seu primeiro PR em inglês', task: 'Escreva a descrição de um PR que **adiciona dark mode** ao app. Use as três seções `## Summary`, `## Changes` (com pelo menos 2 itens `- `) e `## How to test` (com pelo menos 2 passos numerados).',
+            starter: '## Summary\n\n## Changes\n\n## How to test\n',
+            solution: '## Summary\nAdds a dark mode toggle to the settings page.\n\n## Changes\n- New ThemeToggle component\n- Colors moved to CSS variables\n\n## How to test\n1. Open Settings\n2. Click the dark mode toggle\n3. Reload the page and check that the theme is saved',
+            hint: 'Debaixo de cada título escreva o conteúdo. Itens de lista começam com `- ` e passos com `1.`, `2.`.',
+            tests: [['Summary com conteúdo', '/## Summary\\s*\\n\\s*[A-Za-z]/.test(text)'], ['Fala de dark mode', '/dark/i.test(text)'], ['Changes com 2+ itens', '(text.split("## Changes")[1] || "").split("##")[0].split("\\n").filter((l) => /^\\s*- \\S/.test(l)).length >= 2'], ['How to test com 2+ passos', '(text.split("## How to test")[1] || "").split("\\n").filter((l) => /^\\s*\\d+\\.\\s+\\S/.test(l)).length >= 2']] })),
+
+        lesson('eng-bug-report', 'Bug report',
+          learn('Reportando um bug', `Um bug report bom deixa qualquer pessoa reproduzir o problema:
+
+~~~
+Title: Cart total ignores discount codes
+
+Steps to reproduce
+1. Add any product to the cart
+2. Apply the code SAVE10
+
+Expected: total drops by 10%
+Actual: total stays the same
+~~~
+
+**Expected** é o que devia acontecer, **Actual** é o que aconteceu.`),
+          quiz('Qual título de bug é melhor?', ['It doesn\'t work', 'BUG!!!', 'Login button does nothing on Safari', 'Problem'], 2, 'Diz o quê, onde e em que condição. Quem lê já sabe por onde começar.'),
+          code({ title: 'Reporte o bug', task: 'O formulário de cadastro aceita email sem `@`. Escreva o bug report com: uma linha `Title:`, uma seção `Steps to reproduce` com 2+ passos numerados, uma linha `Expected:` e uma linha `Actual:`.',
+            starter: 'Title:\n\nSteps to reproduce\n\nExpected:\nActual:\n',
+            solution: 'Title: Sign-up form accepts emails without @\n\nSteps to reproduce\n1. Open the sign-up page\n2. Type "rickmail.com" in the email field\n3. Click Create account\n\nExpected: an error message saying the email is invalid\nActual: the account is created',
+            hint: 'Preencha cada parte. Expected: o que devia acontecer (uma mensagem de erro). Actual: o que acontece (a conta é criada).',
+            tests: [['Title preenchido', '/^title:[ \\t]*\\S.{8,}/im.test(text)'], ['2+ passos numerados', 'lines.filter((l) => /^\\d+\\.\\s+\\S/.test(l)).length >= 2'], ['Expected preenchido', '/^expected:[ \\t]*\\S/im.test(text)'], ['Actual preenchido', '/^actual:[ \\t]*\\S/im.test(text)']] })),
+
+        lesson('eng-standup', 'Daily e mensagens pro time',
+          learn('A daily em 30 segundos', `Na daily (ou *standup*) cada um responde três coisas:
+
+- **Yesterday**: *I finished the login page.*
+- **Today**: *I'm going to work on the password reset.*
+- **Blockers**: *I'm blocked on the API keys.* / *No blockers.*
+
+Tempos verbais: passado pro ontem (*finished, fixed, reviewed*), *going to* ou presente contínuo pro hoje.`),
+          learn('No Slack', `- *Quick question: ...* (pergunta rápida)
+- *Heads-up: the staging server will be down at 3pm.* (aviso)
+- *Could you review my PR when you have a minute?*
+- *Sorry for the delay!*
+- *I'll look into it.* (vou investigar)
+- *Let me know if you need anything else.*`),
+          quiz('Como dizer "estou travado esperando o acesso ao banco"?', ['I\'m stuck waiting for database access', 'I\'m locked in the database', 'I pretend the database access', 'I\'m blocking the database'], 0, '*Stuck* ou *blocked on/by* = travado esperando algo.'),
+          code({ title: 'Sua daily', task: 'Escreva sua daily em inglês, com três linhas começando com `Yesterday:`, `Today:` e `Blockers:`. Use pelo menos um verbo no passado (terminado em `-ed`) no Yesterday.',
+            starter: 'Yesterday:\nToday:\nBlockers:\n',
+            solution: 'Yesterday: I fixed the cart total bug and reviewed two PRs.\nToday: I\'m going to start the checkout page.\nBlockers: none.',
+            hint: 'Ex.: `Yesterday: I fixed the login bug.` / `Today: I\'m going to write tests.` / `Blockers: none.`',
+            tests: [['Yesterday com verbo no passado', 'lines.some((l) => /^yesterday:\\s*.*\\b\\w+ed\\b/i.test(l))'], ['Today preenchido', 'lines.some((l) => /^today:\\s*\\S.{3,}/i.test(l))'], ['Blockers preenchido', 'lines.some((l) => /^blockers?:\\s*\\S/i.test(l))']] }))
+      ),
+
+      unit('Entrevista técnica',
+        lesson('eng-intro', 'Tell me about yourself',
+          learn('A pergunta que sempre vem', `Toda entrevista começa com *"Tell me about yourself"*. Não conte sua vida: fale em **3 partes**, ~1 minuto:
+
+1. **Present**: o que você faz hoje (*I'm a frontend developer focused on React.*)
+2. **Past**: o que te trouxe até aqui (*Before that, I worked in sales, which taught me...*)
+3. **Future**: por que essa vaga (*Now I'm looking for a team where I can grow in TypeScript.*)`),
+          learn('Frases úteis', `- *I've been coding for two years.* (há dois anos: **present perfect**, não "I code since")
+- *I'm passionate about clean, accessible interfaces.*
+- *My most recent project was...*
+- *I'm currently learning German.*
+- *That's why I applied for this role.*`),
+          quiz('Qual está certo?', ['I work with JavaScript since 2024', 'I have been working with JavaScript since 2024', 'I am working with JavaScript since 2024', 'I worked with JavaScript since 2024'], 1, 'Com *since/for* + algo que continua até hoje, use present perfect: *have been working*.'),
+          code({ title: 'Seu pitch', task: 'Escreva seu "Tell me about yourself" em inglês, com **pelo menos 60 palavras**. Precisa ter: o que você faz hoje, alguma experiência anterior (`before`, `previously` ou `I used to`) e por que quer a vaga (`looking for`, `that\'s why` ou `I applied`). Mencione ao menos uma tecnologia.',
+            starter: '# 1. present: what you do now\n\n# 2. past: what brought you here\n\n# 3. future: why this job\n',
+            solution: 'I\'m a junior full-stack developer from Brazil, and I\'ve been building web apps with JavaScript, TypeScript and SQL for the past two years.\nBefore that, I worked in customer service, which taught me how to listen to users and explain technical problems clearly.\nRecently I built a learning app with spaced repetition and automated tests.\nNow I\'m looking for a team in Germany where I can grow as a developer, and that\'s why I applied for this role.',
+            hint: 'Siga as 3 partes dos comentários. Use *I\'m a...*, *Before that, I...* e *I\'m looking for...*.',
+            tests: [['60+ palavras', 'words.length >= 60'], ['Fala do presente (I\'m / I work)', '/\\b(I\'m|I am|I work|I\'ve been)\\b/i.test(text)'], ['Fala do passado', '/\\b(before|previously|used to)\\b/i.test(text)'], ['Fala do futuro / da vaga', '/\\b(looking for|that\'s why|applied|apply)\\b/i.test(text)'], ['Cita uma tecnologia', '/\\b(javascript|typescript|react|sql|node|python|html|css|git)\\b/i.test(text)']] })),
+
+        lesson('eng-star', 'Perguntas comportamentais (STAR)',
+          learn('O método STAR', `*"Tell me about a time you had a conflict / made a mistake / met a tight deadline."*
+
+Responda em 4 partes:
+
+- **S**ituation: o contexto
+- **T**ask: qual era sua responsabilidade
+- **A**ction: o que **você** fez (fale *I*, não *we*)
+- **R**esult: o que aconteceu, de preferência com número`),
+          quiz('Na parte **Action**, por que preferir "I" a "we"?', ['É mais educado', 'O entrevistador quer saber o que VOCÊ fez', '"We" é errado em inglês', 'Não faz diferença'], 1, 'Eles estão contratando você, não o seu time antigo.'),
+          code({ title: 'Um erro que você cometeu', task: 'Responda *"Tell me about a time you made a mistake"* com o método STAR. Escreva 4 linhas começando com `Situation:`, `Task:`, `Action:` e `Result:`. Na Action, use `I`. No Result, inclua um número.',
+            starter: 'Situation:\nTask:\nAction:\nResult:\n',
+            solution: 'Situation: In my last project, I deployed a change that broke the login page for some users.\nTask: I had to fix it fast and make sure it would not happen again.\nAction: I rolled back the release, wrote a test that reproduced the bug and added it to our CI pipeline.\nResult: The login was back in 20 minutes, and we had zero login bugs in the next 3 months.',
+            hint: 'Uma linha pra cada letra. Ex. de Result: *The page was back in 20 minutes.*',
+            tests: [['Situation', 'lines.some((l) => /^situation:\\s*\\S.{3,}/i.test(l))'], ['Task', 'lines.some((l) => /^task:\\s*\\S.{3,}/i.test(l))'], ['Action com "I"', 'lines.some((l) => /^[Aa]ction:.*\\bI\\b/.test(l))'], ['Result com número', 'lines.some((l) => /^result:.*\\d/i.test(l))']] })),
+
+        lesson('eng-live-coding', 'Live coding em inglês',
+          learn('Pense em voz alta', `Em live coding, o silêncio é seu inimigo. O entrevistador quer ouvir **como você pensa**. Frases pra isso:
+
+- *Let me make sure I understand the problem...*
+- *Can I assume the input is always sorted?* (perguntar antes de codar!)
+- *My first idea is a brute-force approach, then I'll optimize.*
+- *This would be O(n²); I think we can do better with a hash map.*
+- *Let me test it with an edge case: an empty array.*`),
+          learn('Quando trava', `Travar é normal. O que não pode é sumir:
+
+- *Give me a second to think about this.*
+- *I'm not sure, but my guess is...*
+- *I haven't used that before, but I'd look it up in the docs.*
+- *Could you give me a hint?*
+
+Admitir que não sabe, com calma, conta ponto.`),
+          quiz('Qual a melhor primeira coisa a fazer num problema de live coding?', ['Começar a codar imediatamente', 'Fazer perguntas pra esclarecer o problema e os casos extremos', 'Ficar em silêncio pensando 5 minutos', 'Dizer que não sabe'], 1, 'Perguntas de esclarecimento mostram maturidade e evitam resolver o problema errado.'),
+          code({ title: 'Perguntas de esclarecimento', task: 'O problema é: *"Write a function that returns the most frequent word in a text."* Escreva **3 perguntas** de esclarecimento em inglês, uma por linha, cada uma terminando com `?`. Pelo menos uma deve falar de um caso extremo (empty, tie, uppercase, punctuation...).',
+            starter: '# 3 clarifying questions, one per line, ending with ?\n',
+            solution: 'Should the comparison be case-insensitive, so "The" and "the" count as the same word?\nWhat should I return if there is a tie between two words?\nWhat should happen if the text is empty?',
+            hint: 'Comece com *Should...*, *What should I return if...*, *Can I assume...*',
+            tests: [['3+ perguntas', 'lines.filter((l) => /\\?\\s*$/.test(l)).length >= 3'], ['Pergunta sobre caso extremo', '/\\b(empty|tie|ties|upper|lower|case|punctuation|null|special)\\b/i.test(text)'], ['Frases completas (5+ palavras cada)', 'lines.filter((l) => /\\?\\s*$/.test(l)).every((l) => l.split(/\\s+/).length >= 5)']] }))
+      )
+    ]
+  });
+})(window.TD);
+
+</script>
+<script>/* content/career1.js */
+/* Carreira na Europa — rotas de visto, CV, LinkedIn, portfólio e candidatura. Valores de 2026: revisar todo ano. */
+(function (TD) {
+  'use strict';
+  const { learn, quiz, predict, code, lesson, unit } = TD.C;
+
+  TD.courses.push({
+    id: 'career', name: 'Carreira na Europa', badge: 'EU', runner: 'text',
+    tagline: 'Do portfólio à vaga na Alemanha',
+    desc: 'Rotas de visto pra devs, CV no padrão alemão, LinkedIn, portfólio no GitHub, candidatura e negociação. Foco na Alemanha, mas quase tudo vale pra Europa toda.',
+    notes: 'Valores e regras de visto são de **2026** e mudam todo ano. Antes de qualquer decisão, confira no portal oficial **make-it-in-germany.com** e no consulado. Isto é orientação de estudo, não assessoria jurídica.',
+    units: [
+      unit('O caminho',
+        lesson('career-routes', 'Rotas de visto pra devs',
+          learn('Blue Card (Blaue Karte EU)', `A rota mais comum pra dev é a **Blue Card**: um visto de trabalho pra quem já tem **oferta de emprego**.
+
+Pra área de TI, dá pra entrar de dois jeitos:
+
+- com **diploma** de ensino superior reconhecido, ou
+- **sem diploma**, com pelo menos **3 anos de experiência** comparável em TI.
+
+Isso é raro no mundo: experiência conta como diploma.`),
+          learn('O salário mínimo', `A Blue Card exige um **salário bruto anual mínimo**. Em 2026:
+
+- **€50.700**: regra geral
+- **€45.934,20**: valor reduzido, que vale pra **profissionais de TI**, profissões em falta e recém-formados
+
+Na prática, vagas de dev costumam pagar acima do mínimo. O número muda todo ano, em janeiro.`),
+          learn('Chancenkarte: ir antes da vaga', `Sem oferta ainda? A **Chancenkarte** (Opportunity Card), criada em junho de 2024, dá **1 ano** pra procurar emprego dentro da Alemanha.
+
+No caminho por pontos, você precisa de:
+
+- formação (superior ou técnica de pelo menos 2 anos)
+- **inglês B2** ou **alemão A1**
+- pelo menos **6 pontos** (idade, experiência, idiomas, ligação com a Alemanha)
+- comprovar dinheiro: **€1.091 por mês** em conta bloqueada (2026)`),
+          quiz('Rick tem 3 anos de experiência como dev, mas não tem diploma. A Blue Card é possível?', ['Não, diploma é sempre obrigatório', 'Sim: em TI, 3 anos de experiência comparável podem substituir o diploma', 'Só com alemão C1', 'Só se o salário for acima de €100 mil'], 1, 'TI tem essa exceção: experiência profissional comprovada no lugar do diploma.'),
+          predict('Uma vaga de dev oferece €48.000 brutos por ano em 2026. Passa no mínimo da Blue Card de TI?', 'salário oferecido: 48000\nmínimo TI 2026:   45934.20\nmínimo geral:     50700', ['Não passa em nenhum', 'Passa no mínimo reduzido de TI', 'Passa nos dois', 'Depende do idioma'], 1, '48.000 é maior que 45.934,20 (mínimo de TI), mas menor que 50.700.'),
+          quiz('Qual a diferença principal entre Blue Card e Chancenkarte?', ['Nenhuma', 'Blue Card exige oferta de emprego; a Chancenkarte é pra procurar emprego já na Alemanha', 'Chancenkarte é só pra estudantes', 'Blue Card não permite trabalhar'], 1, 'Blue Card = já tem a vaga. Chancenkarte = vai e procura, por até 1 ano.'),
+          code({ title: 'Seu plano', task: 'Escreva seu plano em 4 linhas (pode ser em português):\n\n- `Route:` Blue Card ou Chancenkarte\n- `Target:` mês/ano em que quer se mudar\n- `Gap:` o que falta (ex.: experiência, alemão A1, inglês B2, dinheiro)\n- `Next step:` a primeira ação concreta desta semana',
+            starter: 'Route:\nTarget:\nGap:\nNext step:\n',
+            solution: 'Route: Blue Card (IT specialist)\nTarget: 03/2028\nGap: 3 years of experience and German A2\nNext step: publish my first portfolio project on GitHub this week',
+            hint: 'Preencha cada linha depois dos dois-pontos. O "Next step" tem que ser algo que você consegue fazer em uma semana.',
+            tests: [['Route: Blue Card ou Chancenkarte', 'lines.some((l) => /^route:.*(blue|blaue|chancen|opportunity)/i.test(l))'], ['Target com mês/ano', 'lines.some((l) => /^target:.*\\d{4}/i.test(l))'], ['Gap preenchido', 'lines.some((l) => /^gap:\\s*\\S.{3,}/i.test(l))'], ['Next step concreto', 'lines.some((l) => /^next step:\\s*\\S.{10,}/i.test(l))']] }))
+      ),
+
+      unit('CV e LinkedIn',
+        lesson('career-cv', 'CV no padrão alemão',
+          learn('O Lebenslauf', `O currículo alemão (**Lebenslauf**) é direto e factual:
+
+- **1 a 2 páginas**, nunca mais
+- ordem **cronológica reversa** (o mais recente primeiro)
+- datas no formato **MM/YYYY – MM/YYYY**
+- bullets curtos, sem parágrafos
+- **foto é opcional**: a lei antidiscriminação (AGG) não exige. Em empresa tech internacional, muita gente não usa.`),
+          learn('Bullets que vendem', `Recrutador quer **resultado**, não lista de tarefas. Fórmula:
+
+**verbo de ação + o que fez + resultado com número**
+
+- ❌ *Responsible for the website*
+- ✅ *Rebuilt the checkout in React, cutting load time by 40%*
+
+Verbos fortes: *built, shipped, reduced, automated, migrated, improved, led*.`),
+          quiz('Qual bullet é melhor?', ['Worked with JavaScript', 'Responsible for bugs', 'Automated weekly reports with Node.js, saving 5 hours per week', 'Team player and hard worker'], 2, 'Verbo de ação, tecnologia e resultado medido.'),
+          code({ title: 'Reescreva seus bullets', task: 'Escreva **3 bullets** de experiência em inglês, cada um começando com `- ` e um **verbo de ação no passado** (ex.: built, reduced, automated). Pelo menos **2** devem ter um número (%, horas, usuários...).',
+            starter: '# 3 bullets: - Verb + what + result (with numbers)\n',
+            solution: '- Built a learning app in JavaScript used by 30 students\n- Automated sales reports with Python, saving 4 hours per week\n- Reduced page load time by 35% by lazy-loading images',
+            hint: 'Ex.: `- Built a ... used by 50 people` / `- Reduced ... by 20%`',
+            tests: [['3+ bullets', 'lines.filter((l) => /^- \\S/.test(l)).length >= 3'], ['Começam com verbo no passado', 'lines.filter((l) => /^- /.test(l)).every((l) => /^- (\\w+ed|built|led|ran|made|wrote|shipped|grew|won|taught|drove|built|set up)\\b/i.test(l))'], ['2+ com número', 'lines.filter((l) => /^- /.test(l) && /\\d/.test(l)).length >= 2']] })),
+
+        lesson('career-linkedin', 'LinkedIn que recrutador acha',
+          learn('Headline e configurações', `Recrutadores **buscam** no LinkedIn por palavras. Sua headline precisa ter:
+
+- o cargo: *Frontend Developer*, *Full-Stack Developer*
+- as tecnologias: *React · TypeScript · Node.js*
+- o objetivo: *Open to relocation to Germany*
+
+Ex.: *Full-Stack Developer · React, TypeScript, SQL · Open to relocation (Germany)*
+
+Também: perfil **em inglês**, ative **Open to Work** pra recrutadores e coloque a localização desejada.`),
+          quiz('O que mais ajuda um recrutador a te achar?', ['Uma headline criativa tipo "Code ninja 🥷"', 'Cargo e tecnologias escritos do jeito que aparecem nas vagas', 'Muitas fotos', 'Perfil em português'], 1, 'Recrutador busca por termos exatos: "React Developer", não "ninja".'),
+          quiz('Seu perfil do LinkedIn deve estar em qual idioma pra vagas na Alemanha em tech?', ['Português', 'Inglês (e alemão, se você tiver nível)', 'Espanhol', 'Tanto faz'], 1, 'Inglês é a língua padrão de tech. Uma versão em alemão é bônus.'),
+          code({ title: 'Sua headline', task: 'Escreva sua headline do LinkedIn em inglês, em **uma linha** de até **220 caracteres**, com: um cargo (developer/engineer), **pelo menos 2** tecnologias e menção a **relocation** ou **Germany**.',
+            starter: '# one line, max 220 characters\n',
+            solution: 'Full-Stack Developer · JavaScript, TypeScript, React, SQL · Building learning apps · Open to relocation to Germany',
+            hint: 'Modelo: `<Cargo> · <Tech1>, <Tech2>, <Tech3> · Open to relocation to Germany`',
+            tests: [['Uma linha só', 'lines.length === 1'], ['Até 220 caracteres', 'text.length > 0 && text.length <= 220'], ['Tem um cargo', '/\\b(developer|engineer)\\b/i.test(text)'], ['2+ tecnologias', '(text.match(/\\b(javascript|typescript|react|node(\\.js)?|sql|python|html|css|git|java|vue|angular)\\b/gi) || []).length >= 2'], ['Fala de relocation/Germany', '/\\b(relocat\\w*|germany|europe)\\b/i.test(text)']] }))
+      ),
+
+      unit('Portfólio',
+        lesson('career-portfolio', 'O que colocar no portfólio',
+          learn('Qualidade, não quantidade', `Pra júnior, o portfólio **substitui a experiência**. Melhor **3 projetos bons** que 15 tutoriais copiados.
+
+Um projeto bom:
+
+- resolve um problema real (seu ou de alguém)
+- está **no ar** (link de demo: GitHub Pages, Vercel, Netlify)
+- tem **README** em inglês, com print
+- tem commits frequentes e com mensagem decente
+- idealmente tem **testes**`),
+          learn('Ideias que impressionam', `- Um app que você usa de verdade (este Trilha Dev conta!)
+- Um clone simplificado de algo conhecido, com uma feature sua
+- Um dashboard consumindo uma **API pública** (clima, transporte, câmbio)
+- Uma contribuição em projeto **open source** (até corrigir docs vale)
+- Um projeto **full-stack**: front + API + banco
+
+Fixe 3 a 6 repos no seu perfil do GitHub (**pinned**).`),
+          quiz('Qual desses pesa mais no portfólio de um júnior?', ['20 repositórios de tutorial', 'Um projeto no ar, com README, testes e histórico de commits', 'Muitas estrelas em repos dos outros', 'Um repo com um arquivo só'], 1, 'Mostra que você termina, publica e documenta: é o que o trabalho pede.'),
+          quiz('Por que colocar o projeto no ar (demo)?', ['Não precisa, o código basta', 'Recrutador gasta segundos por candidato: clicar e ver funcionando convence mais', 'Pra gastar menos espaço no GitHub', 'É obrigatório pelo GitHub'], 1, 'Um link que funciona é a prova mais rápida de que você entrega.'),
+          quiz('O que é um repo **pinned** no GitHub?', ['Um repo privado', 'Um repo fixado no topo do seu perfil', 'Um repo arquivado', 'Um fork'], 1, 'Você escolhe até 6 repos pra aparecerem em destaque no perfil.'),
+          code({ title: 'README de projeto', task: 'Escreva o README em inglês de um projeto seu (pode ser o Trilha Dev). Use as seções `## About`, `## Tech stack` (com 2+ itens `- `), `## How to run` (com um comando em crase, tipo `` `npm install` ``) e `## Live demo` (com um link `https://`).',
+            starter: '# Project name\n\n## About\n\n## Tech stack\n\n## How to run\n\n## Live demo\n',
+            solution: '# Trilha Dev\n\n## About\nA programming learning app with bite-size lessons, spaced repetition and automated code tests.\n\n## Tech stack\n- JavaScript\n- TypeScript compiler in the browser\n- SQLite (sql.js)\n\n## How to run\nRun `node build.mjs` and open dist/index.html.\n\n## Live demo\nhttps://rickdevdadz7.github.io/trilha-dev/',
+            hint: 'Preencha cada seção. No "How to run", coloque o comando entre crases.',
+            tests: [['About com conteúdo', '/## About\\s*\\n\\s*[A-Za-z]/.test(text)'], ['Tech stack com 2+ itens', '(text.split("## Tech stack")[1] || "").split("##")[0].split("\\n").filter((l) => /^\\s*- \\S/.test(l)).length >= 2'], ['How to run com comando em crase', '/## How to run[\\s\\S]*?`[^`]+`/.test(text)'], ['Live demo com link', '/## Live demo[\\s\\S]*https:\\/\\/\\S+/.test(text)']] }))
+      ),
+
+      unit('Candidatura',
+        lesson('career-apply', 'Onde e como se candidatar',
+          learn('Onde procurar', `- **LinkedIn Jobs**: filtre por *Germany* e *English*
+- **StepStone**: o maior site de vagas da Alemanha
+- **Arbeitnow**, **GermanTechJobs**, **Berlin Startup Jobs**: focados em tech
+- **make-it-in-germany.com**: portal oficial, com vagas pra estrangeiros
+
+Dica: muitas vagas de tech em Berlim e Munique são **em inglês**. Procure por *"English speaking"*.`),
+          learn('A carta (cover letter)', `Muitas empresas pedem uma **cover letter** curta (o *Anschreiben*). Estrutura em ~200 palavras:
+
+1. **Por que essa empresa** (algo específico dela, não genérico)
+2. **Por que você**: 1 ou 2 conquistas que batem com a vaga
+3. **Logística**: visto, data de início, *"I am eligible for the EU Blue Card"*
+4. Fecho: *I'd be happy to discuss...*`),
+          quiz('Como falar de salário quando perguntam sua expectativa?', ['Dizer "o que vocês acharem justo"', 'Dar uma faixa de salário bruto anual pesquisada pro cargo e cidade', 'Dar o salário líquido mensal em reais', 'Recusar responder'], 1, 'Na Alemanha se fala em **bruto anual** (brutto). Pesquise a faixa e dê um intervalo.'),
+          quiz('Quando falam em salário na Alemanha, normalmente é:', ['Líquido mensal', 'Bruto anual', 'Líquido anual', 'Por hora'], 1, 'O padrão é bruto anual (Bruttojahresgehalt). O líquido depende de impostos e da sua classe fiscal.'),
+          predict('Qual parte dessa abertura de cover letter é fraca?', 'Dear hiring team,\nI am applying for this job because\nI need a job in Germany.', ['"Dear hiring team"', 'Falar só do que você precisa, sem nada sobre a empresa', 'Escrever em inglês', 'Usar parágrafos'], 1, 'A carta é sobre o que você traz pra eles. Cite algo específico da empresa.'),
+          code({ title: 'Sua cover letter', task: 'Escreva uma cover letter em inglês entre **120 e 260 palavras**. Precisa: começar com `Dear`, citar o nome da empresa (invente uma, ex.: `Acme`), ter uma conquista com número, mencionar o visto (`Blue Card` ou `visa`) e terminar com uma despedida (`Best regards` ou `Kind regards`).',
+            starter: 'Dear\n\n# 1. why this company\n\n# 2. why you (an achievement with a number)\n\n# 3. visa and start date\n\nBest regards,\n',
+            solution: 'Dear Acme hiring team,\n\nI am applying for the Junior Frontend Developer role at Acme. I have followed your work on accessible e-commerce, and I love that your checkout is fully usable with a keyboard. That is exactly the kind of product I want to build.\n\nOver the last two years I have been building web apps with JavaScript, TypeScript and React. My latest project is a learning app with automated tests and spaced repetition, used by 30 students every week. I also reduced its load time by 35% by splitting the code and lazy-loading heavy libraries.\n\nI am based in Brazil, I am eligible for the EU Blue Card, and I can relocate to Berlin within three months of an offer. I speak English at B2 level and I am studying German.\n\nI would be happy to discuss how I can help your team.\n\nBest regards,\nRick',
+            hint: 'Siga os 3 blocos dos comentários. Lembre do nome da empresa e de um número na sua conquista.',
+            tests: [['Começa com Dear', '/^dear\\b/i.test(text)'], ['Entre 120 e 260 palavras', 'words.length >= 120 && words.length <= 260'], ['Conquista com número', '/\\d/.test(text)'], ['Fala do visto', '/\\b(blue card|visa|blaue karte|work permit)\\b/i.test(text)'], ['Despedida', '/(best|kind) regards/i.test(text)']] }))
+      )
+    ]
+  });
+})(window.TD);
+
+</script>
 <script>/* store.js */
 /* Persistência do Trilha Dev (mesmo modelo do Deutsch mit Plan).
  * Backends com a mesma interface get/set/del/list:
@@ -5566,7 +5903,7 @@ type Expect<T extends true> = T;
 
   /* ---------- runner de texto (inglês e carreira) ---------- */
   function runText(code, step) {
-    const text = code.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n').trim();
+    const text = code.split('\n').filter((l) => !/^\s*#(?!#)/.test(l)).join('\n').trim();
     const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
     const words = (text.match(/[A-Za-zÀ-ÿ0-9'’-]+/g) || []);
     const api = { text, lines, words, lower: text.toLowerCase(), has: (w) => new RegExp('\\b' + w + '\\b', 'i').test(text) };
