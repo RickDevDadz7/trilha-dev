@@ -360,5 +360,75 @@ type Expect<T extends true> = T;
     });
   }
 
-  TD.runners = { runJS, runTS, runSQL, runWeb, loadTS, loadSQL, wrapHTML, MINI_LIB };
+  /* ---------- React: JSX compilado pelo TypeScript, React 18 (UMD) dentro do iframe ---------- */
+  function compileJSX(ts, code) {
+    const out = ts.transpileModule(code, { reportDiagnostics: true, fileName: 'App.jsx',
+      compilerOptions: { jsx: ts.JsxEmit.React, target: ts.ScriptTarget.ES2019, module: ts.ModuleKind.CommonJS, allowJs: true, esModuleInterop: true } });
+    const diags = (out.diagnostics || []).map((d) => {
+      const msg = ts.flattenDiagnosticMessageText(d.messageText, '\n');
+      if (d.file && d.start != null) { const lc = d.file.getLineAndCharacterOfPosition(d.start); return `Linha ${lc.line + 1}: ${msg}`; }
+      return msg;
+    });
+    return { js: out.outputText, diags };
+  }
+  async function runReact(code, step, frame) {
+    const tests = step.tests || [];
+    const ts = await loadTS();
+    const { js, diags } = compileJSX(ts, code);
+    if (diags.length) return { output: [], results: tests.map((t) => ({ name: t[0], pass: false })), error: diags[0], preview: true };
+    const abs = (f) => new URL('vendor/' + f, location.href).href;
+    const boot = `
+<div id="root"></div>
+<script src="${abs('react.js')}"><\/script><script src="${abs('react-dom.js')}"><\/script>
+<script>
+(function () {
+  if (!window.React || !window.ReactDOM) { window.__err = 'React não carregou'; return; }
+  var exports = {}, module = { exports: exports };
+  var require = function (n) { if (n === 'react') return React; if (n === 'react-dom/client' || n === 'react-dom') return ReactDOM; throw new Error("Cannot find module '" + n + "'"); };
+  var useState = React.useState, useEffect = React.useEffect, useRef = React.useRef, useMemo = React.useMemo, useCallback = React.useCallback, useReducer = React.useReducer, useContext = React.useContext, createContext = React.createContext, Fragment = React.Fragment;
+  var createRoot0 = ReactDOM.createRoot;
+  var createRoot = ReactDOM.createRoot = function (el) { window.__rendered = true; var r = createRoot0.call(ReactDOM, el); var render = r.render.bind(r); r.render = function (x) { ReactDOM.flushSync(function () { render(x); }); }; return r; };
+  try {
+    ${js.replace(/<\/script/gi, '<\\/script')}
+    var App0 = typeof App === 'function' ? App : (module.exports && module.exports.default) || exports.default;
+    if (!window.__rendered && typeof App0 === 'function') createRoot(document.getElementById('root')).render(React.createElement(App0));
+  } catch (e) { window.__err = e.message; console.error(e.message); }
+})();
+<\/script>`;
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = async () => {
+        if (done) return; done = true;
+        let doc = null, win = null;
+        try { doc = frame.contentDocument; win = frame.contentWindow; } catch (e) { /* */ }
+        if (!doc) { resolve({ output: null, results: tests.map((t) => ({ name: t[0], pass: false })), error: 'Não foi possível inspecionar o preview.' }); return; }
+        const $ = (s) => doc.querySelector(s);
+        const $$ = (s) => Array.from(doc.querySelectorAll(s));
+        const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+        const text = (s) => { const el = typeof s === 'string' ? $(s) : s; return el ? el.textContent.trim() : ''; };
+        const click = async (s) => { const el = typeof s === 'string' ? $(s) : s; if (!el) throw new Error('não achei ' + s); el.dispatchEvent(new win.MouseEvent('click', { bubbles: true })); await wait(30); };
+        const type = async (s, value) => {
+          const el = typeof s === 'string' ? $(s) : s; if (!el) throw new Error('não achei ' + s);
+          const proto = el.tagName === 'TEXTAREA' ? win.HTMLTextAreaElement.prototype : win.HTMLInputElement.prototype;
+          Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, value);
+          el.dispatchEvent(new win.Event('input', { bubbles: true })); await wait(30);
+        };
+        const submit = async (s) => { const el = typeof s === 'string' ? $(s) : s; if (!el) throw new Error('não achei ' + s); el.dispatchEvent(new win.Event('submit', { bubbles: true, cancelable: true })); await wait(30); };
+        const results = [];
+        for (const [name, expr] of tests) {
+          try {
+            const fn = new Function('$', '$$', 'doc', 'win', 'wait', 'text', 'click', 'type', 'submit', '__src', 'return (async () => (' + expr + '))();');
+            results.push({ name, pass: !!(await fn($, $$, doc, win, wait, text, click, type, submit, code)) });
+          } catch (e) { results.push({ name, pass: false, err: e.message }); }
+        }
+        const logs = (win.__logs || []).slice().filter((l) => !/Download the React DevTools/.test(l));
+        resolve({ output: logs, results: results.concat(srcChecks(step, code)), error: win.__err ? 'Error: ' + win.__err : null, preview: true });
+      };
+      frame.onload = () => setTimeout(finish, 150);
+      frame.srcdoc = wrapHTML(boot);
+      setTimeout(finish, 6000);
+    });
+  }
+
+  TD.runners = { runJS, runTS, runSQL, runWeb, runReact, loadTS, loadSQL, wrapHTML, MINI_LIB };
 })(globalThis.TD = globalThis.TD || {});

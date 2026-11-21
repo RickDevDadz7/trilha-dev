@@ -37,7 +37,7 @@ for (const c of TD.courses) {
   // checkpoint precisa de material
   c.units.forEach((u, ui) => {
     const cp = TD.ped.checkpointLesson(c, ui, 'lint');
-    if (cp.steps.length < 4) warns.push(`${c.id} unidade ${ui + 1}: checkpoint com só ${cp.steps.length} perguntas`);
+    if (cp.steps.length < (c.runner === 'text' ? 3 : 4)) warns.push(`${c.id} unidade ${ui + 1}: checkpoint com só ${cp.steps.length} perguntas`);
   });
 }
 for (const w of warns) console.log('aviso:', w);

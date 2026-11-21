@@ -30,9 +30,21 @@ Este é o jeito de ensinar do Trilha Dev. Ele vale para **todas** as linguagens,
 ## Adicionando uma linguagem nova
 
 1. Crie `src/content/<lang>1.js` usando os helpers `learn`, `quiz`, `predict`, `code`, `lesson` e `unit` de `_base.js`.
-2. Se precisar de outro executor, adicione um runner em `src/runners.js`. O motor pedagógico funciona sozinho: cards, blocos, revisão e checkpoint são gerados automaticamente.
+2. Use um runner que já existe (`js`, `ts`, `sql`, `web`/`dom`, `react`, `git`, `text`) ou adicione um novo em `src/runners.js` / `src/gitsim.js`. O motor pedagógico funciona sozinho: cards, blocos, revisão e checkpoint são gerados automaticamente.
 3. Se a linguagem tiver erros próprios, adicione um dicionário em `explainError` (`pedagogy.js`).
 4. Rode `node build.mjs`, depois `node test/lint.mjs`, depois `python3 test/check.py`.
+
+## Runners disponíveis
+
+| Runner | O que roda | Testes recebem |
+|---|---|---|
+| `js` | Web Worker | variáveis do código, `__logs` |
+| `ts` | compilador TypeScript + JS | idem + `typeTests` |
+| `sql` | SQLite (sql.js) | compara com o resultado da `solution` |
+| `web` / `dom` | iframe | `$`, `$$`, `css`, `rules()`, `wait` |
+| `react` | React 18 + JSX (via TypeScript) em iframe | `$`, `$$`, `text`, `click`, `type`, `submit`, `wait` |
+| `git` | terminal Git simulado (`gitsim.js`) | `repo`, `files`, `commits`, `branch`, `remote`, `used(re)`, `clean`... |
+| `text` | escrita livre (inglês, carreira) | `text`, `lines`, `words`, `has(w)`; sem modo blocos |
 
 ## Fontes
 

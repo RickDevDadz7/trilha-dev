@@ -72,7 +72,7 @@ copyVendor(root);
 copyFileSync(join(here, 'assets', 'icon.svg'), join(root, 'icon.svg'));
 for (const n of [180, 192, 512]) copyFileSync(join(here, 'assets', `icon-${n}.png`), join(root, `icon-${n}.png`));
 writeFileSync(join(root, 'manifest.webmanifest'), JSON.stringify({
-  name: 'Trilha Dev', short_name: 'Trilha Dev', description: 'Aprenda JavaScript, TypeScript, SQL e HTML/CSS',
+  name: 'Trilha Dev', short_name: 'Trilha Dev', description: 'Aprenda JavaScript, TypeScript, SQL, HTML/CSS, React e Git',
   id: '/trilha-dev/', start_url: './', scope: './', display: 'standalone',
   background_color: '#0b0510', theme_color: '#0b0510', lang: 'pt-BR',
   icons: [

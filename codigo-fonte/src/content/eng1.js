@@ -186,4 +186,6 @@ Admitir que não sabe, com calma, conta ponto.`),
       )
     ]
   });
+  // escrita livre: sem modo blocos
+  TD.courses[TD.courses.length - 1].units.forEach((u) => u.lessons.forEach((l) => l.steps.forEach((st) => { if (st.t === 'code') st.noBlocks = true; })));
 })(window.TD);

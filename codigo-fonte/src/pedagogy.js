@@ -44,6 +44,7 @@
   /* ---------- 2. Parsons: montar com blocos ---------- */
   function seeded(seed) { let h = 2166136261; for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619); } return () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 100000) / 100000; }; }
   function parsonsBlocks(step, seed) {
+    if (step.noBlocks) return null; // texto livre (inglês, carreira): montar com blocos entregaria a resposta
     const lines = String(step.solution || '').split('\n').filter((l) => l.trim() !== '');
     if (lines.length < 2 || lines.length > 28) return null;
     const blocks = lines.map((text, i) => ({ id: 'b' + i, text }));
@@ -80,6 +81,14 @@
       [/Unused '@ts-expect-error' directive/, 'Um teste de tipo esperava um erro e ele não aconteceu: seu tipo está aceitando valores que deveria recusar.'],
       [/lacks ending return statement|Not all code paths return a value/, 'Algum caminho da function termina sem `return`. Trate todos os casos.']
     ],
+    react: [
+      [/JSX expressions must have one parent|Adjacent JSX/, 'Um component só pode retornar **um** elemento de fora. Envolva tudo numa `<div>` ou num fragment `<>...</>`.'],
+      [/has no corresponding closing tag|Expected corresponding JSX closing tag|Unterminated JSX/, 'Faltou fechar uma tag. Em JSX toda tag fecha: `<p>...</p>`, e as vazias com barra: `<img />`, `<input />`, `<br />`.'],
+      [/Objects are not valid as a React child/, 'Você tentou mostrar um object inteiro na tela. Mostre uma propriedade dele (`{user.name}`) ou use `.map()` pra listas.'],
+      [/Too many re-renders/, 'Um `setState` está rodando durante a renderização. No `onClick`, passe uma function: `onClick={() => setCount(count + 1)}`, não `onClick={setCount(count + 1)}`.'],
+      [/Invalid hook call|Rendered more hooks|Rendered fewer hooks/, 'Hooks (`useState`, `useEffect`...) só podem ser chamados no topo de um component, nunca dentro de `if`, loops ou functions internas.'],
+      [/is not defined/, 'Esse nome não existe. Confira maiúsculas: components começam com letra **maiúscula** (`<Card />`), e hooks como `useState` precisam estar escritos certinho.'],
+    ],
     git: [
       [/not a git repository/, 'Essa pasta ainda não é um repositório. Comece com `git init` (ou `git clone <url>` pra baixar um que já existe).'],
       [/nada pra commitar|nothing added to commit/, 'O commit só leva o que está na staging area. Rode `git add <arquivo>` (ou `git add .`) antes do `git commit`.'],
@@ -109,7 +118,7 @@
   ERRORS.dom = ERRORS.js;
   function explainError(runner, msg) {
     if (!msg) return null;
-    const list = (ERRORS[runner] || []).concat(runner === 'ts' ? ERRORS.js : []);
+    const list = (ERRORS[runner] || []).concat(runner === 'ts' || runner === 'react' || runner === 'dom' ? ERRORS.js : []);
     const hit = list.find(([re]) => re.test(msg));
     return hit ? hit[1] : null;
   }

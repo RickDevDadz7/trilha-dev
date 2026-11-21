@@ -184,7 +184,7 @@
         <header class="page-head">
           <span class="hud">Sistema online · ${total} lições carregadas</span>
           <h1 class="glitch">Escolha sua trilha</h1>
-          <p>Do zero ao avançado em JavaScript, TypeScript, SQL e HTML/CSS. Lições curtas, código que roda na hora, testes automáticos e um tutor de IA pra destravar. Explicações em português, código em inglês.</p>
+          <p>Do zero ao avançado em JavaScript, TypeScript, SQL, HTML/CSS, React e Git, mais inglês pra devs e o caminho até uma vaga na Europa. Lições curtas, código que roda na hora, testes automáticos e um tutor de IA pra destravar. Explicações em português, código em inglês.</p>
         </header>
         ${backupNudge()}
         ${reviewBanner()}
@@ -471,7 +471,7 @@
     return `<div class="lesson-foot ${ok ? 'good' : 'badf'}"><div class="msg"><strong>${ok ? 'Acesso liberado' : 'Resposta errada'}</strong>${md(step.why)}${ok ? '' : '<span>Essa pergunta volta na sua revisão, pra fixar.</span>'}</div><button class="btn primary" data-act="next">Continuar <kbd>Enter</kbd></button></div>`;
   }
 
-  function fileName(r) { return { js: 'main.js', ts: 'main.ts', sql: 'query.sql', web: 'index.html', dom: 'index.html', git: 'terminal', text: 'draft.txt' }[r] || 'main.txt'; }
+  function fileName(r) { return { js: 'main.js', ts: 'main.ts', sql: 'query.sql', web: 'index.html', dom: 'index.html', git: 'terminal', text: 'draft.txt', react: 'App.jsx' }[r] || 'main.txt'; }
   function unitIndexOf(c, lessonId) { return c.units.findIndex((u) => u.lessons.some((l) => l.id === lessonId)); }
   function defaultMode(step, ls) {
     if (step._blocks) return TD.ped.parsonsBlocks(step, 'x') ? 'blocks' : 'write';
@@ -541,12 +541,12 @@
     return items.map((x) => `<li class="${x.pass === true ? 'pass' : x.pass === false ? 'fail' : ''}"><span class="dot">${x.pass === true ? '✓' : x.pass === false ? '✕' : ''}</span><span>${inline(x.name)}${x.err ? `<span class="err">${esc(x.err)}</span>` : ''}</span></li>`).join('');
   }
   function outTabs(r, d) {
-    const tab = d.tab || (r === 'sql' ? 'result' : r === 'web' || r === 'dom' ? 'preview' : 'console');
+    const tab = d.tab || (r === 'sql' ? 'result' : (r === 'web' || r === 'dom' || r === 'react') ? 'preview' : 'console');
     const b = (id, label) => `<button class="${tab === id ? 'on' : ''}" data-tab="${id}">${label}</button>`;
     let tabs;
     if (r === 'sql') tabs = b('result', 'Resultado') + b('expected', 'Esperado');
     else if (r === 'web') tabs = b('preview', 'Preview') + (d.res && d.res.output && d.res.output.length ? b('console', 'Console') : '');
-    else if (r === 'dom') tabs = b('preview', 'Preview') + b('console', 'Console');
+    else if (r === 'dom' || r === 'react') tabs = b('preview', 'Preview') + b('console', 'Console');
     else tabs = b('console', 'Console');
     return tabs + `<span class="status">${esc(d.statusText || '')}</span>`;
   }
@@ -572,8 +572,8 @@
     return `<pre class="console">${lines.join('\n')}</pre>${explainHTML(r, res)}`;
   }
   function outBody(r, d) {
-    const tab = d.tab || (r === 'sql' ? 'result' : r === 'web' || r === 'dom' ? 'preview' : 'console');
-    if (r === 'web' || r === 'dom') {
+    const tab = d.tab || (r === 'sql' ? 'result' : (r === 'web' || r === 'dom' || r === 'react') ? 'preview' : 'console');
+    if ((r === 'web' || r === 'dom' || r === 'react')) {
       return `<iframe class="preview-frame ${tab === 'preview' ? '' : 'hidden'}" id="preview" title="Preview"></iframe><div id="dom-console" class="${tab === 'console' ? '' : 'hidden'}">${consoleHTML(d.res, 'console.log aparece aqui depois de rodar.', r)}</div>`;
     }
     const res = d.res;
@@ -598,7 +598,7 @@
     }
     return `<div class="lesson-foot"><div class="msg"><span>${d.mode === 'blocks' ? 'Monte o código com os blocos e clique em Rodar.' : 'Escreva o código e clique em Rodar.'}</span></div><button class="btn primary" data-act="run">Rodar</button></div>`;
   }
-  const cmMode = (r) => ({ js: 'javascript', ts: 'text/typescript', sql: 'text/x-sqlite', web: 'htmlmixed', dom: 'htmlmixed' }[r] || null);
+  const cmMode = (r) => ({ js: 'javascript', ts: 'text/typescript', sql: 'text/x-sqlite', web: 'htmlmixed', dom: 'htmlmixed', react: 'text/typescript-jsx' }[r] || null);
 
   function blocksHTML(d) {
     const pz = d.pz;
@@ -646,7 +646,7 @@
     const tabs = document.getElementById('out-tabs'); if (tabs) tabs.innerHTML = outTabs(r, d);
     const ob = document.getElementById('out-body');
     if (ob) {
-      if (r === 'web' || r === 'dom') {
+      if ((r === 'web' || r === 'dom' || r === 'react')) {
         const tab = d.tab || 'preview';
         const f = document.getElementById('preview'); if (f) f.classList.toggle('hidden', tab !== 'preview');
         const dc = document.getElementById('dom-console'); if (dc) { dc.classList.toggle('hidden', tab !== 'console'); dc.innerHTML = consoleHTML(d.res, 'console.log aparece aqui depois de rodar.', r); }
@@ -681,6 +681,7 @@
       else if (r === 'ts') res = await R.runTS(code, step);
       else if (r === 'sql') res = await R.runSQL(code, step, c);
       else if (r === 'git') res = await R.runGit(code, step);
+      else if (r === 'react') res = await R.runReact(code, step, document.getElementById('preview'));
       else if (r === 'text') res = await R.runText(code, step);
       else res = await R.runWeb(code, step, document.getElementById('preview'));
     } catch (e) {
