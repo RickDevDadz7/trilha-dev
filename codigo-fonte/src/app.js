@@ -246,7 +246,7 @@
     const id = location.hash.replace('#', '');
     if (S.lesson) closeLesson(false);
     if (byId[id]) S.view = { name: 'course', id };
-    else if (id === 'dados') S.view = { name: 'data' };
+    else if (id === 'dados') { S.view = { name: 'config' }; S.scrollTo = 'dados'; }
     else if (id === 'config') S.view = { name: 'config' };
     else if (id === 'login') S.view = { name: 'login' };
     else S.view = { name: 'home' };
@@ -283,7 +283,6 @@
         </div>
         <span class="hud" style="padding:0 8px">Sistema</span>
         <div class="rail-nav">
-          <a class="rail-item ${v.name === 'data' ? 'active' : ''}" href="#dados"><span class="chip sys">⇅</span><span class="mini"><span>Dados e backups</span></span></a>
           <a class="rail-item ${v.name === 'config' ? 'active' : ''}" href="#config"><span class="chip sys">⚙</span><span class="mini"><span>Configurações</span></span></a>
         </div>
         <div class="stats">
@@ -297,7 +296,6 @@
         <a class="${v.name === 'home' ? 'active' : ''}" href="#"><span>▣</span>Trilhas</a>
         <a class="${v.name === 'course' ? 'active' : ''}" href="#${esc(v.name === 'course' ? v.id : (P().last && byId[P().last] ? P().last : COURSES[0].id))}"><span>◆</span>Mapa</a>
         <a href="#" data-start="x:@review"><span>↻</span>Revisão</a>
-        <a class="${v.name === 'data' ? 'active' : ''}" href="#dados"><span>⇅</span>Dados</a>
         <a class="${v.name === 'config' ? 'active' : ''}" href="#config"><span>⚙</span>Config</a>
       </nav>
       <header class="topbar"><span class="brand-name">Over<b>clock</b></span><span class="tb-stat">🔥 ${st}</span><span class="tb-stat">${p.xp} XP</span></header>`;
@@ -422,7 +420,7 @@
   }
 
   /* ---------- dados e backups ---------- */
-  function dataHTML() {
+  function dataCardsHTML() {
     const where = {
       db: 'Banco privado da sua conta no Claude. Só você acessa.',
       native: 'Arquivo no seu PC, com uma cópia automática por dia (guarda as 14 mais recentes).',
@@ -431,11 +429,7 @@
     }[S.mode];
     const last = P().settings.lastExport;
     return `
-      <div class="page">
-        <header class="page-head"><span class="hud">Sistema · persistência</span><h1 class="glitch">Dados e backups</h1>
-          <p>Seu progresso é um registro simples (lições feitas, XP, sequência e o código que você escreveu). Ele pode ser exportado, guardado e restaurado em qualquer versão do app: Claude, navegador ou programa de PC.</p></header>
-        <div class="grid2">
-          <div class="card cut">
+          <div class="card cut" id="dados">
             <span class="hud">Onde está salvo</span>
             <h3>${esc({ db: 'Conta Claude', native: 'Programa de PC', device: 'Navegador', local: 'Navegador' }[S.mode])}</h3>
             <p>${esc(where)}</p>
@@ -458,8 +452,7 @@
             <p>Toda semana o app guarda uma cópia do progresso dentro do próprio armazenamento (as 4 mais recentes).</p>
             <div class="list" id="auto-list"><div class="list-item"><span class="grow"><small>Carregando...</small></span></div></div>
           </div>
-        </div>
-      </div>`;
+`;
   }
   async function fillAutoBackups() {
     const box = document.getElementById('auto-list'); if (!box) return;
@@ -523,6 +516,7 @@
             <div class="row"><button class="btn primary" data-act="save-key">Salvar e testar</button>${ai.key ? '<button class="btn ghost" data-act="clear-key">Remover chave</button>' : ''}</div>`}
           </div>
           ${accountHTML()}
+          ${dataCardsHTML()}
           <div class="card cut">
             <span class="hud" style="color:var(--magenta)">Zona de risco</span><h3>Zerar progresso</h3>
             <p>Apaga XP, sequência e lições feitas. Faça um backup antes.</p>
@@ -1093,10 +1087,13 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
       app.className = 'app auth'; app.innerHTML = loginHTML(); return;
     }
     app.className = 'app';
-    const main = v.name === 'course' ? courseHTML(byId[v.id]) : v.name === 'data' ? dataHTML() : v.name === 'config' ? configHTML() : homeHTML();
+    const main = v.name === 'course' ? courseHTML(byId[v.id]) : v.name === 'config' ? configHTML() : homeHTML();
     app.innerHTML = railHTML() + `<main class="main"${v.name === 'course' ? ` data-course="${v.id}"` : ''}>${main}</main>`;
     renderSaveState();
-    if (v.name === 'data') fillAutoBackups();
+    if (v.name === 'config') {
+      fillAutoBackups();
+      if (S.scrollTo) { const el = document.getElementById(S.scrollTo); S.scrollTo = null; if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' })); }
+    }
   }
 
   /* ---------- boot ---------- */
