@@ -1,4 +1,4 @@
-/* Efeitos sonoros do Trilha Dev: sintetizados na hora com Web Audio (nenhum arquivo de áudio).
+/* Efeitos sonoros do Overclock: sintetizados na hora com Web Audio (nenhum arquivo de áudio).
  * Estética synth/neon: blips de interface, arpejos, ruído filtrado e eco. */
 (function (TD) {
   'use strict';

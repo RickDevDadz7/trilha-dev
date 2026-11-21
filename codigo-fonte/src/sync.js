@@ -1,4 +1,4 @@
-/* Trilha Dev — sincronização entre aparelhos pela conta (Supabase, tabela trilha_sync).
+/* Overclock — sincronização entre aparelhos pela conta (Supabase, tabela trilha_sync).
  * Cada aparelho grava só a própria linha; ao sincronizar, lê as linhas dos outros aparelhos
  * da mesma conta e junta tudo. A junção é idempotente: sincronizar duas vezes não muda nada.
  *

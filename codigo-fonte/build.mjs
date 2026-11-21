@@ -1,4 +1,4 @@
-// Build do Trilha Dev (mesmo esquema do Deutsch mit Plan).
+// Build do Overclock (antes Trilha Dev) (mesmo esquema do Deutsch mit Plan).
 // Gera, a partir de src/:
 //   dist/index.html           -> versão do artifact no Claude.ai (+ dist/vendor)
 //   ../index.html (raiz)      -> app web instalável (GitHub Pages / PWA) + sw.js, manifest, vendor/
@@ -34,7 +34,7 @@ function page({ pwa }) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trilha Dev</title>
+<title>Overclock</title>
 <meta name="theme-color" content="#06070b">
 ${pwa ? '<link rel="manifest" href="manifest.webmanifest">\n<link rel="apple-touch-icon" href="icon-180.png">' : ''}
 <link rel="icon" href="data:image/svg+xml,${encodeURIComponent(readFileSync(join(here, 'assets', 'icon.svg'), 'utf8').replace(/\s+/g, ' '))}">
@@ -72,7 +72,7 @@ copyVendor(root);
 copyFileSync(join(here, 'assets', 'icon.svg'), join(root, 'icon.svg'));
 for (const n of [180, 192, 512]) copyFileSync(join(here, 'assets', `icon-${n}.png`), join(root, `icon-${n}.png`));
 writeFileSync(join(root, 'manifest.webmanifest'), JSON.stringify({
-  name: 'Trilha Dev', short_name: 'Trilha Dev', description: 'Aprenda JavaScript, TypeScript, SQL, HTML/CSS, React e Git',
+  name: 'Overclock', short_name: 'Overclock', description: 'Aprenda JavaScript, TypeScript, SQL, HTML/CSS, React e Git',
   id: '/trilha-dev/', start_url: './', scope: './', display: 'standalone',
   background_color: '#0b0510', theme_color: '#0b0510', lang: 'pt-BR',
   icons: [

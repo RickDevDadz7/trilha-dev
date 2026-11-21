@@ -1,4 +1,4 @@
-/* Trilha Dev — terminal simulado de Git + runner de texto (inglês/carreira).
+/* Overclock — terminal simulado de Git + runner de texto (inglês/carreira).
    Nada roda no sistema de verdade: é um repositório em memória, determinístico,
    pra ensinar o modelo mental do Git (working directory → staging → commits → branches → remote). */
 (function () {

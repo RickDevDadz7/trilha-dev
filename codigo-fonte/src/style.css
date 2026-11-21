@@ -1,4 +1,4 @@
-/* Trilha Dev — cyberpunk HUD. Single dark theme by choice: neon yellow primary, cyan for system/info,
+/* Overclock — cyberpunk HUD. Single dark theme by choice: neon yellow primary, cyan for system/info,
    magenta for errors/alerts. Layout: left rail (status + trilhas), main canvas (home, mapa, lição, dados, config). */
 :root {
   --bg: #06070b;
@@ -406,7 +406,7 @@ kbd { font-size: 10.5px; padding: 1px 5px; border: 1px solid currentColor; opaci
 
 input[type="range"] { accent-color: var(--yellow); width: 100%; }
 
-/* ---------- Método Trilha ---------- */
+/* ---------- Método Overclock ---------- */
 .card-chunk { display: flex; flex-direction: column; gap: 12px; padding-left: 14px; border-left: 2px solid var(--line-2); }
 .card-chunk:last-child { border-left-color: var(--accent, var(--cyan)); }
 .card-chunk.fresh { animation: chunk-in .35s ease-out both; }

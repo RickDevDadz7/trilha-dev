@@ -1,4 +1,4 @@
-/* Trilha Dev — interface. Depende de: TD.courses (conteúdo), TD.store, TD.runners, TD.local. */
+/* Overclock — interface. Depende de: TD.courses (conteúdo), TD.store, TD.runners, TD.local. */
 (function (TD) {
   'use strict';
   const COURSES = TD.courses || [];
@@ -183,7 +183,7 @@
     const v = S.view;
     return `
       <aside class="rail" aria-label="Navegação">
-        <a class="brand" href="#"><span class="brand-mark" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 512 512"><path d="M56 56 H400 L456 112 V456 H112 L56 400 Z" fill="#ff3ea5"/><polyline points="214,166 132,256 214,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><polyline points="298,166 380,256 298,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><rect x="24" y="226" width="210" height="20" fill="#00e5ff"/><rect x="300" y="300" width="188" height="14" fill="#ffffff"/></svg></span><span class="brand-name">Trilha<b>.dev</b></span></a>
+        <a class="brand" href="#"><span class="brand-mark" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 512 512"><path d="M56 56 H400 L456 112 V456 H112 L56 400 Z" fill="#ff3ea5"/><polyline points="214,166 132,256 214,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><polyline points="298,166 380,256 298,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><rect x="24" y="226" width="210" height="20" fill="#00e5ff"/><rect x="300" y="300" width="188" height="14" fill="#ffffff"/></svg></span><span class="brand-name">Over<b>clock</b></span></a>
         <div class="rank cut">
           <span class="hud">Rank ${String(r.level).padStart(2, '0')}</span>
           <div class="who"><strong>${esc(r.name)}</strong><span>${p.xp} XP</span></div>
@@ -221,7 +221,7 @@
         <a class="${v.name === 'data' ? 'active' : ''}" href="#dados"><span>⇅</span>Dados</a>
         <a class="${v.name === 'config' ? 'active' : ''}" href="#config"><span>⚙</span>Config</a>
       </nav>
-      <header class="topbar"><span class="brand-name">Trilha<b>.dev</b></span><span class="tb-stat">🔥 ${st}</span><span class="tb-stat">${p.xp} XP</span></header>`;
+      <header class="topbar"><span class="brand-name">Over<b>clock</b></span><span class="tb-stat">🔥 ${st}</span><span class="tb-stat">${p.xp} XP</span></header>`;
   }
 
   /* ---------- home ---------- */
@@ -329,7 +329,7 @@
               ${nl ? `<button class="btn primary" data-start="${c.id}:${nl.id}">${d ? 'Continuar' : 'Começar'} ${ICON.play}</button>` : ''}
             </div>
             ${c.notes ? `<div class="card cut"><span class="hud">Briefing</span>${md(c.notes)}</div>` : ''}
-            <div class="card cut"><span class="hud">Método Trilha</span><p>Teoria em pedaços curtos, quiz pra puxar da memória, exercício com a teoria à mão e modo guiado com blocos. No fim de cada módulo, um checkpoint misturando tudo. E a Revisão do dia traz de volta o que você estudou, no tempo certo pra não esquecer.</p></div>
+            <div class="card cut"><span class="hud">Método Overclock</span><p>Teoria em pedaços curtos, quiz pra puxar da memória, exercício com a teoria à mão e modo guiado com blocos. No fim de cada módulo, um checkpoint misturando tudo. E a Revisão do dia traz de volta o que você estudou, no tempo certo pra não esquecer.</p></div>
           </aside>
         </div>
       </div>`;
@@ -386,7 +386,7 @@
   }
   function exportJSON() { return JSON.stringify(S.store.exportData(now(), TD.contentVersion)); }
   async function doExport() {
-    const name = 'trilha-dev-backup-' + dayKey() + '.json';
+    const name = 'overclock-backup-' + dayKey() + '.json';
     const data = exportJSON();
     if (S.caps.downloads) {
       try { await S.caps.downloads.save({ filename: name, data }); P().settings.lastExport = now(); await saveProgress(); toast('Backup salvo: ' + name); render(); return; }
@@ -444,14 +444,14 @@
             <div id="reset-box"></div>
           </div>
           <div class="card cut">
-            <span class="hud">Versão</span><h3>Trilha Dev</h3>
+            <span class="hud">Versão</span><h3>Overclock</h3>
             <p>Conteúdo ${esc(TD.contentVersion || '')} · ${COURSES.reduce((a, c) => a + allLessons(c).length, 0)} lições · ${COURSES.reduce((a, c) => a + allLessons(c).reduce((b, l) => b + l.steps.filter((s) => s.t === 'code').length, 0), 0)} exercícios de código.</p>
           </div>
         </div>
       </div>`;
   }
 
-  /* ---------- player de lição (Método Trilha: ver pedagogy.js e PEDAGOGIA.md) ---------- */
+  /* ---------- player de lição (Método Overclock: ver pedagogy.js e PEDAGOGIA.md) ---------- */
   const isAsk = (s) => s && (s.t === 'quiz' || s.t === 'predict');
   function findLesson(cid, lid) { const c = byId[cid]; const l = c && allLessons(c).find((x) => x.id === lid); return l ? { c, l } : null; }
   function newLessonState(c, lesson, kind) {
@@ -786,7 +786,7 @@
     const tests = (d.results || []).map((r) => `- [${r.pass ? 'ok' : 'falhou'}] ${r.name}${r.err ? ' (' + r.err + ')' : ''}`).join('\n') || '(o aluno ainda não rodou o código)';
     const errs = d.res ? [d.res.error, ...(d.res.typeErrors || [])].filter(Boolean).join('\n') : '';
     const r = stepRunner(c, step);
-    const prompt = `Você é o tutor do app Trilha Dev e está ensinando ${c.name} para um brasileiro iniciante (inglês intermediário).
+    const prompt = `Você é o tutor do app Overclock e está ensinando ${c.name} para um brasileiro iniciante (inglês intermediário).
 Regras:
 - Responda em português do Brasil, direto e amigável, com um toque de humor cyberpunk se couber.
 - Termos técnicos e código ficam em inglês (string, array, function, loop, query, selector, property, type...). Não traduza esses termos.

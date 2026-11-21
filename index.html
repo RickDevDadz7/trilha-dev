@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trilha Dev</title>
+<title>Overclock</title>
 <meta name="theme-color" content="#06070b">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -357,7 +357,7 @@ div.CodeMirror-dragcursors {
 /* Help users use markselection to safely style text background */
 span.CodeMirror-selectedtext { background: none; }
 
-/* Trilha Dev — cyberpunk HUD. Single dark theme by choice: neon yellow primary, cyan for system/info,
+/* Overclock — cyberpunk HUD. Single dark theme by choice: neon yellow primary, cyan for system/info,
    magenta for errors/alerts. Layout: left rail (status + trilhas), main canvas (home, mapa, lição, dados, config). */
 :root {
   --bg: #06070b;
@@ -765,7 +765,7 @@ kbd { font-size: 10.5px; padding: 1px 5px; border: 1px solid currentColor; opaci
 
 input[type="range"] { accent-color: var(--yellow); width: 100%; }
 
-/* ---------- Método Trilha ---------- */
+/* ---------- Método Overclock ---------- */
 .card-chunk { display: flex; flex-direction: column; gap: 12px; padding-left: 14px; border-left: 2px solid var(--line-2); }
 .card-chunk:last-child { border-left-color: var(--accent, var(--cyan)); }
 .card-chunk.fresh { animation: chunk-in .35s ease-out both; }
@@ -4280,7 +4280,7 @@ return (
 
 ~~~
 function Logo() {
-  return <span className="logo">Trilha</span>;
+  return <span className="logo">Overclock</span>;
 }
 
 function App() {
@@ -5185,7 +5185,7 @@ Um projeto bom:
 - tem **README** em inglês, com print
 - tem commits frequentes e com mensagem decente
 - idealmente tem **testes**`),
-          learn('Ideias que impressionam', `- Um app que você usa de verdade (este Trilha Dev conta!)
+          learn('Ideias que impressionam', `- Um app que você usa de verdade (este Overclock conta!)
 - Um clone simplificado de algo conhecido, com uma feature sua
 - Um dashboard consumindo uma **API pública** (clima, transporte, câmbio)
 - Uma contribuição em projeto **open source** (até corrigir docs vale)
@@ -5195,9 +5195,9 @@ Fixe 3 a 6 repos no seu perfil do GitHub (**pinned**).`),
           quiz('Qual desses pesa mais no portfólio de um júnior?', ['20 repositórios de tutorial', 'Um projeto no ar, com README, testes e histórico de commits', 'Muitas estrelas em repos dos outros', 'Um repo com um arquivo só'], 1, 'Mostra que você termina, publica e documenta: é o que o trabalho pede.'),
           quiz('Por que colocar o projeto no ar (demo)?', ['Não precisa, o código basta', 'Recrutador gasta segundos por candidato: clicar e ver funcionando convence mais', 'Pra gastar menos espaço no GitHub', 'É obrigatório pelo GitHub'], 1, 'Um link que funciona é a prova mais rápida de que você entrega.'),
           quiz('O que é um repo **pinned** no GitHub?', ['Um repo privado', 'Um repo fixado no topo do seu perfil', 'Um repo arquivado', 'Um fork'], 1, 'Você escolhe até 6 repos pra aparecerem em destaque no perfil.'),
-          code({ title: 'README de projeto', task: 'Escreva o README em inglês de um projeto seu (pode ser o Trilha Dev). Use as seções `## About`, `## Tech stack` (com 2+ itens `- `), `## How to run` (com um comando em crase, tipo `` `npm install` ``) e `## Live demo` (com um link `https://`).',
+          code({ title: 'README de projeto', task: 'Escreva o README em inglês de um projeto seu (pode ser o Overclock). Use as seções `## About`, `## Tech stack` (com 2+ itens `- `), `## How to run` (com um comando em crase, tipo `` `npm install` ``) e `## Live demo` (com um link `https://`).',
             starter: '# Project name\n\n## About\n\n## Tech stack\n\n## How to run\n\n## Live demo\n',
-            solution: '# Trilha Dev\n\n## About\nA programming learning app with bite-size lessons, spaced repetition and automated code tests.\n\n## Tech stack\n- JavaScript\n- TypeScript compiler in the browser\n- SQLite (sql.js)\n\n## How to run\nRun `node build.mjs` and open dist/index.html.\n\n## Live demo\nhttps://rickdevdadz7.github.io/trilha-dev/',
+            solution: '# Overclock\n\n## About\nA programming learning app with bite-size lessons, spaced repetition and automated code tests.\n\n## Tech stack\n- JavaScript\n- TypeScript compiler in the browser\n- SQLite (sql.js)\n\n## How to run\nRun `node build.mjs` and open dist/index.html.\n\n## Live demo\nhttps://rickdevdadz7.github.io/trilha-dev/',
             hint: 'Preencha cada seção. No "How to run", coloque o comando entre crases.',
             tests: [['About com conteúdo', '/## About\\s*\\n\\s*[A-Za-z]/.test(text)'], ['Tech stack com 2+ itens', '(text.split("## Tech stack")[1] || "").split("##")[0].split("\\n").filter((l) => /^\\s*- \\S/.test(l)).length >= 2'], ['How to run com comando em crase', '/## How to run[\\s\\S]*?`[^`]+`/.test(text)'], ['Live demo com link', '/## Live demo[\\s\\S]*https:\\/\\/\\S+/.test(text)']] }))
       ),
@@ -5233,7 +5233,7 @@ Dica: muitas vagas de tech em Berlim e Munique são **em inglês**. Procure por 
 
 </script>
 <script>/* store.js */
-/* Persistência do Trilha Dev (mesmo modelo do Deutsch mit Plan).
+/* Persistência do Overclock (antes Trilha Dev) (mesmo modelo do Deutsch mit Plan).
  * Backends com a mesma interface get/set/del/list:
  *  - DbBackend: banco do artifact no Claude.ai (privado por usuário)
  *  - NativeBackend: arquivo JSON no PC (Electron), com cópias diárias automáticas
@@ -5335,7 +5335,7 @@ Dica: muitas vagas de tech em Berlim e Munique são **em inglês**. Procure por 
     return { app: APP, schema: SCHEMA, contentVersion, exportedAt: now, checksum: fnv(stable(data)), data };
   };
   function validateBackup(obj) {
-    if (!obj || obj.app !== APP) return 'Esse arquivo não é um backup do Trilha Dev.';
+    if (!obj || obj.app !== APP) return 'Esse arquivo não é um backup do Overclock.';
     if (obj.schema !== SCHEMA) return 'Versão de backup incompatível (' + obj.schema + ').';
     if (!obj.data || !validProgress(obj.data.progress)) return 'Backup sem progresso válido.';
     if (fnv(stable(obj.data)) !== obj.checksum) return 'O checksum não confere: o arquivo foi alterado ou está corrompido.';
@@ -5436,7 +5436,7 @@ Dica: muitas vagas de tech em Berlim e Munique são **em inglês**. Procure por 
 
 </script>
 <script>/* cloud.js */
-/* Trilha Dev — conta do usuário (Supabase Auth): e-mail e senha + Google.
+/* Overclock — conta do usuário (Supabase Auth): e-mail e senha + Google.
  * Mesmo projeto Supabase do Deutsch mit Plan: uma conta serve pros dois apps; cada app tem a própria tabela.
  * Fala direto com a API REST do Supabase (sem biblioteca externa), funciona no PWA e no programa de PC.
  * - A chave "publishable" é pública por natureza; a proteção dos dados vem das regras RLS no banco
@@ -5571,7 +5571,7 @@ Dica: muitas vagas de tech em Berlim e Munique são **em inglês**. Procure por 
 
 </script>
 <script>/* sync.js */
-/* Trilha Dev — sincronização entre aparelhos pela conta (Supabase, tabela trilha_sync).
+/* Overclock — sincronização entre aparelhos pela conta (Supabase, tabela trilha_sync).
  * Cada aparelho grava só a própria linha; ao sincronizar, lê as linhas dos outros aparelhos
  * da mesma conta e junta tudo. A junção é idempotente: sincronizar duas vezes não muda nada.
  *
@@ -6179,7 +6179,7 @@ type Expect<T extends true> = T;
 
 </script>
 <script>/* gitsim.js */
-/* Trilha Dev — terminal simulado de Git + runner de texto (inglês/carreira).
+/* Overclock — terminal simulado de Git + runner de texto (inglês/carreira).
    Nada roda no sistema de verdade: é um repositório em memória, determinístico,
    pra ensinar o modelo mental do Git (working directory → staging → commits → branches → remote). */
 (function () {
@@ -6613,7 +6613,7 @@ type Expect<T extends true> = T;
 
 </script>
 <script>/* pedagogy.js */
-/* Método Trilha: o motor pedagógico. Vale pra QUALQUER trilha, inclusive as que forem criadas no futuro,
+/* Método Overclock: o motor pedagógico. Vale pra QUALQUER trilha, inclusive as que forem criadas no futuro,
  * porque trabalha só com o formato das lições (learn / quiz / predict / code) e nunca com uma linguagem específica.
  *
  * Base em pesquisa (detalhes em PEDAGOGIA.md):
@@ -6798,7 +6798,7 @@ type Expect<T extends true> = T;
 
 </script>
 <script>/* sfx.js */
-/* Efeitos sonoros do Trilha Dev: sintetizados na hora com Web Audio (nenhum arquivo de áudio).
+/* Efeitos sonoros do Overclock: sintetizados na hora com Web Audio (nenhum arquivo de áudio).
  * Estética synth/neon: blips de interface, arpejos, ruído filtrado e eco. */
 (function (TD) {
   'use strict';
@@ -6914,7 +6914,7 @@ type Expect<T extends true> = T;
 
 </script>
 <script>/* app.js */
-/* Trilha Dev — interface. Depende de: TD.courses (conteúdo), TD.store, TD.runners, TD.local. */
+/* Overclock — interface. Depende de: TD.courses (conteúdo), TD.store, TD.runners, TD.local. */
 (function (TD) {
   'use strict';
   const COURSES = TD.courses || [];
@@ -7099,7 +7099,7 @@ type Expect<T extends true> = T;
     const v = S.view;
     return `
       <aside class="rail" aria-label="Navegação">
-        <a class="brand" href="#"><span class="brand-mark" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 512 512"><path d="M56 56 H400 L456 112 V456 H112 L56 400 Z" fill="#ff3ea5"/><polyline points="214,166 132,256 214,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><polyline points="298,166 380,256 298,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><rect x="24" y="226" width="210" height="20" fill="#00e5ff"/><rect x="300" y="300" width="188" height="14" fill="#ffffff"/></svg></span><span class="brand-name">Trilha<b>.dev</b></span></a>
+        <a class="brand" href="#"><span class="brand-mark" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 512 512"><path d="M56 56 H400 L456 112 V456 H112 L56 400 Z" fill="#ff3ea5"/><polyline points="214,166 132,256 214,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><polyline points="298,166 380,256 298,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><rect x="24" y="226" width="210" height="20" fill="#00e5ff"/><rect x="300" y="300" width="188" height="14" fill="#ffffff"/></svg></span><span class="brand-name">Over<b>clock</b></span></a>
         <div class="rank cut">
           <span class="hud">Rank ${String(r.level).padStart(2, '0')}</span>
           <div class="who"><strong>${esc(r.name)}</strong><span>${p.xp} XP</span></div>
@@ -7137,7 +7137,7 @@ type Expect<T extends true> = T;
         <a class="${v.name === 'data' ? 'active' : ''}" href="#dados"><span>⇅</span>Dados</a>
         <a class="${v.name === 'config' ? 'active' : ''}" href="#config"><span>⚙</span>Config</a>
       </nav>
-      <header class="topbar"><span class="brand-name">Trilha<b>.dev</b></span><span class="tb-stat">🔥 ${st}</span><span class="tb-stat">${p.xp} XP</span></header>`;
+      <header class="topbar"><span class="brand-name">Over<b>clock</b></span><span class="tb-stat">🔥 ${st}</span><span class="tb-stat">${p.xp} XP</span></header>`;
   }
 
   /* ---------- home ---------- */
@@ -7245,7 +7245,7 @@ type Expect<T extends true> = T;
               ${nl ? `<button class="btn primary" data-start="${c.id}:${nl.id}">${d ? 'Continuar' : 'Começar'} ${ICON.play}</button>` : ''}
             </div>
             ${c.notes ? `<div class="card cut"><span class="hud">Briefing</span>${md(c.notes)}</div>` : ''}
-            <div class="card cut"><span class="hud">Método Trilha</span><p>Teoria em pedaços curtos, quiz pra puxar da memória, exercício com a teoria à mão e modo guiado com blocos. No fim de cada módulo, um checkpoint misturando tudo. E a Revisão do dia traz de volta o que você estudou, no tempo certo pra não esquecer.</p></div>
+            <div class="card cut"><span class="hud">Método Overclock</span><p>Teoria em pedaços curtos, quiz pra puxar da memória, exercício com a teoria à mão e modo guiado com blocos. No fim de cada módulo, um checkpoint misturando tudo. E a Revisão do dia traz de volta o que você estudou, no tempo certo pra não esquecer.</p></div>
           </aside>
         </div>
       </div>`;
@@ -7302,7 +7302,7 @@ type Expect<T extends true> = T;
   }
   function exportJSON() { return JSON.stringify(S.store.exportData(now(), TD.contentVersion)); }
   async function doExport() {
-    const name = 'trilha-dev-backup-' + dayKey() + '.json';
+    const name = 'overclock-backup-' + dayKey() + '.json';
     const data = exportJSON();
     if (S.caps.downloads) {
       try { await S.caps.downloads.save({ filename: name, data }); P().settings.lastExport = now(); await saveProgress(); toast('Backup salvo: ' + name); render(); return; }
@@ -7360,14 +7360,14 @@ type Expect<T extends true> = T;
             <div id="reset-box"></div>
           </div>
           <div class="card cut">
-            <span class="hud">Versão</span><h3>Trilha Dev</h3>
+            <span class="hud">Versão</span><h3>Overclock</h3>
             <p>Conteúdo ${esc(TD.contentVersion || '')} · ${COURSES.reduce((a, c) => a + allLessons(c).length, 0)} lições · ${COURSES.reduce((a, c) => a + allLessons(c).reduce((b, l) => b + l.steps.filter((s) => s.t === 'code').length, 0), 0)} exercícios de código.</p>
           </div>
         </div>
       </div>`;
   }
 
-  /* ---------- player de lição (Método Trilha: ver pedagogy.js e PEDAGOGIA.md) ---------- */
+  /* ---------- player de lição (Método Overclock: ver pedagogy.js e PEDAGOGIA.md) ---------- */
   const isAsk = (s) => s && (s.t === 'quiz' || s.t === 'predict');
   function findLesson(cid, lid) { const c = byId[cid]; const l = c && allLessons(c).find((x) => x.id === lid); return l ? { c, l } : null; }
   function newLessonState(c, lesson, kind) {
@@ -7702,7 +7702,7 @@ type Expect<T extends true> = T;
     const tests = (d.results || []).map((r) => `- [${r.pass ? 'ok' : 'falhou'}] ${r.name}${r.err ? ' (' + r.err + ')' : ''}`).join('\n') || '(o aluno ainda não rodou o código)';
     const errs = d.res ? [d.res.error, ...(d.res.typeErrors || [])].filter(Boolean).join('\n') : '';
     const r = stepRunner(c, step);
-    const prompt = `Você é o tutor do app Trilha Dev e está ensinando ${c.name} para um brasileiro iniciante (inglês intermediário).
+    const prompt = `Você é o tutor do app Overclock e está ensinando ${c.name} para um brasileiro iniciante (inglês intermediário).
 Regras:
 - Responda em português do Brasil, direto e amigável, com um toque de humor cyberpunk se couber.
 - Termos técnicos e código ficam em inglês (string, array, function, loop, query, selector, property, type...). Não traduza esses termos.

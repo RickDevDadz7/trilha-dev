@@ -1,6 +1,6 @@
-# Método Trilha
+# Método Overclock
 
-Este é o jeito de ensinar do Trilha Dev. Ele vale para **todas** as linguagens, inclusive as que forem adicionadas no futuro. O motor (`codigo-fonte/src/pedagogy.js`) aplica as regras automaticamente. O validador (`node codigo-fonte/test/lint.mjs`) barra conteúdo que quebra as regras.
+Este é o jeito de ensinar do Overclock. Ele vale para **todas** as linguagens, inclusive as que forem adicionadas no futuro. O motor (`codigo-fonte/src/pedagogy.js`) aplica as regras automaticamente. O validador (`node codigo-fonte/test/lint.mjs`) barra conteúdo que quebra as regras.
 
 ## O que a pesquisa diz, e o que o app faz com isso
 

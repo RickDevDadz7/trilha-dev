@@ -1,6 +1,6 @@
 {
-  "name": "Trilha Dev",
-  "short_name": "Trilha Dev",
+  "name": "Overclock",
+  "short_name": "Overclock",
   "description": "Aprenda JavaScript, TypeScript, SQL, HTML/CSS, React e Git",
   "id": "/trilha-dev/",
   "start_url": "./",

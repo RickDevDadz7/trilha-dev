@@ -69,7 +69,7 @@ return (
 
 ~~~
 function Logo() {
-  return <span className="logo">Trilha</span>;
+  return <span className="logo">Overclock</span>;
 }
 
 function App() {

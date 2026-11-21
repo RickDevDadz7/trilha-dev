@@ -1,6 +1,8 @@
-# Trilha Dev
+# Overclock
 
-**Instalador para Windows:** [Trilha-Dev-Setup.exe](https://github.com/RickDevDadz7/trilha-dev/releases/latest/download/Trilha-Dev-Setup.exe) (o Windows pode avisar "O Windows protegeu o computador": *Mais informações* → *Executar assim mesmo*).
+*(antes chamado Trilha Dev; o endereço do site e o repositório continuam `trilha-dev`)*
+
+**Instalador para Windows:** [Overclock-Setup.exe](https://github.com/RickDevDadz7/trilha-dev/releases/latest/download/Overclock-Setup.exe) (o Windows pode avisar "O Windows protegeu o computador": *Mais informações* → *Executar assim mesmo*).
 
 **App no navegador:** https://rickdevdadz7.github.io/trilha-dev/ — abra no Chrome ou Edge do computador e clique em **Instalar** (ícone na barra de endereço). Ele vira um programa com ícone próprio, abre em janela separada e funciona offline.
 
@@ -62,7 +64,7 @@ Precisa do [Node.js](https://nodejs.org) instalado.
 cd codigo-fonte/desktop
 npm install
 npm start            # gera o app e abre
-npm run dist:win     # gera release/Trilha-Dev-Setup.exe
+npm run dist:win     # gera release/Overclock-Setup.exe
 ```
 
 ## Desenvolvimento

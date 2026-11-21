@@ -1,4 +1,4 @@
-/* Trilha Dev — conta do usuário (Supabase Auth): e-mail e senha + Google.
+/* Overclock — conta do usuário (Supabase Auth): e-mail e senha + Google.
  * Mesmo projeto Supabase do Deutsch mit Plan: uma conta serve pros dois apps; cada app tem a própria tabela.
  * Fala direto com a API REST do Supabase (sem biblioteca externa), funciona no PWA e no programa de PC.
  * - A chave "publishable" é pública por natureza; a proteção dos dados vem das regras RLS no banco

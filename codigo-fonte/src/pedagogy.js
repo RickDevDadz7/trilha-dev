@@ -1,4 +1,4 @@
-/* Método Trilha: o motor pedagógico. Vale pra QUALQUER trilha, inclusive as que forem criadas no futuro,
+/* Método Overclock: o motor pedagógico. Vale pra QUALQUER trilha, inclusive as que forem criadas no futuro,
  * porque trabalha só com o formato das lições (learn / quiz / predict / code) e nunca com uma linguagem específica.
  *
  * Base em pesquisa (detalhes em PEDAGOGIA.md):

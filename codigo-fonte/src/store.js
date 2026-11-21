@@ -1,4 +1,4 @@
-/* Persistência do Trilha Dev (mesmo modelo do Deutsch mit Plan).
+/* Persistência do Overclock (antes Trilha Dev) (mesmo modelo do Deutsch mit Plan).
  * Backends com a mesma interface get/set/del/list:
  *  - DbBackend: banco do artifact no Claude.ai (privado por usuário)
  *  - NativeBackend: arquivo JSON no PC (Electron), com cópias diárias automáticas
@@ -100,7 +100,7 @@
     return { app: APP, schema: SCHEMA, contentVersion, exportedAt: now, checksum: fnv(stable(data)), data };
   };
   function validateBackup(obj) {
-    if (!obj || obj.app !== APP) return 'Esse arquivo não é um backup do Trilha Dev.';
+    if (!obj || obj.app !== APP) return 'Esse arquivo não é um backup do Overclock.';
     if (obj.schema !== SCHEMA) return 'Versão de backup incompatível (' + obj.schema + ').';
     if (!obj.data || !validProgress(obj.data.progress)) return 'Backup sem progresso válido.';
     if (fnv(stable(obj.data)) !== obj.checksum) return 'O checksum não confere: o arquivo foi alterado ou está corrompido.';

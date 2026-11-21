@@ -1,4 +1,4 @@
-// Trilha Dev — programa de PC (Electron).
+// Overclock (antes Trilha Dev) — programa de PC (Electron).
 // Dados ficam em <pasta do usuário>/Trilha Dev/dados (um JSON por registro),
 // com uma cópia automática por dia em dados-copias/AAAA-MM-DD (guarda as 14 mais recentes).
 const { app, BrowserWindow, ipcMain, dialog, shell, net } = require('electron');
@@ -70,7 +70,7 @@ ipcMain.handle('ai:post', async (e, key, body) => {
 function createWindow() {
   const win = new BrowserWindow({
     width: 1440, height: 920, minWidth: 1000, minHeight: 640,
-    backgroundColor: '#06070b', title: 'Trilha Dev', autoHideMenuBar: true,
+    backgroundColor: '#06070b', title: 'Overclock', autoHideMenuBar: true,
     icon: path.join(__dirname, 'app', 'icon-512.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true }
   });
@@ -93,6 +93,6 @@ function createWindow() {
   win.loadURL(REMOTE, { extraHeaders: 'pragma: no-cache\ncache-control: no-cache\n' });
 }
 
-app.setName('Trilha Dev');
+app.setName('Trilha Dev'); // nome interno mantido: é a pasta onde ficam os dados de quem já usava
 app.whenReady().then(() => { dailyCopy(); createWindow(); });
 app.on('window-all-closed', () => { app.quit(); });

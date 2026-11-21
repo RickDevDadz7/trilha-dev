@@ -1,4 +1,4 @@
-/* Service worker do Trilha Dev: deixa o app abrir offline depois da primeira visita. */
+/* Service worker do Overclock: deixa o app abrir offline depois da primeira visita. */
 const CACHE = 'trilha-dev-__VERSION__';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './vendor/codemirror.min.js', './vendor/typescript.min.js', './vendor/sql-asm.js'];
 

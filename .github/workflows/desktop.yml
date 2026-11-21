@@ -27,10 +27,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: Trilha Dev 1.0.${{ github.run_number }}
+          name: Overclock 1.0.${{ github.run_number }}
           make_latest: true
           body: |
-            Instalador do Trilha Dev para Windows.
-            Baixe o **Trilha-Dev-Setup.exe**, execute e siga o instalador.
+            Instalador do Overclock para Windows.
+            Baixe o **Overclock-Setup.exe**, execute e siga o instalador.
             Como o programa não tem assinatura digital paga, o Windows pode mostrar "O Windows protegeu o computador": clique em **Mais informações** → **Executar assim mesmo**.
-          files: release/Trilha-Dev-Setup.exe
+          files: release/Overclock-Setup.exe
