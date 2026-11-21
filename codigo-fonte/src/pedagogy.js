@@ -127,7 +127,7 @@
   const isPracticeStep = (s) => s.t === 'quiz' || s.t === 'predict' || s.t === 'code';
   function schedule(item, correct, now) {
     const box = correct ? Math.min((item ? item.box : 0) + 1, INTERVALS.length - 1) : 0;
-    return { box, due: now + INTERVALS[box] * DAY, seen: ((item && item.seen) || 0) + 1, last: correct ? 1 : 0 };
+    return { box, due: now + INTERVALS[box] * DAY, seen: ((item && item.seen) || 0) + 1, last: correct ? 1 : 0, at: now };
   }
   function enrollLesson(progress, lesson, results, now) {
     progress.srs = progress.srs || {};

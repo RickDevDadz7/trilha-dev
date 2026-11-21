@@ -98,7 +98,72 @@
     el.className = 'save-state' + (n ? ' busy' : S.store.lastError ? ' err' : '');
     el.textContent = n ? 'salvando...' : S.store.lastError ? 'erro ao salvar, tentando de novo' : 'salvo ' + where;
   }
-  function saveProgress() { return S.store.saveProgress().catch(() => {}); }
+  function saveProgress() { const r = S.store.saveProgress().catch(() => {}); scheduleSync(); return r; }
+
+  /* ---------- conta e sincronização ---------- */
+  const cloudOn = () => !!(TD.cloud && TD.cloud.available() && S.mode !== 'db');
+  let syncTimer = null;
+  function scheduleSync(ms = 4000) {
+    if (!cloudOn() || !TD.cloud.user()) return;
+    clearTimeout(syncTimer); syncTimer = setTimeout(() => runSync(false), ms);
+  }
+  async function runSync(manual) {
+    if (!cloudOn() || !TD.cloud.user()) return null;
+    S.syncing = true; if (manual) refreshAccount();
+    try {
+      await S.store.flush();
+      const info = await TD.sync.syncNow(S.store);
+      S.syncError = null;
+      if (info.changed && !S.lesson) render();
+      if (manual) toast(info.changed ? 'Sincronizado: progresso dos outros aparelhos trazido.' : 'Tudo em dia.');
+      return info;
+    } catch (e) {
+      S.syncError = e.message;
+      if (manual) toast(e.message);
+      log('warn', 'sync: ' + (e.code || e.message));
+      return null;
+    } finally { S.syncing = false; refreshAccount(); }
+  }
+  function refreshAccount() { const box = document.getElementById('account-card'); if (box) box.outerHTML = accountHTML(); }
+  function accountHTML() {
+    if (!TD.cloud) return '';
+    if (!cloudOn()) {
+      return `<div class="card cut" id="account-card"><span class="hud">Conta</span><h3>Sincronização</h3><p>${S.mode === 'db' ? 'Dentro do Claude o progresso já fica salvo na sua conta Claude.' : 'Indisponível aqui.'} Pra sincronizar o celular e o PC, use o app instalado ou o site <strong>rickdevdadz7.github.io/trilha-dev</strong>. Pra levar o progresso daqui pra lá, use Exportar/Restaurar backup.</p></div>`;
+    }
+    const u = TD.cloud.user();
+    const desktop = !!window.tdNative;
+    if (!u) {
+      return `<div class="card cut" id="account-card"><span class="hud">Conta</span><h3>Sincronizar PC e celular</h3>
+        <p>Entre com a mesma conta nos dois aparelhos e o progresso se junta sozinho. É a mesma conta do Deutsch mit Plan.</p>
+        ${desktop ? '<p class="dim-note">No programa de PC, entre com e-mail e senha. Se criou a conta com o Google, use "Esqueci a senha" pra criar uma senha pra ela.</p>' : '<div class="row"><button class="btn primary google-btn" data-act="cloud-google"><b>G</b> Entrar com Google</button></div><p class="dim-note" style="margin:10px 0 4px">ou com e-mail e senha:</p>'}
+        <div class="field"><label for="cloud-email">E-mail</label><input id="cloud-email" type="email" autocomplete="email" placeholder="voce@email.com"></div>
+        <div class="field"><label for="cloud-pass">Senha</label><input id="cloud-pass" type="password" autocomplete="current-password" placeholder="mínimo 8 caracteres"></div>
+        <div class="row"><button class="btn ${desktop ? 'primary' : ''}" data-act="cloud-signin">Entrar</button><button class="btn ghost" data-act="cloud-signup">Criar conta</button><button class="btn ghost sm" data-act="cloud-recover">Esqueci a senha</button></div>
+        <div id="cloud-msg" class="dim-note"></div></div>`;
+    }
+    const last = TD.sync.lastInfo();
+    const when = last ? new Date(last.at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'ainda não';
+    return `<div class="card cut" id="account-card"><span class="hud">Conta</span><h3>${esc(u.email || 'Conectado')}</h3>
+      <p>Sincroniza sozinho ao abrir, ao terminar lições e a cada 10 minutos.</p>
+      <p class="dim-note">Última sincronização: ${esc(when)}${last ? ` · ${last.devices} aparelho${last.devices > 1 ? 's' : ''}` : ''}${S.syncError ? `<br><span style="color:var(--magenta)">${esc(S.syncError)}</span>` : ''}</p>
+      ${S.recovery ? `<div class="field"><label for="cloud-newpass">Nova senha</label><input id="cloud-newpass" type="password" autocomplete="new-password" placeholder="mínimo 8 caracteres"></div><div class="row"><button class="btn primary" data-act="cloud-newpass">Salvar senha</button></div>` : ''}
+      <div class="row"><button class="btn primary" data-act="cloud-sync" ${S.syncing ? 'disabled' : ''}>${S.syncing ? 'Sincronizando...' : 'Sincronizar agora'}</button><button class="btn ghost" data-act="cloud-pass-show">Definir senha</button><button class="btn ghost" data-act="cloud-signout">Sair</button></div></div>`;
+  }
+  async function cloudAction(act) {
+    const msg = (t) => { const m = document.getElementById('cloud-msg'); if (m) m.textContent = t; else toast(t); };
+    const email = () => (document.getElementById('cloud-email') || {}).value || '';
+    const pass = () => (document.getElementById('cloud-pass') || {}).value || '';
+    try {
+      if (act === 'cloud-google') { TD.cloud.signInWithGoogle(); return; }
+      if (act === 'cloud-signin') { msg('Entrando...'); await TD.cloud.signIn(email(), pass()); toast('Conectado. Sincronizando...'); refreshAccount(); await runSync(true); return; }
+      if (act === 'cloud-signup') { msg('Criando...'); const r = await TD.cloud.signUp(email(), pass()); if (r.confirm) msg('Conta criada! Abra o link que chegou no seu e-mail (veja o spam) e depois clique em Entrar.'); else { refreshAccount(); await runSync(true); } return; }
+      if (act === 'cloud-recover') { await TD.cloud.recover(email()); msg('Enviamos um link pro seu e-mail pra criar uma senha nova.'); return; }
+      if (act === 'cloud-sync') { await runSync(true); return; }
+      if (act === 'cloud-pass-show') { S.recovery = true; refreshAccount(); return; }
+      if (act === 'cloud-newpass') { await TD.cloud.updatePassword((document.getElementById('cloud-newpass') || {}).value || ''); S.recovery = false; toast('Senha salva. Agora dá pra entrar com e-mail e senha também.'); refreshAccount(); return; }
+      if (act === 'cloud-signout') { await runSync(false); await TD.cloud.signOut(); toast('Você saiu da conta. O progresso continua neste aparelho.'); refreshAccount(); return; }
+    } catch (e) { msg(e.message); }
+  }
 
   /* ---------- roteamento ---------- */
   function route() {
@@ -371,6 +436,7 @@
             <div class="field"><label for="cfg-key">API key</label><input id="cfg-key" type="password" autocomplete="off" placeholder="sk-ant-..." value="${esc(ai.key || '')}"></div>
             <div class="row"><button class="btn primary" data-act="save-key">Salvar e testar</button>${ai.key ? '<button class="btn ghost" data-act="clear-key">Remover chave</button>' : ''}</div>`}
           </div>
+          ${accountHTML()}
           <div class="card cut">
             <span class="hud" style="color:var(--magenta)">Zona de risco</span><h3>Zerar progresso</h3>
             <p>Apaga XP, sequência e lições feitas. Faça um backup antes.</p>
@@ -783,8 +849,9 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
       ${ls.rankUp ? `<p style="color:var(--yellow);font-family:var(--font-display);font-size:20px;text-transform:uppercase">Novo rank desbloqueado</p>` : ''}</div>`;
   }
   function addXP(p, amount) {
-    p.xp += amount;
     const t = dayKey();
+    if (TD.sync) TD.sync.ledger(p, amount, t); // livro-caixa por aparelho (antes de somar, pra não contar duas vezes)
+    p.xp += amount;
     const day = p.days[t] || (p.days[t] = { xp: 0, lessons: 0 });
     day.xp += amount; day.lessons++;
     const keys = Object.keys(p.days).sort(); while (keys.length > 400) delete p.days[keys.shift()];
@@ -879,6 +946,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
       case 'solution': { const d = ls.d; if (!d.showSolution) { d.code = S.editor ? S.editor.getValue() : d.code; d.showSolution = true; if (!d.passed) d.usedSolution = true; } else d.showSolution = false; renderLesson(); break; }
       case 'tutor': askTutor(); break;
       case 'export': doExport(); break;
+      case 'cloud-google': case 'cloud-signin': case 'cloud-signup': case 'cloud-recover': case 'cloud-sync': case 'cloud-pass-show': case 'cloud-newpass': case 'cloud-signout': cloudAction(act); break;
       case 'copy-json': try { await navigator.clipboard.writeText(exportJSON()); toast('JSON do backup copiado.'); } catch (err) { toast('Não consegui copiar aqui.'); } break;
       case 'restore-no': { const b = document.getElementById('restore-box'); if (b) { b.innerHTML = ''; b._obj = null; } break; }
       case 'restore-yes': doRestore(); break;
@@ -894,7 +962,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
       case 'clear-key': TD.local.saveAiSettings({}); S.caps.sample = null; toast('Chave removida.'); render(); break;
       case 'reset-ask': { const b = document.getElementById('reset-box'); if (b) b.innerHTML = '<div class="banner warn" style="margin-top:8px"><div class="grow"><strong>Tem certeza?</strong><span style="color:var(--muted);font-size:14px">Isso não pode ser desfeito (a não ser por um backup).</span></div><button class="btn sm" data-act="reset-no">Cancelar</button><button class="btn sm danger" data-act="reset-yes">Zerar</button></div>'; break; }
       case 'reset-no': { const b = document.getElementById('reset-box'); if (b) b.innerHTML = ''; break; }
-      case 'reset-yes': { const keep = P().settings; S.store.state.progress = Object.assign(TD.store.blankProgress(now()), { settings: keep }); await saveProgress(); toast('Progresso zerado.'); location.hash = ''; render(); break; }
+      case 'reset-yes': { const keep = P().settings; S.store.state.progress = Object.assign(TD.store.blankProgress(now()), { settings: keep }); if (cloudOn() && TD.cloud.user()) { try { await TD.sync.wipe(); } catch (e) { toast('Não consegui apagar a cópia na nuvem: ' + e.message); } } await saveProgress(); toast('Progresso zerado.'); location.hash = ''; render(); break; }
       default: break;
     }
   });
@@ -978,12 +1046,25 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
       }
     } catch (e) { /* */ }
     if (TD.sfx) TD.sfx.configure({ on: P().settings.sound !== false, vol: P().settings.volume ?? 0.6 });
+    if (TD.sync) TD.sync.migrate(P());
+    let redirect = null;
+    if (cloudOn()) { try { redirect = TD.cloud.handleRedirect(); } catch (e) { redirect = { error: e.message }; } }
+    if (redirect) {
+      try { history.replaceState(null, '', location.pathname + location.search + '#config'); } catch (e) { location.hash = 'config'; }
+      if (redirect.type === 'recovery') S.recovery = true;
+    }
     S.booted = true;
     window.addEventListener('hashchange', route);
     route();
     S.store.autoBackup(now(), TD.contentVersion).catch((e) => log('warn', 'backup automático: ' + (e.code || e.message)));
+    if (redirect) toast(redirect.error ? redirect.error : redirect.type === 'recovery' ? 'Defina sua nova senha abaixo.' : 'Conectado' + (redirect.email ? ' como ' + redirect.email : '') + '. Sincronizando...');
+    if (cloudOn()) {
+      if (TD.cloud.user()) runSync(false);
+      setInterval(() => runSync(false), 10 * 60000);
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') runSync(false); else scheduleSync(1500); });
+    }
   }
 
-  TD.app = { S, startLesson, runCode, renderLesson, get lesson() { return S.lesson; }, get editor() { return S.editor; } };
+  TD.app = { S, startLesson, runCode, renderLesson, finishLesson, runSync, render, get lesson() { return S.lesson; }, get editor() { return S.editor; } };
   boot();
 })(globalThis.TD = globalThis.TD || {});

@@ -442,3 +442,7 @@ input[type="range"] { accent-color: var(--yellow); width: 100%; }
 .node-wrap.cp { transform: none !important; }
 .review-banner { border-left-color: var(--cyan); background: linear-gradient(90deg, color-mix(in srgb, var(--cyan) 12%, var(--panel)), var(--panel) 60%); }
 @media (prefers-reduced-motion: reduce) { .card-chunk.fresh { animation: none; } }
+
+/* ---------- conta ---------- */
+.google-btn b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #fff; color: #4285f4; font-family: Arial, sans-serif; font-size: 13px; margin-right: 4px; }
+#account-card .row { flex-wrap: wrap; }

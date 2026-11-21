@@ -802,6 +802,10 @@ input[type="range"] { accent-color: var(--yellow); width: 100%; }
 .review-banner { border-left-color: var(--cyan); background: linear-gradient(90deg, color-mix(in srgb, var(--cyan) 12%, var(--panel)), var(--panel) 60%); }
 @media (prefers-reduced-motion: reduce) { .card-chunk.fresh { animation: none; } }
 
+/* ---------- conta ---------- */
+.google-btn b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #fff; color: #4285f4; font-family: Arial, sans-serif; font-size: 13px; margin-right: 4px; }
+#account-card .row { flex-wrap: wrap; }
+
 </style>
 </head>
 <body>
@@ -5431,6 +5435,306 @@ Dica: muitas vagas de tech em Berlim e Munique são **em inglês**. Procure por 
 })(globalThis.TD = globalThis.TD || {});
 
 </script>
+<script>/* cloud.js */
+/* Trilha Dev — conta do usuário (Supabase Auth): e-mail e senha + Google.
+ * Mesmo projeto Supabase do Deutsch mit Plan: uma conta serve pros dois apps; cada app tem a própria tabela.
+ * Fala direto com a API REST do Supabase (sem biblioteca externa), funciona no PWA e no programa de PC.
+ * - A chave "publishable" é pública por natureza; a proteção dos dados vem das regras RLS no banco
+ *   (cada conta só lê e grava as próprias linhas).
+ * - A sessão (tokens) fica só neste aparelho (localStorage 'gfs-cloud') e nunca entra em backups. */
+(function (TD) {
+  'use strict';
+  const URL_ = 'https://uutyijvitbeiwbivkfgz.supabase.co';
+  const KEY = 'sb_publishable_L0yFkkuLinZN2d8fWCJvKg_nwZH_i1l';
+  const SITE = 'https://rickdevdadz7.github.io/trilha-dev/';
+  const LS = 'td-cloud';
+  const ls = () => { try { return globalThis.localStorage; } catch (e) { return null; } };
+  let refreshing = null;
+
+  function session() { try { return JSON.parse(ls().getItem(LS) || 'null'); } catch (e) { return null; } }
+  function saveSession(s) { try { if (s) ls().setItem(LS, JSON.stringify(s)); else ls().removeItem(LS); } catch (e) { /* */ } }
+  const redirectTo = () => {
+    try { if (/^https?:$/.test(location.protocol) && !/localhost|127\.0\.0\.1/.test(location.hostname)) return location.origin + location.pathname; } catch (e) { /* */ }
+    return SITE;
+  };
+  function fromTokens(r) {
+    if (!r || !r.access_token) return null;
+    const exp = r.expires_at ? r.expires_at * 1000 : Date.now() + (r.expires_in || 3600) * 1000;
+    return { access_token: r.access_token, refresh_token: r.refresh_token, expires_at: exp, user: r.user ? { id: r.user.id, email: r.user.email } : null };
+  }
+  const MSG = {
+    invalid_credentials: 'E-mail ou senha incorretos.',
+    email_not_confirmed: 'Confirme seu e-mail primeiro: abra o link que chegou na sua caixa de entrada (veja também o spam).',
+    user_already_exists: 'Já existe uma conta com esse e-mail. Use “Entrar”.',
+    email_exists: 'Já existe uma conta com esse e-mail. Use “Entrar”.',
+    weak_password: 'Senha fraca: use pelo menos 8 caracteres, misturando letras e números.',
+    over_email_send_rate_limit: 'Muitos e-mails enviados agora. Espere alguns minutos e tente de novo.',
+    over_request_rate_limit: 'Muitas tentativas. Espere um pouco e tente de novo.',
+    email_address_invalid: 'Esse e-mail não parece válido.',
+    validation_failed: 'Confira o e-mail e a senha.',
+    same_password: 'A nova senha precisa ser diferente da atual.',
+    session_not_found: 'Sua sessão expirou. Entre de novo.',
+    refresh_token_not_found: 'Sua sessão expirou. Entre de novo.'
+  };
+  async function call(path, { method = 'GET', body, auth, headers, timeout = 20000 } = {}) {
+    const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const to = ctl ? setTimeout(() => ctl.abort(), timeout) : null;
+    const h = Object.assign({ apikey: KEY }, body !== undefined ? { 'Content-Type': 'application/json' } : {}, headers || {});
+    if (auth) h.Authorization = 'Bearer ' + auth;
+    let r;
+    try { r = await fetch(URL_ + path, { method, headers: h, body: body !== undefined ? JSON.stringify(body) : undefined, signal: ctl ? ctl.signal : undefined }); }
+    catch (e) { throw Object.assign(new Error('Sem conexão com o servidor. Verifique a internet.'), { code: 'offline' }); }
+    finally { if (to) clearTimeout(to); }
+    const txt = await r.text(); let data = null; try { data = txt ? JSON.parse(txt) : null; } catch (e) { data = txt; }
+    if (!r.ok) {
+      const code = (data && (data.error_code || data.code || data.error)) || 'http_' + r.status;
+      const raw = data && (data.msg || data.message || data.error_description) || '';
+      const e = new Error(MSG[code] || (/confirm/i.test(raw) ? MSG.email_not_confirmed : raw || 'O servidor respondeu ' + r.status + '.'));
+      e.code = code; e.status = r.status; throw e;
+    }
+    return data;
+  }
+  async function token() {
+    const s = session(); if (!s) return null;
+    if (s.expires_at - Date.now() > 60000) return s.access_token;
+    if (!refreshing) refreshing = (async () => {
+      try {
+        const r = await call('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: { refresh_token: s.refresh_token } });
+        const ns = fromTokens(r); if (!ns.user) ns.user = s.user; saveSession(ns); return ns.access_token;
+      } catch (e) {
+        if (e.status === 400 || e.status === 401 || e.status === 403) { saveSession(null); throw Object.assign(new Error('Sua sessão expirou. Entre de novo em Configurações → Conta.'), { code: 'signed_out' }); }
+        throw e;
+      } finally { refreshing = null; }
+    })();
+    return refreshing;
+  }
+  const clean = (email) => String(email || '').trim().toLowerCase();
+  function check(email, pass) {
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(clean(email))) throw new Error(MSG.email_address_invalid);
+    if (pass !== undefined && String(pass).length < 8) throw new Error('A senha precisa ter pelo menos 8 caracteres.');
+  }
+
+  async function signUp(email, pass) {
+    check(email, pass);
+    const r = await call('/auth/v1/signup?redirect_to=' + encodeURIComponent(redirectTo()), { method: 'POST', body: { email: clean(email), password: pass } });
+    const s = fromTokens(r); if (s) { saveSession(s); return { session: s }; }
+    if (r && Array.isArray(r.identities) && !r.identities.length) throw Object.assign(new Error(MSG.user_already_exists), { code: 'user_already_exists' });
+    return { confirm: true };
+  }
+  async function signIn(email, pass) {
+    check(email, pass);
+    const s = fromTokens(await call('/auth/v1/token?grant_type=password', { method: 'POST', body: { email: clean(email), password: pass } }));
+    saveSession(s); return s;
+  }
+  async function resend(email) { check(email); await call('/auth/v1/resend', { method: 'POST', body: { type: 'signup', email: clean(email), options: { email_redirect_to: redirectTo() } } }); }
+  async function recover(email) { check(email); await call('/auth/v1/recover?redirect_to=' + encodeURIComponent(redirectTo()), { method: 'POST', body: { email: clean(email) } }); }
+  async function updatePassword(pass) {
+    if (String(pass).length < 8) throw new Error('A senha precisa ter pelo menos 8 caracteres.');
+    await call('/auth/v1/user', { method: 'PUT', body: { password: pass }, auth: await token() });
+  }
+  async function signOut() {
+    const s = session(); saveSession(null);
+    if (s) { try { await call('/auth/v1/logout', { method: 'POST', auth: s.access_token, timeout: 6000 }); } catch (e) { /* já saiu localmente */ } }
+  }
+  /** Login com Google: vai pra tela do Google e volta pro app com os tokens no endereço. */
+  function googleURL() {
+    return URL_ + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(redirectTo());
+  }
+  function signInWithGoogle() { location.href = googleURL(); }
+  /** Links do e-mail (confirmação, nova senha) voltam com os tokens no endereço (#access_token=…). */
+  function handleRedirect() {
+    let h = ''; try { h = location.hash || ''; } catch (e) { return null; }
+    if (!/access_token=|error_description=|error_code=/.test(h)) return null;
+    const p = new URLSearchParams(h.replace(/^#/, ''));
+    if (p.get('error_description') || p.get('error_code')) {
+      const code = p.get('error_code') || '';
+      return { error: code === 'otp_expired' ? 'Esse link expirou ou já foi usado. Peça outro.' : (p.get('error_description') || 'Link inválido.').replace(/\+/g, ' ') };
+    }
+    const s = { provider: p.get('provider_token') ? 'google' : undefined, access_token: p.get('access_token'), refresh_token: p.get('refresh_token'), expires_at: p.get('expires_at') ? +p.get('expires_at') * 1000 : Date.now() + (+p.get('expires_in') || 3600) * 1000, user: null };
+    try { const payload = JSON.parse(atob(s.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); s.user = { id: payload.sub, email: payload.email }; } catch (e) { /* */ }
+    saveSession(s);
+    return { type: p.get('type') || 'signin', email: s.user && s.user.email };
+  }
+  /** PostgREST autenticado (tabelas protegidas por RLS). */
+  async function rest(path, opts) { const t = await token(); if (!t) throw Object.assign(new Error('Entre na sua conta primeiro.'), { code: 'signed_out' }); return call('/rest/v1/' + path, Object.assign({}, opts, { auth: t })); }
+  const user = () => { const s = session(); return s && s.user; };
+  const available = () => typeof fetch !== 'undefined' && !globalThis.claude;
+
+  TD.cloud = { URL: URL_, session, user, token, signUp, signIn, signInWithGoogle, googleURL, resend, recover, updatePassword, signOut, handleRedirect, rest, available, _call: call };
+})(globalThis.TD = globalThis.TD || {});
+
+</script>
+<script>/* sync.js */
+/* Trilha Dev — sincronização entre aparelhos pela conta (Supabase, tabela trilha_sync).
+ * Cada aparelho grava só a própria linha; ao sincronizar, lê as linhas dos outros aparelhos
+ * da mesma conta e junta tudo. A junção é idempotente: sincronizar duas vezes não muda nada.
+ *
+ * XP e dias de estudo ficam num "livro-caixa" por aparelho (progress.xd / progress.dd), assim
+ * estudar no PC e no celular no mesmo dia soma certinho, sem contar nada duas vezes. */
+(function (TD) {
+  'use strict';
+  const TABLE = 'trilha_sync';
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const ls = () => { try { return globalThis.localStorage; } catch (e) { return null; } };
+
+  function deviceId() {
+    const s = ls();
+    let id = s && s.getItem('td-device');
+    if (!id) {
+      id = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      try { s && s.setItem('td-device', id); } catch (e) { /* */ }
+    }
+    return id;
+  }
+  function deviceName() {
+    let ua = ''; try { ua = navigator.userAgent || ''; } catch (e) { /* */ }
+    if (globalThis.tdNative) return 'PC (programa)';
+    if (/Android|iPhone|iPad|Mobile/i.test(ua)) return 'Celular';
+    return 'Navegador do PC';
+  }
+
+  /** Garante o livro-caixa por aparelho (progresso antigo vira o saldo inicial deste aparelho). */
+  function migrate(p, dev) {
+    dev = dev || deviceId();
+    if (!p.xd || typeof p.xd !== 'object') p.xd = { [dev]: p.xp || 0 };
+    if (!p.dd || typeof p.dd !== 'object') p.dd = { [dev]: clone(p.days || {}) };
+    p.srs = p.srs || {}; p.mastery = p.mastery || {}; p.done = p.done || {};
+    return p;
+  }
+  /** Registra XP ganho neste aparelho. */
+  function ledger(p, amount, day) {
+    const dev = deviceId(); migrate(p, dev);
+    p.xd[dev] = (p.xd[dev] || 0) + amount;
+    const dd = p.dd[dev] || (p.dd[dev] = {});
+    const d = dd[day] || (dd[day] = { xp: 0, lessons: 0 });
+    d.xp += amount; d.lessons++;
+    const keys = Object.keys(dd).sort(); while (keys.length > 400) delete dd[keys.shift()];
+  }
+
+  const dkey = (s) => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10));
+  /** Recalcula XP total, dias e sequência a partir dos livros-caixa. */
+  function derive(p) {
+    p.xp = Object.values(p.xd || {}).reduce((a, b) => a + (+b || 0), 0);
+    const days = {};
+    for (const dd of Object.values(p.dd || {})) for (const [k, v] of Object.entries(dd || {})) {
+      const t = days[k] || (days[k] = { xp: 0, lessons: 0 });
+      t.xp += v.xp || 0; t.lessons += v.lessons || 0;
+    }
+    p.days = days;
+    const keys = Object.keys(days).filter((k) => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort();
+    if (keys.length) {
+      const last = keys[keys.length - 1];
+      if (!p.lastDay || last > p.lastDay) p.lastDay = last;
+      let run = 1;
+      for (let i = keys.length - 1; i > 0; i--) { if (dkey(keys[i]) - dkey(keys[i - 1]) === 86400000) run++; else break; }
+      if (keys[keys.length - 1] === p.lastDay) p.streak = run;
+      p.bestStreak = Math.max(p.bestStreak || 0, p.streak || 0, run);
+    }
+    return p;
+  }
+
+  /** Junta dois progressos. Nunca perde lição feita, XP ou revisão. */
+  function merge(a, b) {
+    a = migrate(clone(a), 'x-a'); b = migrate(clone(b), 'x-b');
+    const newer = (a._u || 0) >= (b._u || 0) ? a : b;
+    const out = clone(newer);
+    out.done = {};
+    for (const k of new Set([...Object.keys(a.done), ...Object.keys(b.done)])) {
+      const x = a.done[k], y = b.done[k];
+      out.done[k] = x && y ? { at: Math.min(x.at || Infinity, y.at || Infinity), xp: Math.max(x.xp || 0, y.xp || 0) } : clone(x || y);
+    }
+    out.srs = {};
+    for (const k of new Set([...Object.keys(a.srs), ...Object.keys(b.srs)])) {
+      const x = a.srs[k], y = b.srs[k];
+      out.srs[k] = clone(!x ? y : !y ? x : ((x.at || 0) !== (y.at || 0) ? ((x.at || 0) > (y.at || 0) ? x : y) : ((x.seen || 0) >= (y.seen || 0) ? x : y)));
+    }
+    out.mastery = {};
+    for (const k of new Set([...Object.keys(a.mastery), ...Object.keys(b.mastery)])) {
+      const x = a.mastery[k], y = b.mastery[k];
+      if (!x || !y) { out.mastery[k] = clone(x || y); continue; }
+      const n = (x.at || 0) >= (y.at || 0) ? x : y;
+      out.mastery[k] = { best: Math.max(x.best || 0, y.best || 0), last: n.last, at: n.at };
+    }
+    out.xd = {};
+    for (const k of new Set([...Object.keys(a.xd), ...Object.keys(b.xd)])) out.xd[k] = Math.max(a.xd[k] || 0, b.xd[k] || 0);
+    out.dd = {};
+    for (const k of new Set([...Object.keys(a.dd), ...Object.keys(b.dd)])) {
+      const x = a.dd[k] || {}, y = b.dd[k] || {}, o = (out.dd[k] = {});
+      for (const d of new Set([...Object.keys(x), ...Object.keys(y)])) {
+        const u = x[d] || {}, v = y[d] || {};
+        o[d] = { xp: Math.max(u.xp || 0, v.xp || 0), lessons: Math.max(u.lessons || 0, v.lessons || 0) };
+      }
+    }
+    out.bestStreak = Math.max(a.bestStreak || 0, b.bestStreak || 0);
+    out.lastDay = [a.lastDay, b.lastDay].filter(Boolean).sort().pop() || null;
+    out._u = Math.max(a._u || 0, b._u || 0);
+    return derive(out);
+  }
+
+  function mergeCode(local, remoteList) {
+    let added = 0;
+    for (const c of remoteList || []) {
+      if (!c || !c.lesson) continue;
+      const mine = local[c.lesson];
+      if (!mine || (c.at || 0) > (mine.at || 0)) { local[c.lesson] = clone(c); added++; }
+    }
+    return added;
+  }
+
+  const sig = (p) => JSON.stringify([p.xp, Object.keys(p.done).length, Object.keys(p.srs || {}).length, p.streak, p.bestStreak, Object.keys(p.mastery || {}).length]);
+
+  let running = null;
+  /** Puxa os outros aparelhos, junta, salva aqui e envia a linha deste aparelho. */
+  function syncNow(store) {
+    if (running) return running;
+    running = (async () => {
+      const cloud = TD.cloud;
+      const u = cloud && cloud.user();
+      if (!u) throw Object.assign(new Error('Entre na sua conta primeiro.'), { code: 'signed_out' });
+      const dev = deviceId();
+      const st = store.state;
+      migrate(st.progress, dev);
+      const before = sig(st.progress);
+      const rows = await cloud.rest(TABLE + '?select=device_id,name,updated_at,data&user_id=eq.' + encodeURIComponent(u.id));
+      let progress = st.progress; let codes = 0; const others = [];
+      for (const r of rows || []) {
+        if (r.device_id === dev) continue;
+        let data = null; try { data = JSON.parse(r.data); } catch (e) { continue; }
+        if (!data || !data.progress || typeof data.progress.xp !== 'number') continue;
+        progress = merge(progress, data.progress);
+        codes += mergeCode(st.code, data.code);
+        others.push({ name: r.name, at: r.updated_at });
+      }
+      // os ids temporários usados quando um lado ainda não tinha livro-caixa somem
+      for (const t of ['x-a', 'x-b']) { if (progress.xd) delete progress.xd[t]; if (progress.dd) delete progress.dd[t]; }
+      derive(progress);
+      const changed = sig(progress) !== before || codes > 0;
+      st.progress = progress;
+      if (changed) {
+        await store.saveProgress();
+        for (const c of Object.values(st.code)) if (c && c.lesson) await store.saveCode(c.lesson);
+      }
+      const payload = JSON.stringify({ v: 1, app: 'trilha-dev', progress: st.progress, code: Object.values(st.code) });
+      await cloud.rest(TABLE + '?on_conflict=user_id,device_id', {
+        method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: { device_id: dev, name: deviceName(), updated_at: new Date().toISOString(), data: payload }
+      });
+      const info = { at: Date.now(), devices: others.length + 1, others, changed };
+      try { ls().setItem('td-sync-last', JSON.stringify(info)); } catch (e) { /* */ }
+      return info;
+    })();
+    return running.finally(() => { running = null; });
+  }
+  async function wipe() {
+    const u = TD.cloud.user(); if (!u) return;
+    await TD.cloud.rest(TABLE + '?user_id=eq.' + encodeURIComponent(u.id), { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+  }
+  const lastInfo = () => { try { return JSON.parse(ls().getItem('td-sync-last') || 'null'); } catch (e) { return null; } };
+
+  TD.sync = { TABLE, deviceId, deviceName, migrate, ledger, derive, merge, mergeCode, syncNow, wipe, lastInfo };
+})(globalThis.TD = globalThis.TD || {});
+
+</script>
 <script>/* runners.js */
 /* Runners: executam o código do aluno e conferem os testes.
  * Todos resolvem para { output, table, results: [{name, pass, err}], error, typeErrors, expectedTable } */
@@ -6432,7 +6736,7 @@ type Expect<T extends true> = T;
   const isPracticeStep = (s) => s.t === 'quiz' || s.t === 'predict' || s.t === 'code';
   function schedule(item, correct, now) {
     const box = correct ? Math.min((item ? item.box : 0) + 1, INTERVALS.length - 1) : 0;
-    return { box, due: now + INTERVALS[box] * DAY, seen: ((item && item.seen) || 0) + 1, last: correct ? 1 : 0 };
+    return { box, due: now + INTERVALS[box] * DAY, seen: ((item && item.seen) || 0) + 1, last: correct ? 1 : 0, at: now };
   }
   function enrollLesson(progress, lesson, results, now) {
     progress.srs = progress.srs || {};
@@ -6704,7 +7008,72 @@ type Expect<T extends true> = T;
     el.className = 'save-state' + (n ? ' busy' : S.store.lastError ? ' err' : '');
     el.textContent = n ? 'salvando...' : S.store.lastError ? 'erro ao salvar, tentando de novo' : 'salvo ' + where;
   }
-  function saveProgress() { return S.store.saveProgress().catch(() => {}); }
+  function saveProgress() { const r = S.store.saveProgress().catch(() => {}); scheduleSync(); return r; }
+
+  /* ---------- conta e sincronização ---------- */
+  const cloudOn = () => !!(TD.cloud && TD.cloud.available() && S.mode !== 'db');
+  let syncTimer = null;
+  function scheduleSync(ms = 4000) {
+    if (!cloudOn() || !TD.cloud.user()) return;
+    clearTimeout(syncTimer); syncTimer = setTimeout(() => runSync(false), ms);
+  }
+  async function runSync(manual) {
+    if (!cloudOn() || !TD.cloud.user()) return null;
+    S.syncing = true; if (manual) refreshAccount();
+    try {
+      await S.store.flush();
+      const info = await TD.sync.syncNow(S.store);
+      S.syncError = null;
+      if (info.changed && !S.lesson) render();
+      if (manual) toast(info.changed ? 'Sincronizado: progresso dos outros aparelhos trazido.' : 'Tudo em dia.');
+      return info;
+    } catch (e) {
+      S.syncError = e.message;
+      if (manual) toast(e.message);
+      log('warn', 'sync: ' + (e.code || e.message));
+      return null;
+    } finally { S.syncing = false; refreshAccount(); }
+  }
+  function refreshAccount() { const box = document.getElementById('account-card'); if (box) box.outerHTML = accountHTML(); }
+  function accountHTML() {
+    if (!TD.cloud) return '';
+    if (!cloudOn()) {
+      return `<div class="card cut" id="account-card"><span class="hud">Conta</span><h3>Sincronização</h3><p>${S.mode === 'db' ? 'Dentro do Claude o progresso já fica salvo na sua conta Claude.' : 'Indisponível aqui.'} Pra sincronizar o celular e o PC, use o app instalado ou o site <strong>rickdevdadz7.github.io/trilha-dev</strong>. Pra levar o progresso daqui pra lá, use Exportar/Restaurar backup.</p></div>`;
+    }
+    const u = TD.cloud.user();
+    const desktop = !!window.tdNative;
+    if (!u) {
+      return `<div class="card cut" id="account-card"><span class="hud">Conta</span><h3>Sincronizar PC e celular</h3>
+        <p>Entre com a mesma conta nos dois aparelhos e o progresso se junta sozinho. É a mesma conta do Deutsch mit Plan.</p>
+        ${desktop ? '<p class="dim-note">No programa de PC, entre com e-mail e senha. Se criou a conta com o Google, use "Esqueci a senha" pra criar uma senha pra ela.</p>' : '<div class="row"><button class="btn primary google-btn" data-act="cloud-google"><b>G</b> Entrar com Google</button></div><p class="dim-note" style="margin:10px 0 4px">ou com e-mail e senha:</p>'}
+        <div class="field"><label for="cloud-email">E-mail</label><input id="cloud-email" type="email" autocomplete="email" placeholder="voce@email.com"></div>
+        <div class="field"><label for="cloud-pass">Senha</label><input id="cloud-pass" type="password" autocomplete="current-password" placeholder="mínimo 8 caracteres"></div>
+        <div class="row"><button class="btn ${desktop ? 'primary' : ''}" data-act="cloud-signin">Entrar</button><button class="btn ghost" data-act="cloud-signup">Criar conta</button><button class="btn ghost sm" data-act="cloud-recover">Esqueci a senha</button></div>
+        <div id="cloud-msg" class="dim-note"></div></div>`;
+    }
+    const last = TD.sync.lastInfo();
+    const when = last ? new Date(last.at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'ainda não';
+    return `<div class="card cut" id="account-card"><span class="hud">Conta</span><h3>${esc(u.email || 'Conectado')}</h3>
+      <p>Sincroniza sozinho ao abrir, ao terminar lições e a cada 10 minutos.</p>
+      <p class="dim-note">Última sincronização: ${esc(when)}${last ? ` · ${last.devices} aparelho${last.devices > 1 ? 's' : ''}` : ''}${S.syncError ? `<br><span style="color:var(--magenta)">${esc(S.syncError)}</span>` : ''}</p>
+      ${S.recovery ? `<div class="field"><label for="cloud-newpass">Nova senha</label><input id="cloud-newpass" type="password" autocomplete="new-password" placeholder="mínimo 8 caracteres"></div><div class="row"><button class="btn primary" data-act="cloud-newpass">Salvar senha</button></div>` : ''}
+      <div class="row"><button class="btn primary" data-act="cloud-sync" ${S.syncing ? 'disabled' : ''}>${S.syncing ? 'Sincronizando...' : 'Sincronizar agora'}</button><button class="btn ghost" data-act="cloud-pass-show">Definir senha</button><button class="btn ghost" data-act="cloud-signout">Sair</button></div></div>`;
+  }
+  async function cloudAction(act) {
+    const msg = (t) => { const m = document.getElementById('cloud-msg'); if (m) m.textContent = t; else toast(t); };
+    const email = () => (document.getElementById('cloud-email') || {}).value || '';
+    const pass = () => (document.getElementById('cloud-pass') || {}).value || '';
+    try {
+      if (act === 'cloud-google') { TD.cloud.signInWithGoogle(); return; }
+      if (act === 'cloud-signin') { msg('Entrando...'); await TD.cloud.signIn(email(), pass()); toast('Conectado. Sincronizando...'); refreshAccount(); await runSync(true); return; }
+      if (act === 'cloud-signup') { msg('Criando...'); const r = await TD.cloud.signUp(email(), pass()); if (r.confirm) msg('Conta criada! Abra o link que chegou no seu e-mail (veja o spam) e depois clique em Entrar.'); else { refreshAccount(); await runSync(true); } return; }
+      if (act === 'cloud-recover') { await TD.cloud.recover(email()); msg('Enviamos um link pro seu e-mail pra criar uma senha nova.'); return; }
+      if (act === 'cloud-sync') { await runSync(true); return; }
+      if (act === 'cloud-pass-show') { S.recovery = true; refreshAccount(); return; }
+      if (act === 'cloud-newpass') { await TD.cloud.updatePassword((document.getElementById('cloud-newpass') || {}).value || ''); S.recovery = false; toast('Senha salva. Agora dá pra entrar com e-mail e senha também.'); refreshAccount(); return; }
+      if (act === 'cloud-signout') { await runSync(false); await TD.cloud.signOut(); toast('Você saiu da conta. O progresso continua neste aparelho.'); refreshAccount(); return; }
+    } catch (e) { msg(e.message); }
+  }
 
   /* ---------- roteamento ---------- */
   function route() {
@@ -6977,6 +7346,7 @@ type Expect<T extends true> = T;
             <div class="field"><label for="cfg-key">API key</label><input id="cfg-key" type="password" autocomplete="off" placeholder="sk-ant-..." value="${esc(ai.key || '')}"></div>
             <div class="row"><button class="btn primary" data-act="save-key">Salvar e testar</button>${ai.key ? '<button class="btn ghost" data-act="clear-key">Remover chave</button>' : ''}</div>`}
           </div>
+          ${accountHTML()}
           <div class="card cut">
             <span class="hud" style="color:var(--magenta)">Zona de risco</span><h3>Zerar progresso</h3>
             <p>Apaga XP, sequência e lições feitas. Faça um backup antes.</p>
@@ -7389,8 +7759,9 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
       ${ls.rankUp ? `<p style="color:var(--yellow);font-family:var(--font-display);font-size:20px;text-transform:uppercase">Novo rank desbloqueado</p>` : ''}</div>`;
   }
   function addXP(p, amount) {
-    p.xp += amount;
     const t = dayKey();
+    if (TD.sync) TD.sync.ledger(p, amount, t); // livro-caixa por aparelho (antes de somar, pra não contar duas vezes)
+    p.xp += amount;
     const day = p.days[t] || (p.days[t] = { xp: 0, lessons: 0 });
     day.xp += amount; day.lessons++;
     const keys = Object.keys(p.days).sort(); while (keys.length > 400) delete p.days[keys.shift()];
@@ -7485,6 +7856,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
       case 'solution': { const d = ls.d; if (!d.showSolution) { d.code = S.editor ? S.editor.getValue() : d.code; d.showSolution = true; if (!d.passed) d.usedSolution = true; } else d.showSolution = false; renderLesson(); break; }
       case 'tutor': askTutor(); break;
       case 'export': doExport(); break;
+      case 'cloud-google': case 'cloud-signin': case 'cloud-signup': case 'cloud-recover': case 'cloud-sync': case 'cloud-pass-show': case 'cloud-newpass': case 'cloud-signout': cloudAction(act); break;
       case 'copy-json': try { await navigator.clipboard.writeText(exportJSON()); toast('JSON do backup copiado.'); } catch (err) { toast('Não consegui copiar aqui.'); } break;
       case 'restore-no': { const b = document.getElementById('restore-box'); if (b) { b.innerHTML = ''; b._obj = null; } break; }
       case 'restore-yes': doRestore(); break;
@@ -7500,7 +7872,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
       case 'clear-key': TD.local.saveAiSettings({}); S.caps.sample = null; toast('Chave removida.'); render(); break;
       case 'reset-ask': { const b = document.getElementById('reset-box'); if (b) b.innerHTML = '<div class="banner warn" style="margin-top:8px"><div class="grow"><strong>Tem certeza?</strong><span style="color:var(--muted);font-size:14px">Isso não pode ser desfeito (a não ser por um backup).</span></div><button class="btn sm" data-act="reset-no">Cancelar</button><button class="btn sm danger" data-act="reset-yes">Zerar</button></div>'; break; }
       case 'reset-no': { const b = document.getElementById('reset-box'); if (b) b.innerHTML = ''; break; }
-      case 'reset-yes': { const keep = P().settings; S.store.state.progress = Object.assign(TD.store.blankProgress(now()), { settings: keep }); await saveProgress(); toast('Progresso zerado.'); location.hash = ''; render(); break; }
+      case 'reset-yes': { const keep = P().settings; S.store.state.progress = Object.assign(TD.store.blankProgress(now()), { settings: keep }); if (cloudOn() && TD.cloud.user()) { try { await TD.sync.wipe(); } catch (e) { toast('Não consegui apagar a cópia na nuvem: ' + e.message); } } await saveProgress(); toast('Progresso zerado.'); location.hash = ''; render(); break; }
       default: break;
     }
   });
@@ -7584,13 +7956,26 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
       }
     } catch (e) { /* */ }
     if (TD.sfx) TD.sfx.configure({ on: P().settings.sound !== false, vol: P().settings.volume ?? 0.6 });
+    if (TD.sync) TD.sync.migrate(P());
+    let redirect = null;
+    if (cloudOn()) { try { redirect = TD.cloud.handleRedirect(); } catch (e) { redirect = { error: e.message }; } }
+    if (redirect) {
+      try { history.replaceState(null, '', location.pathname + location.search + '#config'); } catch (e) { location.hash = 'config'; }
+      if (redirect.type === 'recovery') S.recovery = true;
+    }
     S.booted = true;
     window.addEventListener('hashchange', route);
     route();
     S.store.autoBackup(now(), TD.contentVersion).catch((e) => log('warn', 'backup automático: ' + (e.code || e.message)));
+    if (redirect) toast(redirect.error ? redirect.error : redirect.type === 'recovery' ? 'Defina sua nova senha abaixo.' : 'Conectado' + (redirect.email ? ' como ' + redirect.email : '') + '. Sincronizando...');
+    if (cloudOn()) {
+      if (TD.cloud.user()) runSync(false);
+      setInterval(() => runSync(false), 10 * 60000);
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') runSync(false); else scheduleSync(1500); });
+    }
   }
 
-  TD.app = { S, startLesson, runCode, renderLesson, get lesson() { return S.lesson; }, get editor() { return S.editor; } };
+  TD.app = { S, startLesson, runCode, renderLesson, finishLesson, runSync, render, get lesson() { return S.lesson; }, get editor() { return S.editor; } };
   boot();
 })(globalThis.TD = globalThis.TD || {});
 

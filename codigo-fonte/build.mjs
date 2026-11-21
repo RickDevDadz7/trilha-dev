@@ -23,7 +23,7 @@ contentFiles.sort((a, b) => {
 });
 const scripts = [
   ...contentFiles.map((f) => ['content/' + f, src('content/' + f)]),
-  ['store.js', src('store.js')], ['local.js', src('local.js')], ['runners.js', src('runners.js')], ['gitsim.js', src('gitsim.js')], ['pedagogy.js', src('pedagogy.js')], ['sfx.js', src('sfx.js')], ['app.js', src('app.js')]
+  ['store.js', src('store.js')], ['local.js', src('local.js')], ['cloud.js', src('cloud.js')], ['sync.js', src('sync.js')], ['runners.js', src('runners.js')], ['gitsim.js', src('gitsim.js')], ['pedagogy.js', src('pedagogy.js')], ['sfx.js', src('sfx.js')], ['app.js', src('app.js')]
 ];
 const css = src('codemirror.css') + '\n' + src('style.css');
 const safe = (js) => js.replace(/<\/script/gi, '<\\/script');
