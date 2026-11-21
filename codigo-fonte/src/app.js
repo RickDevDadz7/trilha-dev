@@ -124,6 +124,68 @@
       return null;
     } finally { S.syncing = false; refreshAccount(); }
   }
+  /* ---------- tela de login (como no Stempel e no RONIN) ---------- */
+  const isGuest = () => { try { return localStorage.getItem('td-guest') === '1'; } catch (e) { return false; } };
+  const needsLogin = () => cloudOn() && !TD.cloud.user() && !isGuest();
+  const GOOGLE_SVG = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C.9 16.6 0 20.2 0 24s.9 7.4 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.7-4.1-13.6-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>';
+  function loginHTML() {
+    const A = S.auth || (S.auth = { tab: 'in', email: '', msg: null, confirm: false });
+    const desktop = !!window.tdNative;
+    const google = S.google && !desktop && A.tab !== 'rec';
+    const title = A.tab === 'up' ? 'Criar conta' : A.tab === 'rec' ? 'Recuperar senha' : 'Entrar';
+    return `<div class="auth-screen">
+      <div class="auth-brand"><span class="brand-mark auth-mark" aria-hidden="true"><svg width="72" height="72" viewBox="0 0 512 512"><path d="M56 56 H400 L456 112 V456 H112 L56 400 Z" fill="#ff3ea5"/><polyline points="214,166 132,256 214,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><polyline points="298,166 380,256 298,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><rect x="24" y="226" width="210" height="20" fill="#00e5ff"/><rect x="300" y="300" width="188" height="14" fill="#ffffff"/></svg></span>
+<div class="auth-name">Over<b>clock</b></div><p>Aprenda a programar do zero ao avançado. Seu progresso salvo na nuvem, no celular e no PC.</p></div>
+      <form class="auth-card cut" id="auth-form" novalidate>
+        <span class="hud">Acesso ao sistema</span><h2>${title}</h2>
+        ${A.tab === 'rec' ? '' : `<div class="seg auth-tabs" role="tablist"><button type="button" class="${A.tab === 'in' ? 'on' : ''}" data-act="auth-tab" data-authtab="in">Entrar</button><button type="button" class="${A.tab === 'up' ? 'on' : ''}" data-act="auth-tab" data-authtab="up">Criar conta</button></div>`}
+        ${google ? `<button type="button" class="btn google-btn auth-google" data-act="auth-google">${GOOGLE_SVG} ${A.tab === 'up' ? 'Criar conta com Google' : 'Entrar com Google'}</button><div class="or-sep"><span>ou com e-mail</span></div>` : ''}
+        <div class="field"><label for="auth-email">E-mail</label><input id="auth-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="voce@email.com" value="${esc(A.email || '')}"></div>
+        ${A.tab === 'rec' ? '<p class="dim-note">Vamos mandar um link pro seu e-mail pra você criar uma senha nova.</p>' : `<div class="field"><label for="auth-pass">Senha${A.tab === 'up' ? ' (mínimo 8 caracteres)' : ''}</label><div class="pass-row"><input id="auth-pass" type="password" autocomplete="${A.tab === 'up' ? 'new-password' : 'current-password'}" placeholder="senha"><button type="button" class="btn ghost sm" data-act="auth-eye" aria-label="Mostrar senha">👁</button></div></div>`}
+        ${A.msg ? `<div class="auth-msg ${A.msg.ok ? 'ok' : 'bad'}">${esc(A.msg.text)}</div>` : ''}
+        <button type="submit" class="btn primary auth-go" ${A.busy ? 'disabled' : ''}>${A.busy ? 'Aguarde...' : A.tab === 'up' ? 'Criar conta' : A.tab === 'rec' ? 'Enviar link' : 'Entrar'} ${A.busy ? '' : ICON.play}</button>
+        <div class="auth-links">${A.tab === 'rec' ? '<button type="button" class="linkbtn" data-act="auth-tab" data-authtab="in">← Voltar</button>' : '<button type="button" class="linkbtn" data-act="auth-tab" data-authtab="rec">Esqueci minha senha</button>'}${A.confirm ? '<button type="button" class="linkbtn" data-act="auth-resend">Reenviar e-mail de confirmação</button>' : ''}</div>
+        <p class="dim-note">${desktop ? 'No programa de PC o login com Google não funciona (o Google bloqueia): use e-mail e senha. Se criou a conta com o Google, defina uma senha pelo celular em Configurações → Conta.' : 'É a mesma conta do Stempel e do RONIN. '}${A.tab === 'up' ? ' Ao criar com e-mail, chega uma confirmação (veja também o spam). Depois de confirmar, volte e toque em Entrar.' : ''}</p>
+      </form>
+      <button class="linkbtn auth-guest" data-act="auth-guest">Continuar sem conta (o progresso fica só neste aparelho)</button>
+    </div>`;
+  }
+  async function authSubmit() {
+    const A = S.auth; if (!A || A.busy) return;
+    A.email = (document.getElementById('auth-email') || {}).value || '';
+    const pass = (document.getElementById('auth-pass') || {}).value || '';
+    A.busy = true; A.msg = null; render();
+    try {
+      if (A.tab === 'rec') { await TD.cloud.recover(A.email); A.msg = { ok: true, text: 'Pronto! Abra o link que chegou no seu e-mail (veja também o spam) pra criar a senha nova.' }; }
+      else if (A.tab === 'up') {
+        const r = await TD.cloud.signUp(A.email, pass);
+        if (r.confirm) { A.confirm = true; A.tab = 'in'; A.msg = { ok: true, text: 'Conta criada! Abra o link de confirmação que chegou no seu e-mail (veja o spam) e depois toque em Entrar.' }; }
+        else { A.busy = false; return afterLogin(); }
+      } else { await TD.cloud.signIn(A.email, pass); A.busy = false; return afterLogin(); }
+    } catch (e) {
+      A.msg = { ok: false, text: e.message };
+      if (e.code === 'email_not_confirmed') A.confirm = true;
+    }
+    A.busy = false; render();
+  }
+  async function afterLogin() {
+    S.auth = null;
+    try { localStorage.removeItem('td-guest'); } catch (e) { /* */ }
+    try { history.replaceState(null, '', location.pathname + location.search + '#'); } catch (e) { location.hash = ''; }
+    S.view = { name: 'home' }; render();
+    toast('Conectado. Sincronizando...');
+    await runSync(false);
+    render();
+  }
+  async function authAction(act, t) {
+    const A = S.auth || (S.auth = { tab: 'in' });
+    if (act === 'auth-tab') { A.email = (document.getElementById('auth-email') || {}).value || A.email; A.tab = t.getAttribute('data-authtab'); A.msg = null; render(); return; }
+    if (act === 'auth-eye') { const i = document.getElementById('auth-pass'); if (i) i.type = i.type === 'password' ? 'text' : 'password'; return; }
+    if (act === 'auth-google') { TD.cloud.signInWithGoogle(); return; }
+    if (act === 'auth-guest') { try { localStorage.setItem('td-guest', '1'); } catch (e) { /* */ } S.auth = null; location.hash = ''; route(); return; }
+    if (act === 'auth-resend') { try { await TD.cloud.resend((document.getElementById('auth-email') || {}).value || A.email); A.msg = { ok: true, text: 'Enviamos de novo. Confira a caixa de entrada e o spam.' }; } catch (e) { A.msg = { ok: false, text: e.message }; } render(); }
+  }
+
   function refreshAccount() { const box = document.getElementById('account-card'); if (box) box.outerHTML = accountHTML(); }
   function accountHTML() {
     if (!TD.cloud) return '';
@@ -133,13 +195,9 @@
     const u = TD.cloud.user();
     const desktop = !!window.tdNative;
     if (!u) {
-      return `<div class="card cut" id="account-card"><span class="hud">Conta</span><h3>Sincronizar PC e celular</h3>
-        <p>Entre com a mesma conta nos dois aparelhos e o progresso se junta sozinho. É a mesma conta do Deutsch mit Plan.</p>
-        ${desktop ? '<p class="dim-note">No programa de PC, entre com e-mail e senha. Se criou a conta com o Google, use "Esqueci a senha" pra criar uma senha pra ela.</p>' : S.google ? '<div class="row"><button class="btn primary google-btn" data-act="cloud-google"><b>G</b> Entrar com Google</button></div><p class="dim-note" style="margin:10px 0 4px">ou com e-mail e senha:</p>' : ''}
-        <div class="field"><label for="cloud-email">E-mail</label><input id="cloud-email" type="email" autocomplete="email" placeholder="voce@email.com"></div>
-        <div class="field"><label for="cloud-pass">Senha</label><input id="cloud-pass" type="password" autocomplete="current-password" placeholder="mínimo 8 caracteres"></div>
-        <div class="row"><button class="btn ${desktop || !S.google ? 'primary' : ''}" data-act="cloud-signin">Entrar</button><button class="btn ghost" data-act="cloud-signup">Criar conta</button><button class="btn ghost sm" data-act="cloud-recover">Esqueci a senha</button></div>
-        <div id="cloud-msg" class="dim-note"></div></div>`;
+      return `<div class="card cut" id="account-card"><span class="hud">Conta</span><h3>Sem conta conectada</h3>
+        <p>Seu progresso está só neste aparelho. Entre na conta pra salvar na nuvem e juntar o celular e o PC. É a mesma conta do Stempel e do RONIN.</p>
+        <div class="row"><a class="btn primary" href="#login">Entrar ou criar conta</a></div></div>`;
     }
     const last = TD.sync.lastInfo();
     const when = last ? new Date(last.at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : 'ainda não';
@@ -161,7 +219,7 @@
       if (act === 'cloud-sync') { await runSync(true); return; }
       if (act === 'cloud-pass-show') { S.recovery = true; refreshAccount(); return; }
       if (act === 'cloud-newpass') { await TD.cloud.updatePassword((document.getElementById('cloud-newpass') || {}).value || ''); S.recovery = false; toast('Senha salva. Agora dá pra entrar com e-mail e senha também.'); refreshAccount(); return; }
-      if (act === 'cloud-signout') { await runSync(false); await TD.cloud.signOut(); toast('Você saiu da conta. O progresso continua neste aparelho.'); refreshAccount(); return; }
+      if (act === 'cloud-signout') { await runSync(false); await TD.cloud.signOut(); toast('Você saiu da conta. O progresso continua neste aparelho.'); location.hash = 'login'; return; }
     } catch (e) { msg(e.message); }
   }
 
@@ -172,7 +230,10 @@
     if (byId[id]) S.view = { name: 'course', id };
     else if (id === 'dados') S.view = { name: 'data' };
     else if (id === 'config') S.view = { name: 'config' };
+    else if (id === 'login') S.view = { name: 'login' };
     else S.view = { name: 'home' };
+    if (S.view.name !== 'login' && S.view.name !== 'config' && needsLogin()) S.view = { name: 'login' };
+    if (S.view.name === 'login' && cloudOn() && TD.cloud.user()) S.view = { name: 'home' };
     render();
   }
 
@@ -907,6 +968,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
   }
 
   /* ---------- eventos ---------- */
+  app.addEventListener('submit', (e) => { if (e.target && e.target.id === 'auth-form') { e.preventDefault(); authSubmit(); } });
   app.addEventListener('click', async (e) => {
     const pzBtn = e.target.closest('[data-pz]');
     if (pzBtn && S.lesson && S.lesson.d.pz) {
@@ -953,6 +1015,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
       case 'solution': { const d = ls.d; if (!d.showSolution) { d.code = S.editor ? S.editor.getValue() : d.code; d.showSolution = true; if (!d.passed) d.usedSolution = true; } else d.showSolution = false; renderLesson(); break; }
       case 'tutor': askTutor(); break;
       case 'export': doExport(); break;
+      case 'auth-tab': case 'auth-eye': case 'auth-google': case 'auth-guest': case 'auth-resend': authAction(act, t); break;
       case 'cloud-google': case 'cloud-signin': case 'cloud-signup': case 'cloud-recover': case 'cloud-sync': case 'cloud-pass-show': case 'cloud-newpass': case 'cloud-signout': cloudAction(act); break;
       case 'copy-json': try { await navigator.clipboard.writeText(exportJSON()); toast('JSON do backup copiado.'); } catch (err) { toast('Não consegui copiar aqui.'); } break;
       case 'restore-no': { const b = document.getElementById('restore-box'); if (b) { b.innerHTML = ''; b._obj = null; } break; }
@@ -1006,8 +1069,12 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
   function render() {
     if (!S.booted) return;
     if (S.lesson) { renderLesson(); return; }
-    app.className = 'app';
     const v = S.view;
+    if (v.name === 'login') {
+      if (!cloudOn()) { S.view = { name: 'home' }; return render(); }
+      app.className = 'app auth'; app.innerHTML = loginHTML(); return;
+    }
+    app.className = 'app';
     const main = v.name === 'course' ? courseHTML(byId[v.id]) : v.name === 'data' ? dataHTML() : v.name === 'config' ? configHTML() : homeHTML();
     app.innerHTML = railHTML() + `<main class="main"${v.name === 'course' ? ` data-course="${v.id}"` : ''}>${main}</main>`;
     renderSaveState();
@@ -1057,8 +1124,10 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
     let redirect = null;
     if (cloudOn()) { try { redirect = TD.cloud.handleRedirect(); } catch (e) { redirect = { error: e.message }; } }
     if (redirect) {
-      try { history.replaceState(null, '', location.pathname + location.search + '#config'); } catch (e) { location.hash = 'config'; }
+      const dest = redirect.type === 'recovery' || redirect.error ? '#config' : '#';
+      try { history.replaceState(null, '', location.pathname + location.search + dest); } catch (e) { location.hash = dest.slice(1); }
       if (redirect.type === 'recovery') S.recovery = true;
+      if (redirect.error) { S.auth = { tab: 'in', msg: { ok: false, text: redirect.error } }; try { history.replaceState(null, '', location.pathname + location.search + '#login'); } catch (e) { /* */ } }
     }
     S.booted = true;
     window.addEventListener('hashchange', route);
@@ -1066,7 +1135,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
     S.store.autoBackup(now(), TD.contentVersion).catch((e) => log('warn', 'backup automático: ' + (e.code || e.message)));
     if (redirect) toast(redirect.error ? redirect.error : redirect.type === 'recovery' ? 'Defina sua nova senha abaixo.' : 'Conectado' + (redirect.email ? ' como ' + redirect.email : '') + '. Sincronizando...');
     if (cloudOn()) {
-      TD.cloud.googleEnabled().then((on) => { if (on !== !!S.google) { S.google = on; refreshAccount(); } });
+      TD.cloud.googleEnabled().then((on) => { if (on !== !!S.google) { S.google = on; if (S.view.name === 'login') render(); else refreshAccount(); } });
       if (TD.cloud.user()) runSync(false);
       setInterval(() => runSync(false), 10 * 60000);
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') runSync(false); else scheduleSync(1500); });
