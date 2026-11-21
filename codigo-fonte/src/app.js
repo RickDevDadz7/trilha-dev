@@ -293,8 +293,7 @@
         <div class="save-state" id="save-state"></div>
       </aside>
       <nav class="tabbar" aria-label="Navegação">
-        <a class="${v.name === 'home' ? 'active' : ''}" href="#"><span>▣</span>Trilhas</a>
-        <a class="${v.name === 'course' ? 'active' : ''}" href="#${esc(v.name === 'course' ? v.id : (P().last && byId[P().last] ? P().last : COURSES[0].id))}"><span>◆</span>Mapa</a>
+        <a class="${v.name === 'home' || v.name === 'course' ? 'active' : ''}" href="#"><span>▣</span>Trilhas</a>
         <a href="#" data-start="x:@review"><span>↻</span>Revisão</a>
         <a class="${v.name === 'config' ? 'active' : ''}" href="#config"><span>⚙</span>Config</a>
       </nav>
