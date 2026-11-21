@@ -240,38 +240,45 @@
     const nd = TD.ped.nextDue(P());
     return `<div class="banner cut review-banner"><div class="grow"><span class="hud" style="color:var(--cyan)">Revisão espaçada</span><strong>Memória em dia</strong><span style="color:var(--muted);font-size:14px">${total} itens no seu ciclo de revisão. Próxima revisão: ${nd ? esc(new Date(nd).toLocaleDateString('pt-BR')) : '-'}.</span></div></div>`;
   }
+  const GROUPS = [
+    { id: 'code', title: 'Programação', sub: 'Linguagens e ferramentas' },
+    { id: 'career', title: 'Carreira', sub: 'Inglês, portfólio, vagas e trabalho fora' }
+  ];
+  function tileHTML(c) {
+    const n = allLessons(c).length, d = courseDone(c), pct = coursePct(c);
+    return `
+      <button class="course-tile cut" data-course="${c.id}" data-go="${c.id}" title="${esc(c.desc)}">
+        <span class="chip lg">${esc(c.badge)}</span>
+        <span class="tile-body"><strong>${esc(c.name)}</strong><span class="tag">${esc(c.tagline)}</span>
+          <span class="meter"><i style="width:${pct}%"></i></span>
+          <span class="meta">${d ? `${d}/${n} lições` : `${n} lições`}${pct ? ` · ${pct}%` : ''}</span></span>
+      </button>`;
+  }
   function homeHTML() {
     const last = P().last && byId[P().last] ? byId[P().last] : null;
     const nl = last ? nextLesson(last) : null;
     const total = COURSES.reduce((a, c) => a + allLessons(c).length, 0);
     return `
-      <div class="page">
-        <header class="page-head">
+      <div class="page home">
+        <header class="page-head compact">
           <span class="hud">Sistema online · ${total} lições carregadas</span>
           <h1 class="glitch">Escolha sua trilha</h1>
-          <p>Do zero ao avançado em JavaScript, TypeScript, SQL, HTML/CSS, React e Git, mais inglês pra devs e o caminho até uma vaga na Europa. Lições curtas, código que roda na hora, testes automáticos e um tutor de IA pra destravar. Explicações em português, código em inglês.</p>
+          <p>Aprenda a programar do zero ao avançado, com lições curtas, código que roda na hora e revisão que não te deixa esquecer.</p>
         </header>
         ${backupNudge()}
-        ${reviewBanner()}
         ${last && nl ? `
           <div class="banner cut" data-course="${last.id}">
             <span class="chip lg">${esc(last.badge)}</span>
             <div class="grow"><span class="hud" style="color:var(--accent)">Continuar missão</span><strong>${esc(last.name)} · ${esc(nl.title)}</strong></div>
             <button class="btn primary" data-start="${last.id}:${nl.id}">Continuar ${ICON.play}</button>
           </div>` : ''}
-        <div class="course-grid">
-          ${COURSES.map((c, i) => {
-            const n = allLessons(c).length, d = courseDone(c);
-            return `
-            <button class="course-card cut" data-course="${c.id}" data-go="${c.id}" data-idx="TRILHA_0${i + 1}">
-              <div class="top"><span class="chip lg">${esc(c.badge)}</span><div><h2>${esc(c.name)}</h2><div class="tag">${esc(c.tagline)}</div></div></div>
-              <p>${esc(c.desc)}</p>
-              <div class="topics">${c.units.slice(0, 8).map((u) => `<span>${esc(u.title)}</span>`).join('')}${c.units.length > 8 ? `<span>+${c.units.length - 8}</span>` : ''}</div>
-              <div class="meter"><i style="width:${coursePct(c)}%"></i></div>
-              <div class="meta"><span>${c.units.length} módulos · ${n} lições</span><span>${d ? `${d}/${n} completas` : 'não iniciada'}</span></div>
-            </button>`;
-          }).join('')}
-        </div>
+        ${reviewBanner()}
+        ${GROUPS.map((g) => {
+          const list = COURSES.filter((c) => (c.group || 'code') === g.id);
+          if (!list.length) return '';
+          return `<section class="tile-group"><div class="tile-head"><h2>${esc(g.title)}</h2><span class="hud">${esc(g.sub)}</span></div>
+            <div class="tile-grid">${list.map(tileHTML).join('')}</div></section>`;
+        }).join('')}
       </div>`;
   }
 

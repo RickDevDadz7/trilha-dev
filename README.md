@@ -8,7 +8,7 @@
 
 App pra aprender programação do zero ao avançado, no estilo Mimo/Duolingo, com visual cyberpunk.
 
-**8 trilhas · 173 lições · 189 exercícios com correção automática** · funciona no PC e no celular
+**9 trilhas · 173 lições · 189 exercícios com correção automática** · funciona no PC e no celular
 
 | Trilha | Módulos | Do básico ao avançado |
 |---|---|---|
@@ -19,7 +19,8 @@ App pra aprender programação do zero ao avançado, no estilo Mimo/Duolingo, co
 | React | 4 | components, JSX, props, state, eventos, formulários, listas e key, useEffect, dados assíncronos, projeto final (todo app) |
 | Git & GitHub | 5 | commits, staging, histórico, restore/amend/revert, .gitignore, branches, merge, conflitos, stash, remote, push/pull, pull requests, Conventional Commits |
 | Inglês pra devs | 3 | vocabulário de documentação, falsos cognatos, PR, bug report, daily, entrevista (pitch, STAR, live coding) |
-| Carreira na Europa | 4 | Blue Card e Chancenkarte, CV alemão, LinkedIn, portfólio e README, candidatura e cover letter |
+| Carreira dev | 3 | portfólio e README, currículo (formatos por país), LinkedIn, onde procurar vaga, cover letter, salário |
+| Trabalhar fora | 4 | remoto pra empresa de fora (contractor, EOR, fuso), Europa (EU Blue Card, Alemanha, Portugal), Canadá (Express Entry) |
 
 Explicações em português; código e termos técnicos em inglês, como no mercado.
 

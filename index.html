@@ -417,6 +417,7 @@ a { color: var(--cyan); }
 [data-course="git"] { --accent: var(--c-git); --on-accent: #1a0a00; }
 [data-course="eng"] { --accent: var(--c-eng); --on-accent: #12002a; }
 [data-course="career"] { --accent: var(--c-career); --on-accent: #0d1a00; }
+[data-course="abroad"] { --accent: #ffb84d; --on-accent: #1f1000; }
 
 .cut { clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut))); }
 .hud { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); }
@@ -805,6 +806,38 @@ input[type="range"] { accent-color: var(--yellow); width: 100%; }
 /* ---------- conta ---------- */
 .google-btn b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #fff; color: #4285f4; font-family: Arial, sans-serif; font-size: 13px; margin-right: 4px; }
 #account-card .row { flex-wrap: wrap; }
+
+/* ---------- tela inicial compacta ---------- */
+.page-head.compact h1 { font-size: clamp(30px, 4vw, 44px); }
+.page-head.compact p { max-width: 640px; }
+.tile-group { margin-top: 22px; }
+.tile-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.tile-head h2 { font-size: 18px; text-transform: uppercase; letter-spacing: .06em; margin: 0; }
+.tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.course-tile { position: relative; display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--panel); border: 1px solid var(--line); color: var(--ink); text-align: left; cursor: pointer; transition: transform .15s ease, background .15s ease, border-color .15s ease; min-height: 92px; }
+.course-tile::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+.course-tile:hover, .course-tile:focus-visible { transform: translateY(-2px); background: var(--panel-2); border-color: var(--accent); }
+.course-tile .tile-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.course-tile strong { font-family: var(--font-display); text-transform: uppercase; font-size: 16px; letter-spacing: .03em; }
+.course-tile .tag { color: var(--accent); font-family: var(--font-mono); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.course-tile .meter { margin-top: 4px; }
+.course-tile .meta { font-family: var(--font-mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) {
+  .tile-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .course-tile { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; min-height: 0; }
+  .course-tile .chip.lg { width: 34px; height: 34px; font-size: 11px; }
+  .course-tile strong { font-size: 14px; }
+  .course-tile .tag { white-space: normal; }
+  .page-head.compact p { font-size: 14px; }
+  .tile-group { margin-top: 16px; }
+}
+.course-tile .meter { display: block; width: 100%; }
+@media (max-width: 760px) {
+  .course-tile .tag, .tile-head .hud, .page-head.compact .hud { display: none; }
+  .course-tile { flex-direction: row; align-items: center; gap: 10px; padding: 10px 12px; }
+  .course-tile strong { font-size: 13px; }
+  .page-head.compact h1 { font-size: 26px; margin-bottom: 4px; }
+}
 
 </style>
 </head>
@@ -4898,7 +4931,7 @@ Use as mensagens no padrão Conventional Commits.`),
   const { learn, quiz, predict, code, lesson, unit } = TD.C;
 
   TD.courses.push({
-    id: 'eng', name: 'Inglês pra devs', badge: 'ENG', runner: 'text',
+    id: 'eng', name: 'Inglês pra devs', badge: 'ENG', runner: 'text', group: 'career',
     tagline: 'O inglês que cai no trabalho',
     desc: 'Ler documentação, escrever commits, PRs, bug reports e mensagens pro time, e se virar numa entrevista técnica em inglês. Feito pra quem tem inglês intermediário e quer trabalhar fora.',
     notes: 'Nos exercícios você **escreve em inglês** no editor. O app confere a **estrutura** (seções, palavras-chave, tamanho), não a gramática perfeita. Se ativar o tutor de IA em Configurações, ele também revisa o seu texto.',
@@ -5086,94 +5119,17 @@ Admitir que não sabe, com calma, conta ponto.`),
 
 </script>
 <script>/* content/career1.js */
-/* Carreira na Europa — rotas de visto, CV, LinkedIn, portfólio e candidatura. Valores de 2026: revisar todo ano. */
+/* Carreira dev — portfólio, CV, LinkedIn e candidatura. Vale pra qualquer país; o que muda por destino fica em "Trabalhar fora" (abroad1.js). */
 (function (TD) {
   'use strict';
   const { learn, quiz, predict, code, lesson, unit } = TD.C;
 
   TD.courses.push({
-    id: 'career', name: 'Carreira na Europa', badge: 'EU', runner: 'text',
-    tagline: 'Do portfólio à vaga na Alemanha',
-    desc: 'Rotas de visto pra devs, CV no padrão alemão, LinkedIn, portfólio no GitHub, candidatura e negociação. Foco na Alemanha, mas quase tudo vale pra Europa toda.',
-    notes: 'Valores e regras de visto são de **2026** e mudam todo ano. Antes de qualquer decisão, confira no portal oficial **make-it-in-germany.com** e no consulado. Isto é orientação de estudo, não assessoria jurídica.',
+    id: 'career', name: 'Carreira dev', badge: 'JOB', runner: 'text', group: 'career',
+    tagline: 'Do portfólio à primeira vaga',
+    desc: 'Portfólio no GitHub, currículo, LinkedIn, candidatura e negociação. Serve pra vaga no Brasil, remota ou em outro país.',
+    notes: 'Nos exercícios você **escreve** e o app confere a estrutura do texto. Se ativar o tutor de IA em Configurações, ele também revisa o que você escreveu.',
     units: [
-      unit('O caminho',
-        lesson('career-routes', 'Rotas de visto pra devs',
-          learn('Blue Card (Blaue Karte EU)', `A rota mais comum pra dev é a **Blue Card**: um visto de trabalho pra quem já tem **oferta de emprego**.
-
-Pra área de TI, dá pra entrar de dois jeitos:
-
-- com **diploma** de ensino superior reconhecido, ou
-- **sem diploma**, com pelo menos **3 anos de experiência** comparável em TI.
-
-Isso é raro no mundo: experiência conta como diploma.`),
-          learn('O salário mínimo', `A Blue Card exige um **salário bruto anual mínimo**. Em 2026:
-
-- **€50.700**: regra geral
-- **€45.934,20**: valor reduzido, que vale pra **profissionais de TI**, profissões em falta e recém-formados
-
-Na prática, vagas de dev costumam pagar acima do mínimo. O número muda todo ano, em janeiro.`),
-          learn('Chancenkarte: ir antes da vaga', `Sem oferta ainda? A **Chancenkarte** (Opportunity Card), criada em junho de 2024, dá **1 ano** pra procurar emprego dentro da Alemanha.
-
-No caminho por pontos, você precisa de:
-
-- formação (superior ou técnica de pelo menos 2 anos)
-- **inglês B2** ou **alemão A1**
-- pelo menos **6 pontos** (idade, experiência, idiomas, ligação com a Alemanha)
-- comprovar dinheiro: **€1.091 por mês** em conta bloqueada (2026)`),
-          quiz('Rick tem 3 anos de experiência como dev, mas não tem diploma. A Blue Card é possível?', ['Não, diploma é sempre obrigatório', 'Sim: em TI, 3 anos de experiência comparável podem substituir o diploma', 'Só com alemão C1', 'Só se o salário for acima de €100 mil'], 1, 'TI tem essa exceção: experiência profissional comprovada no lugar do diploma.'),
-          predict('Uma vaga de dev oferece €48.000 brutos por ano em 2026. Passa no mínimo da Blue Card de TI?', 'salário oferecido: 48000\nmínimo TI 2026:   45934.20\nmínimo geral:     50700', ['Não passa em nenhum', 'Passa no mínimo reduzido de TI', 'Passa nos dois', 'Depende do idioma'], 1, '48.000 é maior que 45.934,20 (mínimo de TI), mas menor que 50.700.'),
-          quiz('Qual a diferença principal entre Blue Card e Chancenkarte?', ['Nenhuma', 'Blue Card exige oferta de emprego; a Chancenkarte é pra procurar emprego já na Alemanha', 'Chancenkarte é só pra estudantes', 'Blue Card não permite trabalhar'], 1, 'Blue Card = já tem a vaga. Chancenkarte = vai e procura, por até 1 ano.'),
-          code({ title: 'Seu plano', task: 'Escreva seu plano em 4 linhas (pode ser em português):\n\n- `Route:` Blue Card ou Chancenkarte\n- `Target:` mês/ano em que quer se mudar\n- `Gap:` o que falta (ex.: experiência, alemão A1, inglês B2, dinheiro)\n- `Next step:` a primeira ação concreta desta semana',
-            starter: 'Route:\nTarget:\nGap:\nNext step:\n',
-            solution: 'Route: Blue Card (IT specialist)\nTarget: 03/2028\nGap: 3 years of experience and German A2\nNext step: publish my first portfolio project on GitHub this week',
-            hint: 'Preencha cada linha depois dos dois-pontos. O "Next step" tem que ser algo que você consegue fazer em uma semana.',
-            tests: [['Route: Blue Card ou Chancenkarte', 'lines.some((l) => /^route:.*(blue|blaue|chancen|opportunity)/i.test(l))'], ['Target com mês/ano', 'lines.some((l) => /^target:.*\\d{4}/i.test(l))'], ['Gap preenchido', 'lines.some((l) => /^gap:\\s*\\S.{3,}/i.test(l))'], ['Next step concreto', 'lines.some((l) => /^next step:\\s*\\S.{10,}/i.test(l))']] }))
-      ),
-
-      unit('CV e LinkedIn',
-        lesson('career-cv', 'CV no padrão alemão',
-          learn('O Lebenslauf', `O currículo alemão (**Lebenslauf**) é direto e factual:
-
-- **1 a 2 páginas**, nunca mais
-- ordem **cronológica reversa** (o mais recente primeiro)
-- datas no formato **MM/YYYY – MM/YYYY**
-- bullets curtos, sem parágrafos
-- **foto é opcional**: a lei antidiscriminação (AGG) não exige. Em empresa tech internacional, muita gente não usa.`),
-          learn('Bullets que vendem', `Recrutador quer **resultado**, não lista de tarefas. Fórmula:
-
-**verbo de ação + o que fez + resultado com número**
-
-- ❌ *Responsible for the website*
-- ✅ *Rebuilt the checkout in React, cutting load time by 40%*
-
-Verbos fortes: *built, shipped, reduced, automated, migrated, improved, led*.`),
-          quiz('Qual bullet é melhor?', ['Worked with JavaScript', 'Responsible for bugs', 'Automated weekly reports with Node.js, saving 5 hours per week', 'Team player and hard worker'], 2, 'Verbo de ação, tecnologia e resultado medido.'),
-          code({ title: 'Reescreva seus bullets', task: 'Escreva **3 bullets** de experiência em inglês, cada um começando com `- ` e um **verbo de ação no passado** (ex.: built, reduced, automated). Pelo menos **2** devem ter um número (%, horas, usuários...).',
-            starter: '# 3 bullets: - Verb + what + result (with numbers)\n',
-            solution: '- Built a learning app in JavaScript used by 30 students\n- Automated sales reports with Python, saving 4 hours per week\n- Reduced page load time by 35% by lazy-loading images',
-            hint: 'Ex.: `- Built a ... used by 50 people` / `- Reduced ... by 20%`',
-            tests: [['3+ bullets', 'lines.filter((l) => /^- \\S/.test(l)).length >= 3'], ['Começam com verbo no passado', 'lines.filter((l) => /^- /.test(l)).every((l) => /^- (\\w+ed|built|led|ran|made|wrote|shipped|grew|won|taught|drove|built|set up)\\b/i.test(l))'], ['2+ com número', 'lines.filter((l) => /^- /.test(l) && /\\d/.test(l)).length >= 2']] })),
-
-        lesson('career-linkedin', 'LinkedIn que recrutador acha',
-          learn('Headline e configurações', `Recrutadores **buscam** no LinkedIn por palavras. Sua headline precisa ter:
-
-- o cargo: *Frontend Developer*, *Full-Stack Developer*
-- as tecnologias: *React · TypeScript · Node.js*
-- o objetivo: *Open to relocation to Germany*
-
-Ex.: *Full-Stack Developer · React, TypeScript, SQL · Open to relocation (Germany)*
-
-Também: perfil **em inglês**, ative **Open to Work** pra recrutadores e coloque a localização desejada.`),
-          quiz('O que mais ajuda um recrutador a te achar?', ['Uma headline criativa tipo "Code ninja 🥷"', 'Cargo e tecnologias escritos do jeito que aparecem nas vagas', 'Muitas fotos', 'Perfil em português'], 1, 'Recrutador busca por termos exatos: "React Developer", não "ninja".'),
-          quiz('Seu perfil do LinkedIn deve estar em qual idioma pra vagas na Alemanha em tech?', ['Português', 'Inglês (e alemão, se você tiver nível)', 'Espanhol', 'Tanto faz'], 1, 'Inglês é a língua padrão de tech. Uma versão em alemão é bônus.'),
-          code({ title: 'Sua headline', task: 'Escreva sua headline do LinkedIn em inglês, em **uma linha** de até **220 caracteres**, com: um cargo (developer/engineer), **pelo menos 2** tecnologias e menção a **relocation** ou **Germany**.',
-            starter: '# one line, max 220 characters\n',
-            solution: 'Full-Stack Developer · JavaScript, TypeScript, React, SQL · Building learning apps · Open to relocation to Germany',
-            hint: 'Modelo: `<Cargo> · <Tech1>, <Tech2>, <Tech3> · Open to relocation to Germany`',
-            tests: [['Uma linha só', 'lines.length === 1'], ['Até 220 caracteres', 'text.length > 0 && text.length <= 220'], ['Tem um cargo', '/\\b(developer|engineer)\\b/i.test(text)'], ['2+ tecnologias', '(text.match(/\\b(javascript|typescript|react|node(\\.js)?|sql|python|html|css|git|java|vue|angular)\\b/gi) || []).length >= 2'], ['Fala de relocation/Germany', '/\\b(relocat\\w*|germany|europe)\\b/i.test(text)']] }))
-      ),
-
       unit('Portfólio',
         lesson('career-portfolio', 'O que colocar no portfólio',
           learn('Qualidade, não quantidade', `Pra júnior, o portfólio **substitui a experiência**. Melhor **3 projetos bons** que 15 tutoriais copiados.
@@ -5182,7 +5138,7 @@ Um projeto bom:
 
 - resolve um problema real (seu ou de alguém)
 - está **no ar** (link de demo: GitHub Pages, Vercel, Netlify)
-- tem **README** em inglês, com print
+- tem **README** com print
 - tem commits frequentes e com mensagem decente
 - idealmente tem **testes**`),
           learn('Ideias que impressionam', `- Um app que você usa de verdade (este Overclock conta!)
@@ -5195,35 +5151,214 @@ Fixe 3 a 6 repos no seu perfil do GitHub (**pinned**).`),
           quiz('Qual desses pesa mais no portfólio de um júnior?', ['20 repositórios de tutorial', 'Um projeto no ar, com README, testes e histórico de commits', 'Muitas estrelas em repos dos outros', 'Um repo com um arquivo só'], 1, 'Mostra que você termina, publica e documenta: é o que o trabalho pede.'),
           quiz('Por que colocar o projeto no ar (demo)?', ['Não precisa, o código basta', 'Recrutador gasta segundos por candidato: clicar e ver funcionando convence mais', 'Pra gastar menos espaço no GitHub', 'É obrigatório pelo GitHub'], 1, 'Um link que funciona é a prova mais rápida de que você entrega.'),
           quiz('O que é um repo **pinned** no GitHub?', ['Um repo privado', 'Um repo fixado no topo do seu perfil', 'Um repo arquivado', 'Um fork'], 1, 'Você escolhe até 6 repos pra aparecerem em destaque no perfil.'),
-          code({ title: 'README de projeto', task: 'Escreva o README em inglês de um projeto seu (pode ser o Overclock). Use as seções `## About`, `## Tech stack` (com 2+ itens `- `), `## How to run` (com um comando em crase, tipo `` `npm install` ``) e `## Live demo` (com um link `https://`).',
+          code({ title: 'README de projeto', task: 'Escreva o README de um projeto seu (pode ser o Overclock). Em inglês ele serve pra vaga em qualquer lugar. Use as seções `## About`, `## Tech stack` (com 2+ itens `- `), `## How to run` (com um comando em crase, tipo `` `npm install` ``) e `## Live demo` (com um link `https://`).',
             starter: '# Project name\n\n## About\n\n## Tech stack\n\n## How to run\n\n## Live demo\n',
             solution: '# Overclock\n\n## About\nA programming learning app with bite-size lessons, spaced repetition and automated code tests.\n\n## Tech stack\n- JavaScript\n- TypeScript compiler in the browser\n- SQLite (sql.js)\n\n## How to run\nRun `node build.mjs` and open dist/index.html.\n\n## Live demo\nhttps://rickdevdadz7.github.io/trilha-dev/',
             hint: 'Preencha cada seção. No "How to run", coloque o comando entre crases.',
             tests: [['About com conteúdo', '/## About\\s*\\n\\s*[A-Za-z]/.test(text)'], ['Tech stack com 2+ itens', '(text.split("## Tech stack")[1] || "").split("##")[0].split("\\n").filter((l) => /^\\s*- \\S/.test(l)).length >= 2'], ['How to run com comando em crase', '/## How to run[\\s\\S]*?`[^`]+`/.test(text)'], ['Live demo com link', '/## Live demo[\\s\\S]*https:\\/\\/\\S+/.test(text)']] }))
       ),
 
+      unit('CV e LinkedIn',
+        lesson('career-cv', 'Um currículo que passa na triagem',
+          learn('O básico que vale em todo lugar', `Recrutador gasta poucos segundos no primeiro olhar. Por isso:
+
+- **1 página** (2 no máximo, se tiver muita experiência)
+- ordem **cronológica reversa**: o mais recente primeiro
+- seções: contato, resumo curto, experiência, projetos, habilidades, formação, idiomas
+- arquivo em **PDF**, com nome claro: \`rick-silva-cv.pdf\`
+- adapte as palavras-chave pra cada vaga: muitas empresas usam filtros automáticos (ATS)`),
+          learn('Cada país tem seu jeito', `O formato muda conforme o destino:
+
+- **EUA e Canadá** (*resume*): sem foto, sem idade, sem estado civil
+- **Alemanha** (*Lebenslauf*): datas em MM/AAAA, foto opcional
+- **Brasil**: foto e dados pessoais são comuns, mas não obrigatórios
+
+Na dúvida, vá no formato mais enxuto: sem foto e sem dados pessoais além de contato e cidade.`),
+          learn('Bullets que vendem', `Recrutador quer **resultado**, não lista de tarefas. Fórmula:
+
+**verbo de ação + o que fez + resultado com número**
+
+- ❌ *Responsible for the website*
+- ✅ *Rebuilt the checkout in React, cutting load time by 40%*
+
+Verbos fortes: *built, shipped, reduced, automated, migrated, improved, led*.`),
+          quiz('Qual bullet é melhor?', ['Worked with JavaScript', 'Responsible for bugs', 'Automated weekly reports with Node.js, saving 5 hours per week', 'Team player and hard worker'], 2, 'Verbo de ação, tecnologia e resultado medido.'),
+          quiz('Você vai mandar o CV pra uma empresa dos EUA. O que tirar?', ['As tecnologias', 'Foto, idade e estado civil', 'Os projetos', 'O e-mail'], 1, 'Nos EUA e no Canadá, foto e dados pessoais costumam ser evitados pra prevenir discriminação.'),
+          code({ title: 'Reescreva seus bullets', task: 'Escreva **3 bullets** de experiência ou projetos, cada um começando com `- ` e um **verbo de ação no passado** em inglês (ex.: built, reduced, automated). Pelo menos **2** devem ter um número (%, horas, usuários...).',
+            starter: '# 3 bullets: - Verb + what + result (with numbers)\n',
+            solution: '- Built a learning app in JavaScript used by 30 students\n- Automated sales reports with Python, saving 4 hours per week\n- Reduced page load time by 35% by lazy-loading images',
+            hint: 'Ex.: `- Built a ... used by 50 people` / `- Reduced ... by 20%`',
+            tests: [['3+ bullets', 'lines.filter((l) => /^- \\S/.test(l)).length >= 3'], ['Começam com verbo no passado', 'lines.filter((l) => /^- /.test(l)).every((l) => /^- (\\w+ed|built|led|ran|made|wrote|shipped|grew|won|taught|drove|set up)\\b/i.test(l))'], ['2+ com número', 'lines.filter((l) => /^- /.test(l) && /\\d/.test(l)).length >= 2']] })),
+
+        lesson('career-linkedin', 'LinkedIn que recrutador acha',
+          learn('Headline e configurações', `Recrutadores **buscam** no LinkedIn por palavras. Sua headline precisa ter:
+
+- o cargo: *Frontend Developer*, *Full-Stack Developer*
+- as tecnologias: *React · TypeScript · Node.js*
+- o que você procura: *Open to remote work*, *Open to relocation*
+
+Ex.: *Full-Stack Developer · React, TypeScript, SQL · Open to remote roles*
+
+Também: ative **Open to Work** pra recrutadores e preencha a localização que você quer.`),
+          quiz('O que mais ajuda um recrutador a te achar?', ['Uma headline criativa tipo "Code ninja 🥷"', 'Cargo e tecnologias escritos do jeito que aparecem nas vagas', 'Muitas fotos', 'Uma headline bem longa sobre sua vida'], 1, 'Recrutador busca por termos exatos: "React Developer", não "ninja".'),
+          quiz('Você quer vagas de fora também. Em que idioma deixar o perfil?', ['Só português', 'Inglês (dá pra ter uma versão em português também)', 'Espanhol', 'Tanto faz'], 1, 'Inglês é o idioma padrão de tech no mundo. O LinkedIn permite um perfil secundário em outro idioma.'),
+          code({ title: 'Sua headline', task: 'Escreva sua headline do LinkedIn em **uma linha** de até **220 caracteres**, com: um cargo (developer/engineer), **pelo menos 2** tecnologias e o que você procura (remote, relocation, hybrid ou onsite).',
+            starter: '# one line, max 220 characters\n',
+            solution: 'Full-Stack Developer · JavaScript, TypeScript, React, SQL · Building learning apps · Open to remote roles',
+            hint: 'Modelo: `<Cargo> · <Tech1>, <Tech2>, <Tech3> · Open to remote roles`',
+            tests: [['Uma linha só', 'lines.length === 1'], ['Até 220 caracteres', 'text.length > 0 && text.length <= 220'], ['Tem um cargo', '/\\b(developer|engineer)\\b/i.test(text)'], ['2+ tecnologias', '(text.match(/\\b(javascript|typescript|react|node(\\.js)?|sql|python|html|css|git|java|vue|angular)\\b/gi) || []).length >= 2'], ['Diz o que procura', '/\\b(remote|relocat\\w*|hybrid|onsite|open to)\\b/i.test(text)']] }))
+      ),
+
       unit('Candidatura',
         lesson('career-apply', 'Onde e como se candidatar',
-          learn('Onde procurar', `- **LinkedIn Jobs**: filtre por *Germany* e *English*
-- **StepStone**: o maior site de vagas da Alemanha
-- **Arbeitnow**, **GermanTechJobs**, **Berlin Startup Jobs**: focados em tech
-- **make-it-in-germany.com**: portal oficial, com vagas pra estrangeiros
+          learn('Onde procurar', `- **LinkedIn Jobs**: o maior, no mundo todo
+- **Indeed** e **Glassdoor**: vagas e salários
+- **Gupy** e **Programathor**: vagas no Brasil
+- **Wellfound**: startups
+- **We Work Remotely** e **Remote OK**: só vagas remotas
 
-Dica: muitas vagas de tech em Berlim e Munique são **em inglês**. Procure por *"English speaking"*.`),
-          learn('A carta (cover letter)', `Muitas empresas pedem uma **cover letter** curta (o *Anschreiben*). Estrutura em ~200 palavras:
+Dica: candidatura em massa rende pouco. Melhor 5 candidaturas bem adaptadas que 50 iguais.`),
+          learn('A carta (cover letter)', `Algumas vagas pedem uma **cover letter** curta. Estrutura em ~200 palavras:
 
 1. **Por que essa empresa** (algo específico dela, não genérico)
 2. **Por que você**: 1 ou 2 conquistas que batem com a vaga
-3. **Logística**: visto, data de início, *"I am eligible for the EU Blue Card"*
+3. **Logística**: quando pode começar, modelo de trabalho (remoto, presencial)
 4. Fecho: *I'd be happy to discuss...*`),
-          quiz('Como falar de salário quando perguntam sua expectativa?', ['Dizer "o que vocês acharem justo"', 'Dar uma faixa de salário bruto anual pesquisada pro cargo e cidade', 'Dar o salário líquido mensal em reais', 'Recusar responder'], 1, 'Na Alemanha se fala em **bruto anual** (brutto). Pesquise a faixa e dê um intervalo.'),
-          quiz('Quando falam em salário na Alemanha, normalmente é:', ['Líquido mensal', 'Bruto anual', 'Líquido anual', 'Por hora'], 1, 'O padrão é bruto anual (Bruttojahresgehalt). O líquido depende de impostos e da sua classe fiscal.'),
-          predict('Qual parte dessa abertura de cover letter é fraca?', 'Dear hiring team,\nI am applying for this job because\nI need a job in Germany.', ['"Dear hiring team"', 'Falar só do que você precisa, sem nada sobre a empresa', 'Escrever em inglês', 'Usar parágrafos'], 1, 'A carta é sobre o que você traz pra eles. Cite algo específico da empresa.'),
-          code({ title: 'Sua cover letter', task: 'Escreva uma cover letter em inglês entre **120 e 260 palavras**. Precisa: começar com `Dear`, citar o nome da empresa (invente uma, ex.: `Acme`), ter uma conquista com número, mencionar o visto (`Blue Card` ou `visa`) e terminar com uma despedida (`Best regards` ou `Kind regards`).',
-            starter: 'Dear\n\n# 1. why this company\n\n# 2. why you (an achievement with a number)\n\n# 3. visa and start date\n\nBest regards,\n',
-            solution: 'Dear Acme hiring team,\n\nI am applying for the Junior Frontend Developer role at Acme. I have followed your work on accessible e-commerce, and I love that your checkout is fully usable with a keyboard. That is exactly the kind of product I want to build.\n\nOver the last two years I have been building web apps with JavaScript, TypeScript and React. My latest project is a learning app with automated tests and spaced repetition, used by 30 students every week. I also reduced its load time by 35% by splitting the code and lazy-loading heavy libraries.\n\nI am based in Brazil, I am eligible for the EU Blue Card, and I can relocate to Berlin within three months of an offer. I speak English at B2 level and I am studying German.\n\nI would be happy to discuss how I can help your team.\n\nBest regards,\nRick',
+          quiz('Como falar de salário quando perguntam sua expectativa?', ['Dizer "o que vocês acharem justo"', 'Dar uma faixa pesquisada pro cargo, nível e lugar', 'Falar o mínimo que aceitaria', 'Recusar responder'], 1, 'Pesquise antes (Glassdoor, levels.fyi, pesquisas salariais) e dê um intervalo. O costume muda por país: no Brasil se fala em mensal; na Europa e nos EUA, em bruto anual.'),
+          predict('Qual parte dessa abertura de cover letter é fraca?', 'Dear hiring team,\nI am applying for this job because\nI really need a job.', ['"Dear hiring team"', 'Falar só do que você precisa, sem nada sobre a empresa', 'Escrever em inglês', 'Usar parágrafos'], 1, 'A carta é sobre o que você traz pra eles. Cite algo específico da empresa.'),
+          quiz('Qual estratégia de candidatura costuma render mais?', ['Mandar o mesmo CV pra 100 vagas no mesmo dia', 'Poucas candidaturas, com CV e carta adaptados a cada vaga', 'Só aplicar em vagas sênior', 'Esperar o recrutador te achar'], 1, 'Adaptar palavras-chave e mostrar interesse real pela empresa aumenta muito a taxa de resposta.'),
+          code({ title: 'Sua cover letter', task: 'Escreva uma cover letter em inglês entre **120 e 260 palavras**. Precisa: começar com `Dear`, citar o nome da empresa (invente uma, ex.: `Acme`), ter uma conquista com número, dizer quando você pode começar (`start`) e terminar com uma despedida (`Best regards` ou `Kind regards`).',
+            starter: 'Dear\n\n# 1. why this company\n\n# 2. why you (an achievement with a number)\n\n# 3. when you can start\n\nBest regards,\n',
+            solution: 'Dear Acme hiring team,\n\nI am applying for the Junior Frontend Developer role at Acme. I have followed your work on accessible e-commerce, and I love that your checkout is fully usable with a keyboard. That is exactly the kind of product I want to build.\n\nOver the last two years I have been building web apps with JavaScript, TypeScript and React. My latest project is a learning app with automated tests and spaced repetition, used by 30 students every week. I also reduced its load time by 35% by splitting the code and lazy-loading heavy libraries.\n\nI can start within four weeks of an offer, and I am comfortable working remotely or on site. I speak English at B2 level.\n\nI would be happy to discuss how I can help your team.\n\nBest regards,\nRick',
             hint: 'Siga os 3 blocos dos comentários. Lembre do nome da empresa e de um número na sua conquista.',
-            tests: [['Começa com Dear', '/^dear\\b/i.test(text)'], ['Entre 120 e 260 palavras', 'words.length >= 120 && words.length <= 260'], ['Conquista com número', '/\\d/.test(text)'], ['Fala do visto', '/\\b(blue card|visa|blaue karte|work permit)\\b/i.test(text)'], ['Despedida', '/(best|kind) regards/i.test(text)']] }))
+            tests: [['Começa com Dear', '/^dear\\b/i.test(text)'], ['Entre 120 e 260 palavras', 'words.length >= 120 && words.length <= 260'], ['Conquista com número', '/\\d/.test(text)'], ['Diz quando pode começar', '/\\bstart/i.test(text)'], ['Despedida', '/(best|kind) regards/i.test(text)']] }))
+      )
+    ]
+  });
+  // escrita livre: sem modo blocos
+  TD.courses[TD.courses.length - 1].units.forEach((u) => u.lessons.forEach((l) => l.steps.forEach((st) => { if (st.t === 'code') st.noBlocks = true; })));
+})(window.TD);
+
+</script>
+<script>/* content/abroad1.js */
+/* Trabalhar fora — remoto pra empresas de fora e rotas por destino. Regras de visto mudam todo ano: revisar (valores de 2026). */
+(function (TD) {
+  'use strict';
+  const { learn, quiz, predict, code, lesson, unit } = TD.C;
+
+  TD.courses.push({
+    id: 'abroad', name: 'Trabalhar fora', badge: 'INT', runner: 'text', group: 'career',
+    tagline: 'Remoto ou mudando de país',
+    desc: 'Os caminhos pra trabalhar com empresas de fora: remoto sem sair de casa ou mudando de país. Rotas de visto de Europa (Alemanha e Portugal) e Canadá, com o que é realista pra dev em cada uma.',
+    notes: 'Regras de visto e valores são de **2026** e mudam com frequência. Antes de qualquer decisão, confira no site oficial do governo do país e no consulado. Isto é orientação de estudo, não assessoria jurídica.',
+    units: [
+      unit('Escolhendo o caminho',
+        lesson('abroad-paths', 'Remoto, mudar de país ou os dois',
+          learn('Três caminhos', `Trabalhar pra fora não exige, necessariamente, sair do país:
+
+1. **Remoto pra empresa de fora**: você continua onde mora e recebe em dólar ou euro. Não precisa de visto.
+2. **Mudar com uma vaga** (relocation): a empresa te contrata e o visto sai junto com o contrato.
+3. **Mudar pra procurar vaga lá**: alguns países têm vistos de busca de emprego.
+
+Muita gente faz o 1 primeiro, ganha experiência internacional e inglês, e depois parte pro 2.`),
+          learn('O que pesa na escolha', `- **Inglês**: é o requisito número 1 nos três caminhos
+- **Experiência**: júnior consegue remoto e relocation, mas é mais difícil; 2 a 3 anos de experiência abrem muitas portas
+- **Diploma**: alguns vistos exigem, outros aceitam experiência no lugar
+- **Idioma local**: pra morar, ajuda muito (alemão na Alemanha, francês em parte do Canadá)
+- **Dinheiro guardado**: mudar custa caro, e alguns vistos exigem comprovar saldo`),
+          quiz('Qual caminho não precisa de visto?', ['Mudar com uma vaga', 'Visto de busca de emprego', 'Trabalhar remoto pra empresa de fora, morando no seu país', 'Nenhum'], 2, 'Se você continua morando no seu país, não há visto de trabalho envolvido. O que muda é contrato, pagamento e impostos.'),
+          quiz('Qual é o requisito que aparece em praticamente todos os caminhos?', ['Diploma de mestrado', 'Inglês', 'Ter morado fora antes', 'Saber alemão'], 1, 'Entrevista, documentação, dia a dia com o time: tudo passa pelo inglês.'),
+          quiz('Por que muita gente começa pelo remoto antes de mudar de país?', ['Porque é proibido mudar sem ter trabalhado remoto', 'Pra ganhar experiência internacional e inglês sem o custo e o risco da mudança', 'Porque paga mais que qualquer vaga lá fora', 'Porque não precisa de inglês'], 1, 'Experiência com time de fora pesa no currículo e na entrevista de relocation, e você testa se gosta do ritmo antes de se mudar.'),
+          code({ title: 'Seu plano', task: 'Escreva seu plano em 4 linhas (pode ser em português):\n\n- `Route:` remoto, relocation ou visto de busca (e o país, se for mudar)\n- `Target:` mês/ano\n- `Gap:` o que falta (ex.: inglês, experiência, portfólio, dinheiro)\n- `Next step:` a primeira ação concreta desta semana',
+            starter: 'Route:\nTarget:\nGap:\nNext step:\n',
+            solution: 'Route: remote job for a foreign company first, then relocation\nTarget: 03/2028\nGap: English for interviews and 2 portfolio projects\nNext step: publish my first portfolio project on GitHub this week',
+            hint: 'Preencha cada linha depois dos dois-pontos. O "Next step" tem que ser algo que você consegue fazer em uma semana.',
+            tests: [['Route preenchido', 'lines.some((l) => /^route:\\s*\\S.{3,}/i.test(l))'], ['Target com ano', 'lines.some((l) => /^target:.*\\d{4}/i.test(l))'], ['Gap preenchido', 'lines.some((l) => /^gap:\\s*\\S.{3,}/i.test(l))'], ['Next step concreto', 'lines.some((l) => /^next step:\\s*\\S.{10,}/i.test(l))']] }))
+      ),
+
+      unit('Remoto internacional',
+        lesson('abroad-remote', 'Trabalhando remoto pra fora',
+          learn('Como funciona a contratação', `Empresa de fora normalmente te contrata de um destes jeitos:
+
+- **Contractor** (prestador de serviço): você tem uma empresa ou se registra como autônomo no seu país, emite nota e recebe do exterior
+- **Employer of Record** (EOR): plataformas como Deel ou Remote contratam você **no seu país** em nome da empresa de fora
+- **Contrato direto**, quando a empresa já tem filial no seu país
+
+Impostos e o tipo de empresa mudam de país pra país: **converse com um contador** antes de assinar.`),
+          learn('O que as empresas remotas querem ver', `- **Comunicação escrita** clara, em inglês: muita coisa acontece por mensagem
+- **Autonomia**: resolver sem ninguém do lado
+- **Fuso horário**: algumas horas de sobreposição com o time
+- **Histórico público**: GitHub, projetos no ar, open source
+
+Dica: procure vagas com *"remote (LATAM)"*, *"remote (worldwide)"* ou *"anywhere"*. Muitas vagas "remote" aceitam só quem mora num país específico.`),
+          quiz('A vaga diz "Remote (US only)". O que isso quer dizer?', ['Qualquer pessoa pode aplicar', 'É remota, mas só pra quem mora (e pode trabalhar) nos EUA', 'Precisa ir aos EUA uma vez por mês', 'Paga em dólar'], 1, 'Remoto não significa "de qualquer lugar". Procure "worldwide", "anywhere" ou a sua região.'),
+          quiz('Antes de assinar um contrato de contractor com empresa de fora, o mais importante é:', ['Pedir adiantamento', 'Entender impostos e a forma de receber, com um contador', 'Mudar de banco', 'Abrir conta no exterior obrigatoriamente'], 1, 'Cada país tem regras próprias pra quem recebe do exterior. Um contador evita multa e imposto pago a mais.'),
+          predict('Qual dessas mensagens assíncronas é melhor pro time remoto?', '# A: "oi, tá aí?"\n# B: "Hi! The login test fails on staging\n#     with a 500. Logs attached. Can you\n#     check the auth config today?"', ['A, porque é curta', 'B: contexto, evidência e pedido claro numa mensagem só', 'As duas são iguais', 'Nenhuma: tem que ligar'], 1, 'Em time remoto, "oi, tá aí?" faz a pessoa esperar. Mande tudo de uma vez: o quê, a evidência e o que você precisa.'),
+          code({ title: 'Candidatura remota', task: 'Escreva em inglês a mensagem curta (3 a 6 linhas) que você mandaria junto com a candidatura pra uma vaga remota. Precisa: dizer seu cargo/stack, seu **fuso horário** ou região (`timezone`, `UTC` ou `GMT`), um link (`https://`) pro GitHub ou portfólio e terminar com uma despedida.',
+            starter: '# 3 to 6 lines\n# who you are + stack, your timezone, a link, sign-off\n',
+            solution: 'Hi! I am a frontend developer working with React and TypeScript.\nI am based in Brazil (UTC-3) and I can overlap 4+ hours with US and European teams.\nYou can see my projects here: https://github.com/RickDevDadz7\nBest regards,\nRick',
+            hint: 'Ex.: `I am based in Brazil (UTC-3)` e o link do seu GitHub.',
+            tests: [['3 a 6 linhas', 'lines.length >= 3 && lines.length <= 6'], ['Cita a stack', '/\\b(react|typescript|javascript|node|sql|python|vue|angular)\\b/i.test(text)'], ['Diz o fuso horário', '/\\b(utc|gmt|timezone|time zone)\\b/i.test(text)'], ['Tem um link', '/https:\\/\\/\\S+/.test(text)'], ['Despedida', '/(regards|thanks|thank you|cheers|best)/i.test(text)']] }))
+      ),
+
+      unit('Europa',
+        lesson('career-routes', 'Alemanha e o Blue Card',
+          learn('EU Blue Card', `O **EU Blue Card** é o visto de trabalho qualificado da União Europeia. Vale em **25 dos 27 países** (não vale na Dinamarca nem na Irlanda), e cada país define o próprio salário mínimo.
+
+Pra ter, você precisa de uma **oferta de emprego** qualificado de pelo menos 6 meses e de um salário acima do mínimo daquele país.`),
+          learn('Alemanha: TI tem regra especial', `Na **Alemanha**, pra área de TI dá pra entrar de dois jeitos:
+
+- com **diploma** de ensino superior reconhecido, ou
+- **sem diploma**, com pelo menos **3 anos de experiência** comparável em TI.
+
+Salário bruto anual mínimo em 2026:
+
+- **€50.700**: regra geral
+- **€45.934,20**: pra **TI**, profissões em falta e recém-formados`),
+          learn('Chancenkarte: ir antes da vaga', `Sem oferta ainda? A **Chancenkarte** (Opportunity Card) alemã dá **1 ano** pra procurar emprego dentro da Alemanha.
+
+No caminho por pontos, você precisa de:
+
+- formação (superior ou técnica de pelo menos 2 anos)
+- **inglês B2** ou **alemão A1**
+- pelo menos **6 pontos** (idade, experiência, idiomas, ligação com a Alemanha)
+- comprovar dinheiro: **€1.091 por mês** em conta bloqueada (2026)`),
+          quiz('Um dev tem 3 anos de experiência, mas não tem diploma. A Blue Card alemã é possível?', ['Não, diploma é sempre obrigatório', 'Sim: em TI, 3 anos de experiência comparável podem substituir o diploma', 'Só com alemão C1', 'Só se o salário for acima de €100 mil'], 1, 'TI tem essa exceção na Alemanha: experiência profissional comprovada no lugar do diploma.'),
+          predict('Uma vaga de dev na Alemanha oferece €48.000 brutos por ano em 2026. Passa no mínimo da Blue Card de TI?', 'salário oferecido: 48000\nmínimo TI 2026:   45934.20\nmínimo geral:     50700', ['Não passa em nenhum', 'Passa no mínimo reduzido de TI', 'Passa nos dois', 'Depende do idioma'], 1, '48.000 é maior que 45.934,20 (mínimo de TI), mas menor que 50.700.'),
+          quiz('Qual a diferença principal entre Blue Card e Chancenkarte?', ['Nenhuma', 'Blue Card exige oferta de emprego; a Chancenkarte é pra procurar emprego já na Alemanha', 'Chancenkarte é só pra estudantes', 'Blue Card não permite trabalhar'], 1, 'Blue Card = já tem a vaga. Chancenkarte = vai e procura, por até 1 ano.')),
+
+        lesson('abroad-portugal', 'Portugal',
+          learn('As rotas pra dev', `Portugal é popular entre brasileiros por causa do idioma. As rotas mais comuns pra dev:
+
+- **Tech Visa**: pra trabalhar numa empresa de tecnologia **certificada** no programa, com processo mais rápido
+- **Visto de trabalho qualificado** ou **EU Blue Card**: com uma oferta de emprego
+- **Visto de nômade digital (D8)**: pra quem trabalha **remoto** pra empresa de fora e quer morar lá, comprovando renda`),
+          learn('Atenção à busca de emprego', `Em 2025, Portugal mudou a lei de imigração: o antigo visto de procura de trabalho foi substituído por um visto pra **competências técnicas especializadas**, que até o fim de 2026 ainda dependia de regulamentação pra abrir nos consulados.
+
+Também acabou a possibilidade de entrar como turista e trocar pra visto de trabalho lá dentro. Na prática: **consiga a vaga antes de ir**.
+
+Brasileiros têm acordos próprios dentro da **CPLP**: vale pesquisar no site do consulado.`),
+          quiz('Você trabalha remoto pra uma empresa americana e quer morar em Portugal. Qual rota combina mais?', ['Tech Visa', 'Visto de nômade digital (D8)', 'Blue Card', 'Visto de estudante'], 1, 'O D8 é pra quem já tem renda de trabalho remoto. Tech Visa e Blue Card exigem vaga numa empresa em Portugal ou na UE.'),
+          quiz('Qual a estratégia mais segura pra trabalhar em Portugal hoje?', ['Entrar como turista e procurar emprego lá', 'Conseguir a oferta de emprego antes de viajar', 'Esperar a lei mudar', 'Abrir uma empresa lá sem visto'], 1, 'A troca de turista pra trabalhador acabou em 2024, e o novo visto de busca ainda não estava aberto: a vaga antes é o caminho seguro.'))
+      ),
+
+      unit('Canadá',
+        lesson('abroad-canada', 'Canadá e o Express Entry',
+          learn('Como funciona', `O principal caminho de imigração qualificada pro Canadá é o **Express Entry**, que dá **residência permanente**.
+
+Você cria um perfil e recebe uma pontuação (**CRS**) por idade, formação, experiência e idiomas (inglês e francês). Periodicamente o governo faz sorteios ("draws") e convida os perfis com mais pontos.
+
+Além dos draws gerais, existem draws por **categoria**: profissões que o país quer priorizar naquele ano.`),
+          learn('A realidade pra dev em 2026', `Em 2026 o Canadá reorganizou as categorias, e **desenvolvedores de software saíram da lista de STEM** priorizada. Ou seja: dev concorre nos draws gerais, com pontuação de corte alta.
+
+O que mais aumenta pontos:
+
+- **inglês** muito bom (e **francês**, que conta muito)
+- experiência de trabalho, de preferência **no Canadá**
+- uma **oferta de emprego** ou indicação de uma província (PNP)`),
+          quiz('No Express Entry, o que é o CRS?', ['O nome do visto', 'A pontuação do seu perfil, que define se você é convidado', 'Um exame de inglês', 'O salário mínimo'], 1, 'CRS (Comprehensive Ranking System) é a nota do perfil. Quem tem mais pontos é convidado nos draws.'),
+          quiz('Pra um dev brasileiro que quer o Canadá, o que mais aumenta as chances?', ['Ter muitos repositórios no GitHub', 'Melhorar muito o inglês e, se possível, aprender francês', 'Morar perto da fronteira', 'Aplicar várias vezes no mesmo dia'], 1, 'Idiomas pesam muito no CRS, e francês dá pontos extras e acesso a draws próprios.'),
+          quiz('O Express Entry dá que tipo de status?', ['Visto de turista', 'Residência permanente', 'Visto de estudante', 'Cidadania imediata'], 1, 'Quem é convidado e aprovado recebe residência permanente: pode morar e trabalhar em qualquer lugar do Canadá.'))
       )
     ]
   });
@@ -7156,38 +7291,45 @@ type Expect<T extends true> = T;
     const nd = TD.ped.nextDue(P());
     return `<div class="banner cut review-banner"><div class="grow"><span class="hud" style="color:var(--cyan)">Revisão espaçada</span><strong>Memória em dia</strong><span style="color:var(--muted);font-size:14px">${total} itens no seu ciclo de revisão. Próxima revisão: ${nd ? esc(new Date(nd).toLocaleDateString('pt-BR')) : '-'}.</span></div></div>`;
   }
+  const GROUPS = [
+    { id: 'code', title: 'Programação', sub: 'Linguagens e ferramentas' },
+    { id: 'career', title: 'Carreira', sub: 'Inglês, portfólio, vagas e trabalho fora' }
+  ];
+  function tileHTML(c) {
+    const n = allLessons(c).length, d = courseDone(c), pct = coursePct(c);
+    return `
+      <button class="course-tile cut" data-course="${c.id}" data-go="${c.id}" title="${esc(c.desc)}">
+        <span class="chip lg">${esc(c.badge)}</span>
+        <span class="tile-body"><strong>${esc(c.name)}</strong><span class="tag">${esc(c.tagline)}</span>
+          <span class="meter"><i style="width:${pct}%"></i></span>
+          <span class="meta">${d ? `${d}/${n} lições` : `${n} lições`}${pct ? ` · ${pct}%` : ''}</span></span>
+      </button>`;
+  }
   function homeHTML() {
     const last = P().last && byId[P().last] ? byId[P().last] : null;
     const nl = last ? nextLesson(last) : null;
     const total = COURSES.reduce((a, c) => a + allLessons(c).length, 0);
     return `
-      <div class="page">
-        <header class="page-head">
+      <div class="page home">
+        <header class="page-head compact">
           <span class="hud">Sistema online · ${total} lições carregadas</span>
           <h1 class="glitch">Escolha sua trilha</h1>
-          <p>Do zero ao avançado em JavaScript, TypeScript, SQL, HTML/CSS, React e Git, mais inglês pra devs e o caminho até uma vaga na Europa. Lições curtas, código que roda na hora, testes automáticos e um tutor de IA pra destravar. Explicações em português, código em inglês.</p>
+          <p>Aprenda a programar do zero ao avançado, com lições curtas, código que roda na hora e revisão que não te deixa esquecer.</p>
         </header>
         ${backupNudge()}
-        ${reviewBanner()}
         ${last && nl ? `
           <div class="banner cut" data-course="${last.id}">
             <span class="chip lg">${esc(last.badge)}</span>
             <div class="grow"><span class="hud" style="color:var(--accent)">Continuar missão</span><strong>${esc(last.name)} · ${esc(nl.title)}</strong></div>
             <button class="btn primary" data-start="${last.id}:${nl.id}">Continuar ${ICON.play}</button>
           </div>` : ''}
-        <div class="course-grid">
-          ${COURSES.map((c, i) => {
-            const n = allLessons(c).length, d = courseDone(c);
-            return `
-            <button class="course-card cut" data-course="${c.id}" data-go="${c.id}" data-idx="TRILHA_0${i + 1}">
-              <div class="top"><span class="chip lg">${esc(c.badge)}</span><div><h2>${esc(c.name)}</h2><div class="tag">${esc(c.tagline)}</div></div></div>
-              <p>${esc(c.desc)}</p>
-              <div class="topics">${c.units.slice(0, 8).map((u) => `<span>${esc(u.title)}</span>`).join('')}${c.units.length > 8 ? `<span>+${c.units.length - 8}</span>` : ''}</div>
-              <div class="meter"><i style="width:${coursePct(c)}%"></i></div>
-              <div class="meta"><span>${c.units.length} módulos · ${n} lições</span><span>${d ? `${d}/${n} completas` : 'não iniciada'}</span></div>
-            </button>`;
-          }).join('')}
-        </div>
+        ${reviewBanner()}
+        ${GROUPS.map((g) => {
+          const list = COURSES.filter((c) => (c.group || 'code') === g.id);
+          if (!list.length) return '';
+          return `<section class="tile-group"><div class="tile-head"><h2>${esc(g.title)}</h2><span class="hud">${esc(g.sub)}</span></div>
+            <div class="tile-grid">${list.map(tileHTML).join('')}</div></section>`;
+        }).join('')}
       </div>`;
   }
 

@@ -15,7 +15,7 @@ const src = (p) => readFileSync(join(here, 'src', p), 'utf8');
 const contentFiles = readdirSync(join(here, 'src', 'content'))
   .filter((f) => f.endsWith('.js'))
   .sort((a, b) => (a === '_base.js' ? -1 : b === '_base.js' ? 1 : a.localeCompare(b, 'en', { numeric: true })));
-const order = ['js', 'ts', 'sql', 'web', 'react', 'git', 'eng', 'career'];
+const order = ['js', 'ts', 'sql', 'web', 'react', 'git', 'eng', 'career', 'abroad'];
 contentFiles.sort((a, b) => {
   if (a === '_base.js') return -1; if (b === '_base.js') return 1;
   const ka = order.findIndex((k) => a.startsWith(k)), kb = order.findIndex((k) => b.startsWith(k));

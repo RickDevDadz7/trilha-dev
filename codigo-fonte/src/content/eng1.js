@@ -4,7 +4,7 @@
   const { learn, quiz, predict, code, lesson, unit } = TD.C;
 
   TD.courses.push({
-    id: 'eng', name: 'Inglês pra devs', badge: 'ENG', runner: 'text',
+    id: 'eng', name: 'Inglês pra devs', badge: 'ENG', runner: 'text', group: 'career',
     tagline: 'O inglês que cai no trabalho',
     desc: 'Ler documentação, escrever commits, PRs, bug reports e mensagens pro time, e se virar numa entrevista técnica em inglês. Feito pra quem tem inglês intermediário e quer trabalhar fora.',
     notes: 'Nos exercícios você **escreve em inglês** no editor. O app confere a **estrutura** (seções, palavras-chave, tamanho), não a gramática perfeita. Se ativar o tutor de IA em Configurações, ele também revisa o seu texto.',
