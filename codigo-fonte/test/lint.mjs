@@ -34,11 +34,6 @@ for (const c of TD.courses) {
     // teoria antes da prática: o primeiro passo da lição é sempre learn
     if (l.steps[0]?.t !== 'learn') errors.push(`${where}: a lição deve começar com teoria`);
   }));
-  // checkpoint precisa de material
-  c.units.forEach((u, ui) => {
-    const cp = TD.ped.checkpointLesson(c, ui, 'lint');
-    if (cp.steps.length < (c.runner === 'text' ? 3 : 4)) warns.push(`${c.id} unidade ${ui + 1}: checkpoint com só ${cp.steps.length} perguntas`);
-  });
 }
 for (const w of warns) console.log('aviso:', w);
 for (const e of errors) console.log('ERRO:', e);

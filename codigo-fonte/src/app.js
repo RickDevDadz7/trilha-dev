@@ -58,25 +58,17 @@
   const allLessons = (c) => c.units.flatMap((u) => u.lessons);
   const courseDone = (c) => allLessons(c).filter((l) => P().done[l.id]).length;
   const coursePct = (c) => Math.round((courseDone(c) / Math.max(1, allLessons(c).length)) * 100);
-  // Mastery learning: o 1º lição de cada módulo exige o checkpoint do módulo anterior.
+  // Lições em sequência: cada uma abre quando a anterior é concluída.
   const isUnlocked = (c, lesson) => {
     if (P().done[lesson.id]) return true;
     const ls = allLessons(c); const i = ls.findIndex((l) => l.id === lesson.id);
-    if (i === 0) return true;
-    if (!P().done[ls[i - 1].id]) return false;
-    const ui = c.units.findIndex((u) => u.lessons[0].id === lesson.id);
-    return ui <= 0 || TD.ped.unitMastered(P(), c, ui - 1) || !TD.ped.checkpointLesson(c, ui - 1, 'x');
+    return i === 0 || !!P().done[ls[i - 1].id];
   };
   const unitDone = (c, ui) => c.units[ui].lessons.every((l) => P().done[l.id]);
-  const checkpointOpen = (c, ui) => unitDone(c, ui);
-  // próxima coisa a fazer na trilha: lição pendente ou checkpoint pendente
+  // próxima lição pendente da trilha
   function nextTarget(c) {
-    for (let ui = 0; ui < c.units.length; ui++) {
-      const pending = c.units[ui].lessons.find((l) => !P().done[l.id]);
-      if (pending) return isUnlocked(c, pending) ? pending : null;
-      if (!TD.ped.unitMastered(P(), c, ui) && TD.ped.checkpointLesson(c, ui, 'x')) return { id: '@cp' + ui, title: 'Checkpoint: ' + c.units[ui].title, checkpoint: ui };
-    }
-    return null;
+    const pending = allLessons(c).find((l) => !P().done[l.id]);
+    return pending && isUnlocked(c, pending) ? pending : null;
   }
   const nextLesson = (c) => nextTarget(c);
   const liveStreak = () => (P().lastDay === dayKey() || P().lastDay === yesterday() ? P().streak : 0);
@@ -172,7 +164,6 @@
     try { localStorage.removeItem('td-guest'); } catch (e) { /* */ }
     try { history.replaceState(null, '', location.pathname + location.search + '#'); } catch (e) { location.hash = ''; }
     S.view = { name: 'home' }; render();
-    toast('Conectado. Sincronizando...');
     await runSync(false);
     render();
   }
@@ -217,7 +208,7 @@
     const pass = () => (document.getElementById('cloud-pass') || {}).value || '';
     try {
       if (act === 'cloud-google') { TD.cloud.signInWithGoogle(); return; }
-      if (act === 'cloud-signin') { msg('Entrando...'); await TD.cloud.signIn(email(), pass()); toast('Conectado. Sincronizando...'); refreshAccount(); await runSync(true); return; }
+      if (act === 'cloud-signin') { msg('Entrando...'); await TD.cloud.signIn(email(), pass()); refreshAccount(); await runSync(false); return; }
       if (act === 'cloud-signup') { msg('Criando...'); const r = await TD.cloud.signUp(email(), pass()); if (r.confirm) msg('Conta criada! Abra o link que chegou no seu e-mail (veja o spam) e depois clique em Entrar.'); else { refreshAccount(); await runSync(true); } return; }
       if (act === 'cloud-recover') { await TD.cloud.recover(email()); msg('Enviamos um link pro seu e-mail pra criar uma senha nova.'); return; }
       if (act === 'cloud-sync') { await runSync(true); return; }
@@ -359,14 +350,7 @@
   }
 
   /* ---------- mapa da trilha ---------- */
-  function checkpointNodeHTML(c, ui) {
-    if (!TD.ped.checkpointLesson(c, ui, 'x')) return '';
-    const m = (P().mastery || {})[TD.ped.unitKey(c, ui)];
-    const passed = TD.ped.unitMastered(P(), c, ui);
-    const open = checkpointOpen(c, ui);
-    const status = passed ? `dominado · ${Math.round(m.best * 100)}%` : m ? `melhor: ${Math.round(m.best * 100)}% · precisa de ${Math.round(TD.ped.CHECKPOINT_PASS * 100)}%` : open ? 'liberado · revisão misturada do módulo' : 'termine as lições do módulo';
-    return `<div class="node-wrap cp ${open ? '' : 'locked'}"><span class="hex-ring ${open && !passed ? 'current' : ''}"><button class="node diamond ${passed ? 'done' : open ? '' : 'locked'}" ${open ? `data-start="${c.id}:@cp${ui}"` : 'disabled'} aria-label="Checkpoint do módulo ${ui + 1}">${passed ? ICON.check : open ? '◆' : ICON.lock}</button></span><div class="node-label"><strong>Checkpoint do módulo</strong><small>${status}</small></div></div>`;
-  }
+
   const OFFS = [0, 60, 90, 60, 0, -60, -90, -60];
   function courseHTML(c) {
     const nl = nextLesson(c);
@@ -398,7 +382,6 @@
                       <div class="node-label"><strong>${esc(l.title)}</strong><small>${dn ? 'completa · revisar' : un ? (cur ? 'próxima missão' : 'disponível') : 'bloqueada'} · ${l.steps.length} etapas${codeN ? ` · ${codeN} código` : ''}</small></div>
                     </div>`;
                   }).join('')}
-                  ${checkpointNodeHTML(c, ui)}
                 </div>
               </section>`;
             }).join('')}
@@ -412,7 +395,7 @@
               ${nl ? `<button class="btn primary" data-start="${c.id}:${nl.id}">${d ? 'Continuar' : 'Começar'} ${ICON.play}</button>` : ''}
             </div>
             ${c.notes ? `<div class="card cut"><span class="hud">Briefing</span>${md(c.notes)}</div>` : ''}
-            <div class="card cut"><span class="hud">Método Overclock</span><p>Teoria em pedaços curtos, quiz pra puxar da memória, exercício com a teoria à mão e modo guiado com blocos. No fim de cada módulo, um checkpoint misturando tudo. E a Revisão do dia traz de volta o que você estudou, no tempo certo pra não esquecer.</p></div>
+            <div class="card cut"><span class="hud">Método Overclock</span><p>Teoria em pedaços curtos, quiz pra puxar da memória, exercício com a teoria à mão e modo guiado com blocos. E a Revisão do dia traz de volta o que você estudou, no tempo certo pra não esquecer.</p></div>
           </aside>
         </div>
       </div>`;
@@ -1145,7 +1128,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
     window.addEventListener('hashchange', route);
     route();
     S.store.autoBackup(now(), TD.contentVersion).catch((e) => log('warn', 'backup automático: ' + (e.code || e.message)));
-    if (redirect) toast(redirect.error ? redirect.error : redirect.type === 'recovery' ? 'Defina sua nova senha abaixo.' : 'Conectado' + (redirect.email ? ' como ' + redirect.email : '') + '. Sincronizando...');
+    if (redirect && (redirect.error || redirect.type === 'recovery')) toast(redirect.error ? redirect.error : 'Defina sua nova senha abaixo.');
     if (cloudOn()) {
       TD.cloud.googleEnabled().then((on) => { if (on !== !!S.google) { S.google = on; if (S.view.name === 'login') render(); else refreshAccount(); } });
       if (TD.cloud.user()) runSync(false);
