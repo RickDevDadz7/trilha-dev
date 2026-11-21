@@ -1,5 +1,5 @@
 /* Service worker do Trilha Dev: deixa o app abrir offline depois da primeira visita. */
-const CACHE = 'trilha-dev-2026.11.20-1795221940799';
+const CACHE = 'trilha-dev-2026.11.20-1795222267357';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './vendor/codemirror.min.js', './vendor/typescript.min.js', './vendor/sql-asm.js'];
 
 self.addEventListener('install', (e) => {

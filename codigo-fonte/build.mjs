@@ -15,7 +15,7 @@ const src = (p) => readFileSync(join(here, 'src', p), 'utf8');
 const contentFiles = readdirSync(join(here, 'src', 'content'))
   .filter((f) => f.endsWith('.js'))
   .sort((a, b) => (a === '_base.js' ? -1 : b === '_base.js' ? 1 : a.localeCompare(b, 'en', { numeric: true })));
-const order = ['js', 'ts', 'sql', 'web'];
+const order = ['js', 'ts', 'sql', 'web', 'react', 'git', 'eng', 'career'];
 contentFiles.sort((a, b) => {
   if (a === '_base.js') return -1; if (b === '_base.js') return 1;
   const ka = order.findIndex((k) => a.startsWith(k)), kb = order.findIndex((k) => b.startsWith(k));
@@ -23,7 +23,7 @@ contentFiles.sort((a, b) => {
 });
 const scripts = [
   ...contentFiles.map((f) => ['content/' + f, src('content/' + f)]),
-  ['store.js', src('store.js')], ['local.js', src('local.js')], ['runners.js', src('runners.js')], ['pedagogy.js', src('pedagogy.js')], ['sfx.js', src('sfx.js')], ['app.js', src('app.js')]
+  ['store.js', src('store.js')], ['local.js', src('local.js')], ['runners.js', src('runners.js')], ['gitsim.js', src('gitsim.js')], ['pedagogy.js', src('pedagogy.js')], ['sfx.js', src('sfx.js')], ['app.js', src('app.js')]
 ];
 const css = src('codemirror.css') + '\n' + src('style.css');
 const safe = (js) => js.replace(/<\/script/gi, '<\\/script');

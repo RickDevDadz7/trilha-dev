@@ -80,6 +80,19 @@
       [/Unused '@ts-expect-error' directive/, 'Um teste de tipo esperava um erro e ele não aconteceu: seu tipo está aceitando valores que deveria recusar.'],
       [/lacks ending return statement|Not all code paths return a value/, 'Algum caminho da function termina sem `return`. Trate todos os casos.']
     ],
+    git: [
+      [/not a git repository/, 'Essa pasta ainda não é um repositório. Comece com `git init` (ou `git clone <url>` pra baixar um que já existe).'],
+      [/nada pra commitar|nothing added to commit/, 'O commit só leva o que está na staging area. Rode `git add <arquivo>` (ou `git add .`) antes do `git commit`.'],
+      [/did not match any/, 'Esse nome de arquivo ou branch não existe. Confira com `ls` (arquivos) ou `git branch` (branches).'],
+      [/has no upstream branch/, 'Na primeira vez que manda uma branch pro GitHub, use `git push -u origin <branch>`. Depois disso, só `git push` basta.'],
+      [/rejected|fetch first/, 'O GitHub tem commits que você não tem. Rode `git pull` primeiro, resolva o que precisar e aí faça `git push`.'],
+      [/unmerged files|fix conflicts/, 'Tem conflito. Abra o arquivo, escolha o conteúdo final (apagando as linhas `<<<<<<<`, `=======` e `>>>>>>>`), depois `git add` e `git commit`.'],
+      [/would be overwritten/, 'Você tem mudanças sem commit. Faça commit (ou `git stash`) antes de trocar de branch.'],
+      [/not fully merged/, 'Essa branch tem commits que ainda não estão na atual. Faça o merge antes, ou use `-D` se quer jogar fora mesmo.'],
+      [/command not found/, 'Esse terminal simulado só entende `git`, `echo`, `touch`, `cat`, `ls` e `rm`.'],
+      [/is not a git command/, 'Confira a grafia do comando. Os mais usados: `status`, `add`, `commit`, `log`, `branch`, `switch`, `merge`, `push`, `pull`.'],
+      [/aspas não fechadas/, 'Faltou fechar as aspas da mensagem: `git commit -m "mensagem"`.'],
+    ],
     sql: [
       [/no such column/, 'Essa column não existe. Confira o nome na descrição do banco (e o alias da table, como `c.name`).'],
       [/no such table/, 'Essa table não existe. Confira o nome na descrição do banco.'],

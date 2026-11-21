@@ -378,6 +378,10 @@ span.CodeMirror-selectedtext { background: none; }
   --c-ts: #3db4ff;
   --c-sql: #2dffb0;
   --c-web: #ff4f8b;
+  --c-react: #61dafb;
+  --c-git: #ff8a3d;
+  --c-eng: #b48cff;
+  --c-career: #b6ff3d;
   --font-display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
   --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
@@ -409,6 +413,10 @@ a { color: var(--cyan); }
 [data-course="ts"] { --accent: var(--c-ts); --on-accent: #001222; }
 [data-course="sql"] { --accent: var(--c-sql); --on-accent: #00140d; }
 [data-course="web"] { --accent: var(--c-web); --on-accent: #1a0009; }
+[data-course="react"] { --accent: var(--c-react); --on-accent: #001820; }
+[data-course="git"] { --accent: var(--c-git); --on-accent: #1a0a00; }
+[data-course="eng"] { --accent: var(--c-eng); --on-accent: #12002a; }
+[data-course="career"] { --accent: var(--c-career); --on-accent: #0d1a00; }
 
 .cut { clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut))); }
 .hud { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); }
@@ -4196,6 +4204,381 @@ Capriche: esse é o tipo de peça que vai pro seu portfólio.`),
 })(globalThis.TD = globalThis.TD || {});
 
 </script>
+<script>/* content/git1.js */
+/* Git & GitHub — terminal simulado (src/gitsim.js). Os comandos são reais; o repositório é de mentira. */
+(function (TD) {
+  'use strict';
+  const { learn, quiz, predict, code, lesson, unit } = TD.C;
+
+  const BASE = ['git init', 'echo "# My App" > README.md', 'git add .', 'git commit -m "Initial commit"'];
+  const WITH_APP = BASE.concat(['echo "console.log(1)" > app.js', 'git add app.js', 'git commit -m "Add app"']);
+
+  TD.courses.push({
+    id: 'git', name: 'Git & GitHub', badge: 'GIT', runner: 'git',
+    tagline: 'Todo emprego de dev pede',
+    desc: 'Versionar código, trabalhar com branches, resolver conflitos e colaborar no GitHub com push, pull e pull requests. Os comandos são os de verdade, num terminal simulado.',
+    notes: 'O editor aqui é um **terminal**: escreva **um comando por linha** e clique em Rodar. Cada exercício começa numa pasta nova, então pode errar à vontade. Linhas com `#` são comentários. Além do `git`, funcionam `echo "texto" > arquivo`, `touch`, `cat`, `ls` e `rm`.',
+    units: [
+      unit('Primeiros passos',
+        lesson('git-why', 'O que é Git',
+          learn('Uma máquina do tempo pro código', `**Git** é um sistema de **controle de versão**: ele guarda o histórico de tudo que muda no seu projeto.
+
+Cada ponto salvo se chama **commit**: uma foto do projeto inteiro naquele momento, com uma mensagem dizendo o que mudou.
+
+Com isso você pode voltar no tempo, ver quem mudou o quê e trabalhar em equipe sem um sobrescrever o outro.`),
+          learn('Git não é GitHub', `- **Git**: o programa que roda no seu computador e guarda o histórico.
+- **GitHub**: um site que hospeda repositórios Git na nuvem, pra compartilhar e colaborar.
+
+Um projeto controlado pelo Git é um **repositório** (ou **repo**). Pra transformar uma pasta em repo:
+
+~~~
+git init
+~~~`),
+          quiz('Qual a diferença entre Git e GitHub?', ['São a mesma coisa', 'Git guarda o histórico no seu computador; GitHub hospeda repositórios na nuvem', 'GitHub é a versão paga do Git', 'Git só funciona com JavaScript'], 1, 'Git é a ferramenta; GitHub é um serviço que hospeda repos Git (existem outros, como GitLab).'),
+          code({ title: 'Seu primeiro repo', task: 'Confira a versão do Git e transforme a pasta num repositório.',
+            starter: '# 1. show the git version\n\n# 2. turn this folder into a git repository\n',
+            solution: 'git --version\ngit init', hint: '`git --version` e depois `git init`, um por linha.',
+            tests: [['Mostrou a versão', 'used("^git (--version|version)")'], ['Criou o repositório', 'repo.inited']] })),
+
+        lesson('git-config', 'Configurando sua identidade',
+          learn('Quem fez esse commit?', `Todo commit guarda o **autor**. Antes do primeiro commit, diga ao Git quem você é:
+
+~~~
+git config --global user.name "Rick"
+git config --global user.email "rick@mail.com"
+~~~
+
+O \`--global\` vale pra todos os seus projetos. Use o mesmo email da sua conta do GitHub: é assim que os commits aparecem no seu perfil.`),
+          quiz('Por que usar o mesmo email da conta do GitHub?', ['É obrigatório pra instalar o Git', 'Pros commits contarem no seu perfil (o gráfico verde de contribuições)', 'Pra receber notificações', 'Não faz diferença'], 1, 'O GitHub liga commits ao seu perfil pelo email. Recrutador olha esse gráfico.'),
+          code({ title: 'Quem é você', task: 'Configure `user.name` e `user.email` com `--global`.',
+            starter: '# 1. set your user.name\n\n# 2. set your user.email\n',
+            solution: 'git config --global user.name "Rick"\ngit config --global user.email "rick@mail.com"', hint: '`git config --global user.name "Seu Nome"` e o mesmo com `user.email`.',
+            tests: [['Configurou o nome', '!!repo.config["user.name"]'], ['Configurou um email válido', '/@/.test(repo.config["user.email"] || "")']] })),
+
+        lesson('git-first-commit', 'O primeiro commit',
+          learn('As três áreas', `O Git tem três lugares:
+
+1. **Working directory**: a pasta, onde você edita os arquivos.
+2. **Staging area**: a "caixa" do próximo commit. Você escolhe o que entra com \`git add\`.
+3. **Repositório**: o histórico de commits. \`git commit\` fecha a caixa e salva a foto.
+
+~~~
+git add README.md
+git commit -m "Add README"
+~~~`),
+          learn('Vendo o que está acontecendo', `\`git status\` é o comando que você mais vai usar. Ele mostra:
+
+- **Untracked files**: arquivos novos que o Git ainda não acompanha
+- **Changes not staged**: mudanças que ainda não foram pro \`add\`
+- **Changes to be committed**: o que vai no próximo commit
+
+Na dúvida, rode \`git status\`.`),
+          predict('O que o `git status` mostra no final?', 'git init\necho "hi" > notes.txt\ngit add notes.txt\ngit status', ['Untracked files: notes.txt', 'Changes to be committed: new file: notes.txt', 'nothing to commit', 'Um erro'], 1, 'O `git add` colocou o arquivo na staging area: ele está pronto pro commit.'),
+          code({ title: 'Primeira foto', task: 'Crie um repo, crie um `README.md`, coloque na staging area e faça o commit com a mensagem `Add README`.',
+            starter: '# 1. create the repository\n\n# 2. create README.md (tip: echo "# My App" > README.md)\n\n# 3. add it to the staging area\n\n# 4. commit with the message: Add README\n',
+            solution: 'git init\necho "# My App" > README.md\ngit add README.md\ngit commit -m "Add README"',
+            hint: 'A ordem é: `git init`, `echo ... > README.md`, `git add README.md`, `git commit -m "Add README"`.',
+            tests: [['Tem 1 commit', 'commits.length === 1'], ['Mensagem "Add README"', 'tipMsg === "Add README"'], ['O commit tem o README.md', '"README.md" in commits[0].files'], ['Nada sobrando sem commit', 'clean']] })),
+
+        lesson('git-history', 'Histórico e diferenças',
+          learn('git log e git diff', `Pra ver o histórico:
+
+~~~
+git log            # completo
+git log --oneline  # uma linha por commit
+~~~
+
+Pra ver **o que mudou** antes de commitar:
+
+~~~
+git diff           # mudanças ainda fora da staging area
+git diff --staged  # o que vai no próximo commit
+~~~
+
+Linhas com \`-\` saíram, linhas com \`+\` entraram.`),
+          learn('Atalho: commit -am', `Pra arquivos que o Git **já acompanha**, dá pra fazer \`add\` e \`commit\` de uma vez:
+
+~~~
+git commit -am "Update README"
+~~~
+
+Cuidado: o \`-a\` **não pega arquivos novos**. Arquivo novo sempre precisa de \`git add\` antes.`),
+          quiz('Você criou `style.css` (arquivo novo) e rodou `git commit -am "Add style"`. O que acontece?', ['O style.css entra no commit', 'O style.css fica de fora: -a só pega arquivos já acompanhados', 'Dá erro de sintaxe', 'Apaga o arquivo'], 1, '`-a` só pega arquivos que o Git já conhece. Arquivo novo precisa de `git add`.'),
+          code({ title: 'Segunda versão', task: 'O repo já tem um commit com o `README.md`. Mude o conteúdo do README, veja o diff, faça o commit `Update README` e mostre o histórico em uma linha por commit.',
+            setup: { cmds: BASE },
+            starter: '# the repo already has one commit\n# 1. change README.md (echo "# My App v2" > README.md)\n\n# 2. see what changed\n\n# 3. stage and commit: Update README\n\n# 4. show the history, one line per commit\n',
+            solution: 'echo "# My App v2" > README.md\ngit diff\ngit add README.md\ngit commit -m "Update README"\ngit log --oneline',
+            hint: '`git diff` mostra a mudança. Depois `git add README.md` + `git commit -m "Update README"`, e por fim `git log --oneline`.',
+            tests: [['Agora são 2 commits', 'commits.length === 2'], ['Último commit: "Update README"', 'tipMsg === "Update README"'], ['Usou git diff', 'used("^git diff")'], ['Mostrou o log em uma linha', 'used("^git log --oneline")']] }))
+      ),
+
+      unit('Desfazendo coisas',
+        lesson('git-restore', 'Descartando mudanças',
+          learn('git restore', `Estragou um arquivo e quer voltar pra versão do último commit?
+
+~~~
+git restore app.js           # descarta mudanças na pasta
+git restore --staged app.js  # tira da staging area (mantém a mudança)
+~~~
+
+Atenção: \`git restore\` sem \`--staged\` **apaga** sua mudança no arquivo. Não tem desfazer.`),
+          quiz('Você deu `git add app.js` sem querer. Qual comando tira o arquivo da staging area, sem perder a edição?', ['git restore app.js', 'git restore --staged app.js', 'git rm app.js', 'git reset --hard'], 1, '`--staged` mexe só na staging area. Sem ele, a mudança no arquivo é descartada.'),
+          code({ title: 'Ops, quebrei tudo', task: 'Alguém escreveu bobagem no `app.js` e já deu `git add`. Tire da staging area e depois descarte a mudança, voltando o arquivo à versão do último commit.',
+            setup: { cmds: WITH_APP.concat(['echo "oops" > app.js', 'git add app.js']) },
+            starter: '# app.js is broken AND staged\n# 1. unstage app.js\n\n# 2. discard the change in app.js\n\n# 3. check that everything is clean\n',
+            solution: 'git restore --staged app.js\ngit restore app.js\ngit status',
+            hint: 'Primeiro `git restore --staged app.js`, depois `git restore app.js`.',
+            tests: [['app.js voltou ao original', 'files["app.js"] === "console.log(1)"'], ['Nada pendente', 'clean'], ['Nenhum commit novo', 'commits.length === 2']] })),
+
+        lesson('git-amend', 'Consertando o último commit',
+          learn('commit --amend', `Errou a mensagem do commit que **acabou de fazer**?
+
+~~~
+git commit --amend -m "Fix typo in title"
+~~~
+
+O \`--amend\` substitui o último commit por um novo. Também serve pra incluir um arquivo esquecido: dê \`git add\` nele e rode o \`--amend\`.
+
+Regra de ouro: só use \`--amend\` em commits que você **ainda não mandou** pro GitHub.`),
+          quiz('Quando NÃO usar `--amend`?', ['Quando o commit é só local', 'Quando o commit já foi mandado pro GitHub', 'Quando a mensagem tem erro de digitação', 'Quando esqueceu um arquivo'], 1, '`--amend` reescreve o commit. Se ele já está no remoto, outras pessoas podem ter a versão antiga.'),
+          code({ title: 'Mensagem errada', task: 'O último commit saiu como `Fx titel`. Corrija a mensagem pra `Fix title` sem criar um commit a mais.',
+            setup: { cmds: BASE.concat(['echo "# My Great App" > README.md', 'git commit -am "Fx titel"']) },
+            starter: '# fix the message of the last commit to: Fix title\n',
+            solution: 'git commit --amend -m "Fix title"',
+            hint: '`git commit --amend -m "Fix title"`',
+            tests: [['Mensagem corrigida', 'tipMsg === "Fix title"'], ['Continuam 2 commits', 'commits.length === 2'], ['A mensagem errada sumiu do histórico', '!commits.some((c) => c.msg === "Fx titel")']] })),
+
+        lesson('git-revert', 'revert vs reset',
+          learn('Desfazendo commits', `Dois jeitos de desfazer um commit:
+
+- \`git revert <commit>\`: cria um **commit novo** que desfaz o anterior. O histórico continua intacto. **Seguro** pra commits que já estão no GitHub.
+- \`git reset HEAD~1\`: **apaga** o último commit do histórico (as mudanças voltam pra pasta). Só pra commits locais.
+
+\`HEAD\` é "onde você está agora". \`HEAD~1\` é um commit antes.`),
+          quiz('O commit ruim já está no GitHub e o time puxou. Qual usar?', ['git reset --hard HEAD~1', 'git revert HEAD', 'Apagar o repositório', 'git commit --amend'], 1, 'Reescrever histórico público bagunça o repo de todo mundo. `revert` só adiciona um commit que desfaz.'),
+          code({ title: 'Desfaça com segurança', task: 'O último commit adicionou um `debug.txt` que não devia estar lá (e já foi pro GitHub). Desfaça com `revert`.',
+            setup: { cmds: BASE.concat(['echo "secret logs" > debug.txt', 'git add .', 'git commit -m "Add debug file"']) },
+            starter: '# undo the last commit safely, keeping history\n',
+            solution: 'git revert HEAD', hint: '`git revert HEAD` desfaz o commit atual criando um novo.',
+            tests: [['debug.txt sumiu da pasta', '!("debug.txt" in files)'], ['Histórico mantido (3 commits)', 'commits.length === 3'], ['Último commit é um Revert', '/^Revert/.test(tipMsg)']] })),
+
+        lesson('git-ignore', '.gitignore',
+          learn('Arquivos que não vão pro repo', `Alguns arquivos **nunca** devem ir pro Git:
+
+- \`node_modules/\`: dependências (gigante, se reinstala com npm)
+- \`.env\`: senhas e chaves de API
+- \`*.log\`: logs
+
+Liste eles num arquivo \`.gitignore\`, um padrão por linha:
+
+~~~
+node_modules/
+.env
+*.log
+~~~
+
+O \`git add .\` passa a ignorar esses arquivos.`),
+          predict('Com esse `.gitignore`, o que entra no commit?', '# .gitignore tem: .env\necho "KEY=123" > .env\necho "x" > index.js\ngit add .\ngit commit -m "Start"', ['.env e index.js', 'Só index.js', 'Só .env', 'Nada'], 1, '.env está no .gitignore, então o `git add .` pula ele.'),
+          code({ title: 'Protegendo segredos', task: 'A pasta tem `index.js`, `.env` (com uma senha) e `error.log`. Crie um `.gitignore` que ignore `.env` e qualquer `*.log`, depois faça `git add .` e o commit `Initial commit`.\n\nDica: pra escrever duas linhas, use `>` na primeira e `>>` (anexar) na segunda.',
+            setup: { cmds: ['git init', 'echo "app()" > index.js', 'echo "PASSWORD=hunter2" > .env', 'echo "boom" > error.log'] },
+            starter: '# 1. write .env in the .gitignore\n\n# 2. append *.log to the .gitignore (use >>)\n\n# 3. stage everything and commit: Initial commit\n',
+            solution: 'echo ".env" > .gitignore\necho "*.log" >> .gitignore\ngit add .\ngit commit -m "Initial commit"',
+            hint: '`echo ".env" > .gitignore`, `echo "*.log" >> .gitignore`, `git add .`, `git commit -m "Initial commit"`.',
+            tests: [['Commit feito', 'commits.length === 1'], ['.env ficou fora', '!(".env" in commits[0].files)'], ['error.log ficou fora', '!("error.log" in commits[0].files)'], ['index.js e .gitignore entraram', '"index.js" in commits[0].files && ".gitignore" in commits[0].files']] }))
+      ),
+
+      unit('Branches',
+        lesson('git-branch', 'Criando branches',
+          learn('Linhas do tempo paralelas', `Uma **branch** é uma linha de desenvolvimento separada. Você cria uma pra cada feature, mexe à vontade, e a \`main\` continua estável.
+
+~~~
+git branch              # lista (a atual tem *)
+git switch -c login     # cria e já entra
+git switch main         # volta pra main
+~~~
+
+Commits feitos na branch \`login\` **não aparecem** na \`main\` até você fazer merge.`),
+          predict('Quantos arquivos o `ls` mostra no final?', 'git switch -c feature\necho "x" > new.js\ngit add .\ngit commit -m "Add new"\ngit switch main\nls', ['Só README.md', 'README.md e new.js', 'Nenhum', 'Só new.js'], 0, 'Ao voltar pra main, a pasta volta a ser a foto da main, que não tem o new.js.'),
+          code({ title: 'Trabalhando numa feature', task: 'Crie a branch `feature/login`, entre nela, crie `login.js` e faça o commit `Add login`. Depois volte pra `main`.',
+            setup: { cmds: BASE },
+            starter: '# 1. create and switch to feature/login\n\n# 2. create login.js and commit: Add login\n\n# 3. go back to main\n',
+            solution: 'git switch -c feature/login\necho "login()" > login.js\ngit add login.js\ngit commit -m "Add login"\ngit switch main',
+            hint: '`git switch -c feature/login`, crie o arquivo, `add`, `commit`, e `git switch main`.',
+            tests: [['Branch feature/login existe', 'branches.includes("feature/login")'], ['Está de volta na main', 'branch === "main"'], ['A main não tem login.js', '!("login.js" in files)'], ['A feature/login tem o commit', 'repo.commits[repo.branches["feature/login"]].msg === "Add login"']] })),
+
+        lesson('git-merge', 'Merge',
+          learn('Juntando branches', `Terminou a feature? Volte pra branch que vai **receber** as mudanças e faça o merge:
+
+~~~
+git switch main
+git merge feature/login
+git branch -d feature/login   # apaga a branch já juntada
+~~~
+
+Se a \`main\` não andou desde que a branch foi criada, o Git só "avança o ponteiro": é um **fast-forward**.`),
+          quiz('Você está na `feature/login` e quer trazer o trabalho dela pra `main`. Qual o primeiro passo?', ['git merge main', 'git switch main', 'git branch -d main', 'git push'], 1, 'O merge traz a outra branch **pra dentro da atual**. Então primeiro vá pra main.'),
+          code({ title: 'Feature pronta', task: 'A branch `feature/login` está pronta. Junte ela na `main` e apague a branch.',
+            setup: { cmds: BASE.concat(['git switch -c feature/login', 'echo "login()" > login.js', 'git add .', 'git commit -m "Add login"']) },
+            starter: '# you are on feature/login\n# 1. go to main\n\n# 2. merge feature/login\n\n# 3. delete the branch\n',
+            solution: 'git switch main\ngit merge feature/login\ngit branch -d feature/login',
+            hint: '`git switch main`, `git merge feature/login`, `git branch -d feature/login`.',
+            tests: [['Está na main', 'branch === "main"'], ['A main tem o login.js', '"login.js" in files'], ['A branch foi apagada', '!branches.includes("feature/login")']] })),
+
+        lesson('git-conflict', 'Resolvendo conflitos',
+          learn('Quando o Git não sabe escolher', `Se duas branches mudaram **a mesma parte** do mesmo arquivo, o merge para com um **conflito**. O arquivo fica assim:
+
+~~~
+<<<<<<< HEAD
+title = "Shop"
+=======
+title = "Store"
+>>>>>>> rename
+~~~
+
+Em cima, a sua versão (HEAD). Embaixo, a da outra branch.`),
+          learn('Resolvendo', `Pra resolver:
+
+1. Edite o arquivo deixando só a versão final, sem as linhas \`<<<<<<<\`, \`=======\` e \`>>>>>>>\`.
+2. \`git add arquivo\`
+3. \`git commit -m "Merge rename"\`
+
+Conflito não é erro seu: é o Git pedindo pra um humano decidir.`),
+          quiz('Depois de editar o arquivo com conflito, o que falta?', ['Nada, o Git detecta sozinho', 'git add no arquivo e git commit', 'git merge --abort', 'git push --force'], 1, 'O `git add` marca o conflito como resolvido; o commit fecha o merge.'),
+          code({ title: 'Store ou Shop?', task: 'Faça o merge da branch `rename` na `main`. Vai dar conflito no `config.txt`. Resolva deixando o conteúdo `title = "Store"` e conclua o merge com o commit `Merge rename`.',
+            setup: { cmds: ['git init', 'echo \'title = "App"\' > config.txt', 'git add .', 'git commit -m "Add config"', 'git switch -c rename', 'echo \'title = "Store"\' > config.txt', 'git commit -am "Rename to Store"', 'git switch main', 'echo \'title = "Shop"\' > config.txt', 'git commit -am "Rename to Shop"'] },
+            starter: '# 1. merge rename into main (it will conflict)\n\n# 2. see the conflict\n\n# 3. write the final content: title = "Store"\n#    tip: echo \'title = "Store"\' > config.txt\n\n# 4. mark as resolved and commit: Merge rename\n',
+            solution: 'git merge rename\ncat config.txt\necho \'title = "Store"\' > config.txt\ngit add config.txt\ngit commit -m "Merge rename"',
+            hint: 'Depois do `git merge rename`, sobrescreva o arquivo com `echo \'title = "Store"\' > config.txt`, aí `git add config.txt` e `git commit -m "Merge rename"`.',
+            tests: [['Merge concluído', 'isMerge && !merging'], ['Conteúdo final certo', 'files["config.txt"] === \'title = "Store"\''], ['Sem marcadores de conflito', '!/<<<<<<<|>>>>>>>/.test(files["config.txt"])']] })),
+
+        lesson('git-stash', 'Guardando trabalho: stash',
+          learn('git stash', `Está no meio de algo e precisa trocar de branch urgente? O Git não deixa trocar com mudanças pendentes. Use o **stash**, uma gaveta temporária:
+
+~~~
+git stash       # guarda as mudanças e limpa a pasta
+git switch hotfix
+...
+git switch main
+git stash pop   # devolve as mudanças
+~~~`),
+          predict('O que o `git status` mostra no final?', 'echo "wip" > README.md\ngit stash\ngit status', ['modified: README.md', 'nothing to commit, working tree clean', 'Untracked files: README.md', 'Um erro'], 1, 'O stash guardou a mudança e deixou a pasta igual ao último commit.'),
+          code({ title: 'Interrupção', task: 'Você está editando o `README.md` na `main` quando pedem um hotfix. Guarde a mudança, crie a branch `hotfix`, volte pra `main` e recupere o que guardou.',
+            setup: { cmds: BASE.concat(['echo "# My App - work in progress" > README.md']) },
+            starter: '# 1. stash your changes\n\n# 2. create and switch to hotfix\n\n# 3. go back to main\n\n# 4. bring your changes back\n',
+            solution: 'git stash\ngit switch -c hotfix\ngit switch main\ngit stash pop',
+            hint: '`git stash`, `git switch -c hotfix`, `git switch main`, `git stash pop`.',
+            tests: [['Branch hotfix criada', 'branches.includes("hotfix")'], ['De volta na main', 'branch === "main"'], ['A mudança voltou', 'files["README.md"] === "# My App - work in progress"'], ['Gaveta vazia', 'repo.stash.length === 0']] }))
+      ),
+
+      unit('GitHub',
+        lesson('gh-push', 'Mandando pro GitHub',
+          learn('Remote e push', `Pra publicar no GitHub: crie um repo vazio no site e ligue ele ao seu repo local. O endereço remoto ganha o apelido \`origin\`:
+
+~~~
+git remote add origin https://github.com/rick/app.git
+git push -u origin main
+~~~
+
+O \`-u\` liga sua \`main\` à \`main\` do GitHub. Nas próximas vezes, só \`git push\`.`),
+          quiz('O que é `origin`?', ['Um comando do Git', 'O apelido padrão do repositório remoto', 'A primeira branch', 'O primeiro commit'], 1, '`origin` é só um nome pro endereço do remoto. Podia ser qualquer nome, mas é a convenção.'),
+          code({ title: 'Publicando', task: 'Ligue o repo a `https://github.com/rick/app.git` como `origin` e faça o primeiro push da `main` com `-u`.',
+            setup: { cmds: BASE },
+            starter: '# 1. add the remote called origin\n\n# 2. push main and set upstream\n',
+            solution: 'git remote add origin https://github.com/rick/app.git\ngit push -u origin main',
+            hint: '`git remote add origin <url>` e depois `git push -u origin main`.',
+            tests: [['origin configurado', 'remotes.origin === "https://github.com/rick/app.git"'], ['main está no GitHub', 'remote.main === repo.tip()'], ['Upstream configurado', 'repo.upstream.main === "origin/main"']] })),
+
+        lesson('gh-clone-pull', 'Clone e pull',
+          learn('Trazendo do GitHub', `Pra baixar um projeto que já existe:
+
+~~~
+git clone https://github.com/rick/app.git
+~~~
+
+Isso baixa o repo inteiro, com histórico, já com o \`origin\` configurado.
+
+Quando outra pessoa manda commits, você atualiza com:
+
+~~~
+git pull
+~~~
+
+O \`pull\` busca os commits novos e faz merge na sua branch.`),
+          quiz('Você tentou `git push` e recebeu `rejected (fetch first)`. Por quê?', ['Sua internet caiu', 'O GitHub tem commits que você ainda não tem', 'Você não tem permissão', 'O commit está vazio'], 1, 'Alguém mandou commits antes. Rode `git pull`, depois `git push`.'),
+          code({ title: 'Push rejeitado', task: 'Uma colega mandou um commit pro GitHub e você também commitou na sua `main`. Seu push vai ser rejeitado. Traga o trabalho dela e depois mande o seu.',
+            setup: { cmds: BASE.concat(['git switch -c teammate', 'echo "notes" > notes.txt', 'git add .', 'git commit -m "Add notes"', 'git switch main', 'echo "app()" > app.js', 'git add .', 'git commit -m "Add app"']), publish: { main: 'teammate' }, drop: ['teammate'] },
+            starter: '# your push would be rejected: GitHub has a commit you do not have\n# 1. bring the new commits from GitHub\n\n# 2. push your work\n',
+            solution: 'git pull\ngit push',
+            hint: '`git pull` e depois `git push`.',
+            tests: [['Você tem o notes.txt da colega', '"notes.txt" in files'], ['Seu app.js continua aí', '"app.js" in files'], ['O GitHub está atualizado', 'remote.main === repo.tip()']] })),
+
+        lesson('gh-pr', 'Pull requests',
+          learn('Como times trabalham', `Em empresa, ninguém faz push direto na \`main\`. O fluxo é:
+
+1. Crie uma branch: \`git switch -c feat/search\`
+2. Commite o trabalho
+3. Mande a branch: \`git push -u origin feat/search\`
+4. No GitHub, abra um **Pull Request (PR)**: um pedido pra juntar sua branch na \`main\`
+
+O time lê o código, comenta (**code review**) e aprova. Aí o merge é feito pelo GitHub.`),
+          learn('Um bom PR', `- Pequeno: uma coisa por PR
+- Título claro, em inglês: \`Add search bar to header\`
+- Descrição: **o que** mudou, **por que**, e como testar
+- Responda os comentários com calma: review é sobre o código, não sobre você
+
+Seus PRs em projetos open source são ótimos pro portfólio.`),
+          quiz('Qual título de PR está melhor?', ['update', 'fixed stuff', 'Add search bar to header', 'PR do Rick'], 2, 'Verbo no imperativo + o que mudou. Dá pra entender sem abrir o PR.'),
+          code({ title: 'Abrindo um PR', task: 'Crie a branch `feat/search`, adicione `search.js` com o commit `Add search`, e mande a branch pro GitHub com `-u`. (O PR em si é aberto no site.)',
+            setup: { cmds: BASE, publish: true },
+            starter: '# 1. create and switch to feat/search\n\n# 2. create search.js and commit: Add search\n\n# 3. push the branch to origin and set upstream\n',
+            solution: 'git switch -c feat/search\necho "search()" > search.js\ngit add .\ngit commit -m "Add search"\ngit push -u origin feat/search',
+            hint: 'O último passo é `git push -u origin feat/search`.',
+            tests: [['Branch feat/search no GitHub', '!!remote["feat/search"]'], ['Com o commit "Add search"', 'repo.commits[remote["feat/search"]].msg === "Add search"'], ['A main do GitHub não mudou', 'repo.commits[remote.main].msg === "Initial commit"']] }))
+      ),
+
+      unit('Fluxo profissional',
+        lesson('git-commit-msgs', 'Mensagens de commit',
+          learn('Conventional Commits', `Muitas empresas usam o padrão **Conventional Commits**: um tipo, dois-pontos e um resumo curto em inglês, no imperativo:
+
+~~~
+feat: add login page
+fix: handle empty cart
+docs: update README
+refactor: extract price helper
+test: add cart tests
+~~~
+
+Resumo com até ~50 caracteres, sem ponto final. "add", não "added".`),
+          quiz('Qual mensagem segue o padrão?', ['Fixed the bug.', 'fix: handle empty cart', 'FIX - cart', 'changes'], 1, 'Tipo em minúsculas, dois-pontos, resumo curto no imperativo.'),
+          predict('Qual tipo de commit é esse?', '# você corrigiu o cálculo de frete\n# que dava errado pra CEP vazio', ['feat:', 'fix:', 'docs:', 'test:'], 1, 'Corrigiu um bug: `fix:`. Ex.: `fix: handle empty zip code`.'),
+          code({ title: 'Commits de profissional', task: 'Faça dois commits seguindo Conventional Commits:\n\n1. crie `cart.js` e commite como uma **feature** (`feat: ...`)\n2. crie `CONTRIBUTING.md` e commite como **documentação** (`docs: ...`)',
+            setup: { cmds: BASE },
+            starter: '# 1. create cart.js and commit it as a feature\n\n# 2. create CONTRIBUTING.md and commit it as docs\n',
+            solution: 'echo "cart()" > cart.js\ngit add cart.js\ngit commit -m "feat: add shopping cart"\necho "# How to contribute" > CONTRIBUTING.md\ngit add CONTRIBUTING.md\ngit commit -m "docs: add contributing guide"',
+            hint: 'Ex.: `git commit -m "feat: add shopping cart"` e `git commit -m "docs: add contributing guide"`.',
+            tests: [['Commit feat: com cart.js', 'commits.some((c) => /^feat(\\(.+\\))?: \\S/.test(c.msg) && "cart.js" in c.files)'], ['Commit docs:', 'tipMsg && /^docs(\\(.+\\))?: \\S/.test(tipMsg)'], ['Resumos com até 50 caracteres', 'commits.slice(0, 2).every((c) => c.msg.length <= 50)']] })),
+
+        lesson('git-final', 'Projeto final: do zero ao GitHub',
+          learn('O fluxo completo', `Agora junta tudo, do jeito que você vai fazer no trabalho:
+
+1. \`git init\` e primeiro commit
+2. Uma branch pra feature
+3. Commit na branch
+4. Merge na \`main\`
+5. Publicar no GitHub
+
+Use as mensagens no padrão Conventional Commits.`),
+          code({ title: 'Seu projeto no ar', task: 'Do zero:\n\n1. crie o repo, um `README.md` e o commit `docs: add readme`\n2. crie a branch `feat/home`, adicione `index.html` com o commit `feat: add home page`\n3. volte pra `main`, faça o merge e apague a branch\n4. ligue a `https://github.com/rick/portfolio.git` e mande a `main` com `-u`',
+            starter: '# 1. init + README + commit\n\n# 2. branch feat/home + index.html + commit\n\n# 3. merge into main and delete the branch\n\n# 4. remote + push\n',
+            solution: 'git init\necho "# Portfolio" > README.md\ngit add .\ngit commit -m "docs: add readme"\ngit switch -c feat/home\necho "<h1>Hi</h1>" > index.html\ngit add .\ngit commit -m "feat: add home page"\ngit switch main\ngit merge feat/home\ngit branch -d feat/home\ngit remote add origin https://github.com/rick/portfolio.git\ngit push -u origin main',
+            hint: 'Siga a ordem dos comentários. O merge é fast-forward, então não pede mensagem.',
+            tests: [['Commit docs: add readme', 'commits.some((c) => c.msg === "docs: add readme")'], ['Commit feat: add home page', 'commits.some((c) => c.msg === "feat: add home page")'], ['main tem index.html', 'branch === "main" && "index.html" in files'], ['Branch apagada', '!branches.includes("feat/home")'], ['Publicado no GitHub', 'remote.main === repo.tip() && remotes.origin === "https://github.com/rick/portfolio.git"']] }))
+      )
+    ]
+  });
+})(window.TD);
+
+</script>
 <script>/* store.js */
 /* Persistência do Trilha Dev (mesmo modelo do Deutsch mit Plan).
  * Backends com a mesma interface get/set/del/list:
@@ -4766,6 +5149,440 @@ type Expect<T extends true> = T;
 })(globalThis.TD = globalThis.TD || {});
 
 </script>
+<script>/* gitsim.js */
+/* Trilha Dev — terminal simulado de Git + runner de texto (inglês/carreira).
+   Nada roda no sistema de verdade: é um repositório em memória, determinístico,
+   pra ensinar o modelo mental do Git (working directory → staging → commits → branches → remote). */
+(function () {
+  'use strict';
+
+  function hashOf(s) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return h.toString(16).padStart(8, '0').slice(0, 7);
+  }
+
+  // divide uma linha de comando respeitando aspas
+  function argv(line) {
+    const out = []; let cur = ''; let q = null; let has = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (q) { if (ch === q) q = null; else cur += ch; continue; }
+      if (ch === '"' || ch === "'") { q = ch; has = true; continue; }
+      if (/\s/.test(ch)) { if (cur || has) { out.push(cur); cur = ''; has = false; } continue; }
+      cur += ch;
+    }
+    if (q) throw new Error('aspas não fechadas');
+    if (cur || has) out.push(cur);
+    return out;
+  }
+
+  class Repo {
+    constructor() {
+      this.wd = {};          // arquivos na pasta
+      this.inited = false;
+      this.index = {};       // staging area (snapshot do próximo commit)
+      this.commits = {};     // hash -> { hash, msg, parents, files, author }
+      this.order = [];       // hashes na ordem de criação
+      this.branches = {};    // nome -> hash
+      this.head = 'main';    // branch atual
+      this.remotes = {};     // nome -> url
+      this.remote = null;    // { branches: {nome: hash} } (o "GitHub")
+      this.upstream = {};
+      this.merging = null;
+      this.stash = [];
+      this.n = 0;
+      this.config = {};
+    }
+    tip() { return this.branches[this.head] || null; }
+    ignored(f) {
+      const pats = (this.wd['.gitignore'] || '').split('\n').map((x) => x.trim()).filter((x) => x && !x.startsWith('#'));
+      return pats.some((p) => p === f || (p.endsWith('/') && f.startsWith(p)) || f.startsWith(p + '/') || (p.startsWith('*.') && f.endsWith(p.slice(1))));
+    }
+    tree(hash) { return hash ? this.commits[hash].files : {}; }
+    ancestors(hash) {
+      const seen = new Set(); const st = [hash];
+      while (st.length) { const h = st.pop(); if (!h || seen.has(h)) continue; seen.add(h); st.push(...this.commits[h].parents); }
+      return seen;
+    }
+    log(hash) { // primeiro pai, mais recente primeiro
+      const h = hash || this.tip();
+      const all = [...this.ancestors(h)];
+      return all.sort((a, b) => this.order.indexOf(b) - this.order.indexOf(a)).map((x) => this.commits[x]);
+    }
+    status() {
+      const head = this.tree(this.tip());
+      const staged = [], unstaged = [], untracked = [];
+      const names = new Set([...Object.keys(head), ...Object.keys(this.index), ...Object.keys(this.wd)]);
+      for (const f of [...names].sort()) {
+        const inH = f in head, inI = f in this.index, inW = f in this.wd;
+        if (inI && (!inH || head[f] !== this.index[f])) staged.push([inH ? 'modified' : 'new file', f]);
+        if (!inI && inH) staged.push(['deleted', f]);
+        if (inI && inW && this.wd[f] !== this.index[f]) unstaged.push(['modified', f]);
+        if (inI && !inW) unstaged.push(['deleted', f]);
+        if (!inI && !inH && inW && !this.ignored(f)) untracked.push(f);
+      }
+      return { staged, unstaged, untracked };
+    }
+    commit(msg, extraParent) {
+      const parent = this.tip();
+      const files = { ...this.index };
+      this.n++;
+      const hash = hashOf(msg + '|' + this.n + '|' + JSON.stringify(files));
+      this.commits[hash] = { hash, msg, parents: [parent, extraParent].filter(Boolean), files, author: this.config['user.name'] || 'You' };
+      this.order.push(hash);
+      this.branches[this.head] = hash;
+      return hash;
+    }
+    checkoutTree(hash) { const t = this.tree(hash); this.wd = { ...t }; this.index = { ...t }; }
+  }
+
+  function exec(repo, line, out) {
+    const a = argv(line);
+    if (!a.length) return;
+    // redirecionamento: echo "x" > file / >> file
+    const redir = a.findIndex((x) => x === '>' || x === '>>');
+    if (a[0] === 'echo') {
+      if (redir > 0) {
+        const file = a[redir + 1]; if (!file) throw new Error('faltou o nome do arquivo depois de >');
+        const text = a.slice(1, redir).join(' ');
+        repo.wd[file] = a[redir] === '>>' && file in repo.wd ? repo.wd[file] + '\n' + text : text;
+      } else out.push(a.slice(1).join(' '));
+      return;
+    }
+    if (a[0] === 'touch') { for (const f of a.slice(1)) if (!(f in repo.wd)) repo.wd[f] = ''; return; }
+    if (a[0] === 'cat') { for (const f of a.slice(1)) { if (!(f in repo.wd)) throw new Error(`cat: ${f}: No such file or directory`); out.push(repo.wd[f]); } return; }
+    if (a[0] === 'ls') { const fs = Object.keys(repo.wd).sort(); if (fs.length) out.push(fs.join('  ')); return; }
+    if (a[0] === 'rm') { for (const f of a.slice(1)) { if (!(f in repo.wd)) throw new Error(`rm: ${f}: No such file or directory`); delete repo.wd[f]; } return; }
+    if (a[0] === 'mkdir' || a[0] === 'cd' || a[0] === 'clear' || a[0] === 'pwd') return;
+    if (a[0] !== 'git') throw new Error(`${a[0]}: command not found (aqui só funcionam git, echo, touch, cat, ls e rm)`);
+    gitCmd(repo, a.slice(1), out);
+  }
+
+  function needRepo(repo) { if (!repo.inited) throw new Error('fatal: not a git repository (or any of the parent directories): .git'); }
+
+  function gitCmd(repo, a, out) {
+    const cmd = a[0]; const args = a.slice(1);
+    const flag = (...f) => args.some((x) => f.includes(x));
+    const valOf = (...f) => { const i = args.findIndex((x) => f.includes(x)); return i >= 0 ? args[i + 1] : undefined; };
+    switch (cmd) {
+      case undefined: throw new Error('usage: git <command>');
+      case '--version': case 'version': out.push('git version 2.47.0'); return;
+      case 'config': {
+        const k = args.filter((x) => !x.startsWith('--'));
+        if (k.length >= 2) repo.config[k[0]] = k.slice(1).join(' ');
+        else if (k.length === 1) out.push(repo.config[k[0]] || '');
+        return;
+      }
+      case 'init': {
+        if (repo.inited) { out.push('Reinitialized existing Git repository in /project/.git/'); return; }
+        repo.inited = true; const b = valOf('-b', '--initial-branch'); if (b) repo.head = b;
+        out.push('Initialized empty Git repository in /project/.git/'); return;
+      }
+      case 'clone': {
+        const url = args.find((x) => !x.startsWith('-'));
+        if (!url) throw new Error('fatal: You must specify a repository to clone.');
+        if (!repo.remote) throw new Error(`fatal: repository '${url}' not found`);
+        repo.inited = true; repo.remotes.origin = url; repo.head = 'main';
+        for (const [b, h] of Object.entries(repo.remote.branches)) repo.branches[b] = h;
+        repo.upstream.main = 'origin/main'; repo.checkoutTree(repo.branches.main);
+        out.push(`Cloning into '${url.split('/').pop().replace(/\.git$/, '')}'...`, 'done.'); return;
+      }
+    }
+    needRepo(repo);
+    switch (cmd) {
+      case 'status': {
+        const s = repo.status();
+        out.push(`On branch ${repo.head}`);
+        if (repo.merging) out.push('You have unmerged paths.', '  (fix conflicts and run "git commit")');
+        if (!repo.tip()) out.push('', 'No commits yet');
+        if (s.staged.length) { out.push('', 'Changes to be committed:'); s.staged.forEach(([k, f]) => out.push(`\t${(k + ':').padEnd(12)}${f}`)); }
+        if (s.unstaged.length) { out.push('', 'Changes not staged for commit:'); s.unstaged.forEach(([k, f]) => out.push(`\t${(k + ':').padEnd(12)}${f}`)); }
+        if (s.untracked.length) { out.push('', 'Untracked files:'); s.untracked.forEach((f) => out.push('\t' + f)); }
+        if (!s.staged.length && !s.unstaged.length && !s.untracked.length) out.push(repo.tip() ? 'nothing to commit, working tree clean' : 'nothing to commit (create/copy files and use "git add" to track)');
+        return;
+      }
+      case 'add': {
+        const paths = args.filter((x) => !x.startsWith('-'));
+        if (!paths.length) throw new Error('Nothing specified, nothing added.');
+        const all = paths.includes('.') || flag('-A', '--all');
+        const names = all ? new Set([...Object.keys(repo.wd), ...Object.keys(repo.index)]) : new Set(paths);
+        for (const f of names) {
+          if (all && !(f in repo.index) && repo.ignored(f)) continue;
+          if (!all && repo.ignored(f) && !(f in repo.index)) throw new Error(`The following paths are ignored by one of your .gitignore files:\n${f}`);
+          if (f in repo.wd) repo.index[f] = repo.wd[f];
+          else if (f in repo.index) delete repo.index[f];
+          else throw new Error(`fatal: pathspec '${f}' did not match any files`);
+        }
+        if (repo.merging) for (const f of names) repo.merging.conflicts.delete(f);
+        return;
+      }
+      case 'restore': {
+        const paths = args.filter((x) => !x.startsWith('-'));
+        const head = repo.tree(repo.tip());
+        for (const f of paths) {
+          if (flag('--staged')) { if (f in head) repo.index[f] = head[f]; else delete repo.index[f]; }
+          else if (f in repo.index) repo.wd[f] = repo.index[f];
+          else throw new Error(`error: pathspec '${f}' did not match any file(s) known to git`);
+        }
+        return;
+      }
+      case 'rm': {
+        for (const f of args.filter((x) => !x.startsWith('-'))) { delete repo.index[f]; if (!flag('--cached')) delete repo.wd[f]; }
+        return;
+      }
+      case 'commit': {
+        const msg = valOf('-m', '-am');
+        if (msg === undefined) throw new Error('error: aqui use sempre git commit -m "mensagem"');
+        if (!msg.trim()) throw new Error('Aborting commit due to empty commit message.');
+        if (flag('-a', '-am')) for (const f of Object.keys(repo.index)) { if (f in repo.wd) repo.index[f] = repo.wd[f]; else delete repo.index[f]; }
+        if (repo.merging) {
+          if (repo.merging.conflicts.size) throw new Error('error: Committing is not possible because you have unmerged files.\nhint: Fix them up in the work tree, and then use \'git add <file>\'');
+          const h = repo.commit(msg, repo.merging.other); repo.merging = null;
+          out.push(`[${repo.head} ${h}] ${msg}`); return;
+        }
+        if (flag('--amend')) {
+          const t = repo.tip(); if (!t) throw new Error('fatal: You have nothing to amend.');
+          const old = repo.commits[t]; repo.branches[repo.head] = old.parents[0] || undefined;
+          if (!old.parents[0]) delete repo.branches[repo.head];
+          const h = repo.commit(msg); repo.commits[h].parents = old.parents.slice();
+          out.push(`[${repo.head} ${h}] ${msg}`); return;
+        }
+        const s = repo.status();
+        if (!s.staged.length) { out.push(`On branch ${repo.head}`, 'nothing added to commit but untracked files present (use "git add" to track)'); throw new Error('nada pra commitar: rode git add antes'); }
+        const root = !repo.tip();
+        const h = repo.commit(msg);
+        out.push(`[${repo.head}${root ? ' (root-commit)' : ''} ${h}] ${msg}`, ` ${s.staged.length} file${s.staged.length > 1 ? 's' : ''} changed`);
+        return;
+      }
+      case 'log': {
+        if (!repo.tip()) throw new Error(`fatal: your current branch '${repo.head}' does not have any commits yet`);
+        const n = Number((args.find((x) => /^-\d+$/.test(x)) || '').slice(1)) || Infinity;
+        const all = repo.log().slice(0, n);
+        const refs = (h) => { const b = Object.entries(repo.branches).filter(([, x]) => x === h).map(([k]) => (k === repo.head ? 'HEAD -> ' + k : k)); return b.length ? ` (${b.join(', ')})` : ''; };
+        if (flag('--oneline')) all.forEach((c) => out.push(`${c.hash}${refs(c.hash)} ${c.msg}`));
+        else all.forEach((c, i) => { if (i) out.push(''); out.push(`commit ${c.hash}${refs(c.hash)}`, `Author: ${c.author}`, '', `    ${c.msg}`); });
+        return;
+      }
+      case 'diff': {
+        const base = flag('--staged', '--cached') ? repo.tree(repo.tip()) : repo.index;
+        const cur = flag('--staged', '--cached') ? repo.index : repo.wd;
+        for (const f of Object.keys({ ...base, ...cur }).sort()) {
+          if (base[f] === cur[f] || (!flag('--staged', '--cached') && !(f in repo.index))) continue;
+          out.push(`diff --git a/${f} b/${f}`);
+          (base[f] || '').split('\n').filter((l) => l && !(cur[f] || '').split('\n').includes(l)).forEach((l) => out.push('-' + l));
+          (cur[f] || '').split('\n').filter((l) => l && !(base[f] || '').split('\n').includes(l)).forEach((l) => out.push('+' + l));
+        }
+        return;
+      }
+      case 'branch': {
+        const names = args.filter((x) => !x.startsWith('-'));
+        if (flag('-d', '-D')) {
+          for (const b of names) {
+            if (!(b in repo.branches)) throw new Error(`error: branch '${b}' not found.`);
+            if (b === repo.head) throw new Error(`error: Cannot delete branch '${b}' checked out`);
+            if (flag('-d') && !repo.ancestors(repo.tip()).has(repo.branches[b])) throw new Error(`error: The branch '${b}' is not fully merged.`);
+            delete repo.branches[b]; out.push(`Deleted branch ${b}.`);
+          }
+          return;
+        }
+        if (flag('-m')) { const [from, to] = names.length === 2 ? names : [repo.head, names[0]]; repo.branches[to] = repo.branches[from]; delete repo.branches[from]; if (repo.head === from) repo.head = to; return; }
+        if (!names.length) { const bs = new Set([...Object.keys(repo.branches), repo.head]); [...bs].sort().forEach((b) => out.push((b === repo.head ? '* ' : '  ') + b)); return; }
+        if (!repo.tip()) throw new Error(`fatal: not a valid object name: '${repo.head}'`);
+        if (names[0] in repo.branches) throw new Error(`fatal: a branch named '${names[0]}' already exists`);
+        repo.branches[names[0]] = repo.tip(); return;
+      }
+      case 'switch': case 'checkout': {
+        const create = flag('-c', '-b');
+        const name = args.filter((x) => !x.startsWith('-'))[0];
+        if (!name) throw new Error('fatal: missing branch name');
+        if (cmd === 'checkout' && !create && name in repo.wd && !(name in repo.branches)) { repo.wd[name] = repo.index[name]; return; }
+        const s = repo.status();
+        if (s.staged.length || s.unstaged.length) throw new Error('error: Your local changes would be overwritten by checkout.\nPlease commit your changes or stash them before you switch branches.');
+        if (create) {
+          if (name in repo.branches) throw new Error(`fatal: a branch named '${name}' already exists`);
+          if (repo.tip()) repo.branches[name] = repo.tip();
+          repo.head = name; out.push(`Switched to a new branch '${name}'`); return;
+        }
+        if (!(name in repo.branches)) {
+          if (repo.remote && name in repo.remote.branches) { repo.branches[name] = repo.remote.branches[name]; repo.upstream[name] = 'origin/' + name; }
+          else throw new Error(`error: pathspec '${name}' did not match any file(s) known to git`);
+        }
+        repo.head = name; repo.checkoutTree(repo.branches[name]); out.push(`Switched to branch '${name}'`); return;
+      }
+      case 'merge': {
+        if (flag('--abort')) { if (!repo.merging) throw new Error('fatal: There is no merge to abort.'); repo.checkoutTree(repo.tip()); repo.merging = null; return; }
+        const name = args.filter((x) => !x.startsWith('-'))[0];
+        const other = name && name.startsWith('origin/') && repo.remote ? repo.remote.branches[name.slice(7)] : repo.branches[name];
+        if (!other) throw new Error(`merge: ${name} - not something we can merge`);
+        const mine = repo.tip();
+        if (repo.ancestors(mine).has(other)) { out.push('Already up to date.'); return; }
+        if (!mine || repo.ancestors(other).has(mine)) { repo.branches[repo.head] = other; repo.checkoutTree(other); out.push(`Updating ${mine || '0000000'}..${other}`, 'Fast-forward'); return; }
+        // merge de 3 vias simples por arquivo
+        const A = repo.ancestors(mine), B = repo.ancestors(other);
+        const common = repo.order.slice().reverse().find((h) => A.has(h) && B.has(h));
+        const base = repo.tree(common), ours = repo.tree(mine), theirs = repo.tree(other);
+        const merged = {}; const conflicts = new Set();
+        for (const f of new Set([...Object.keys(base), ...Object.keys(ours), ...Object.keys(theirs)])) {
+          const b = base[f], o = ours[f], t = theirs[f];
+          if (o === t) { if (o !== undefined) merged[f] = o; }
+          else if (o === b) { if (t !== undefined) merged[f] = t; }
+          else if (t === b) { if (o !== undefined) merged[f] = o; }
+          else { conflicts.add(f); merged[f] = `<<<<<<< HEAD\n${o || ''}\n=======\n${t || ''}\n>>>>>>> ${name}`; }
+        }
+        repo.wd = { ...merged };
+        if (conflicts.size) {
+          repo.index = { ...ours }; for (const f of Object.keys(merged)) if (!conflicts.has(f)) repo.index[f] = merged[f];
+          repo.merging = { other, conflicts };
+          for (const f of conflicts) out.push(`CONFLICT (content): Merge conflict in ${f}`);
+          out.push('Automatic merge failed; fix conflicts and then commit the result.');
+          return;
+        }
+        repo.index = { ...merged };
+        const h = repo.commit(`Merge branch '${name}'`, other);
+        out.push(`Merge made by the 'ort' strategy. (${h})`);
+        return;
+      }
+      case 'remote': {
+        if (args[0] === 'add') { if (!args[1] || !args[2]) throw new Error('usage: git remote add <name> <url>'); repo.remotes[args[1]] = args[2]; if (!repo.remote) repo.remote = { branches: {} }; return; }
+        if (args[0] === '-v') { for (const [k, u] of Object.entries(repo.remotes)) out.push(`${k}\t${u} (fetch)`, `${k}\t${u} (push)`); return; }
+        Object.keys(repo.remotes).forEach((k) => out.push(k)); return;
+      }
+      case 'push': {
+        const pos = args.filter((x) => !x.startsWith('-'));
+        const rem = pos[0] || 'origin';
+        if (!repo.remotes[rem]) throw new Error(`fatal: '${rem}' does not appear to be a git repository`);
+        const br = pos[1] || (repo.upstream[repo.head] ? repo.head : null);
+        if (!br) throw new Error(`fatal: The current branch ${repo.head} has no upstream branch.\nTo push the current branch and set the remote as upstream, use\n\n    git push -u origin ${repo.head}`);
+        const local = repo.branches[br]; if (!local) throw new Error(`error: src refspec ${br} does not match any`);
+        const remoteTip = repo.remote.branches[br];
+        if (remoteTip && !repo.ancestors(local).has(remoteTip)) throw new Error(`! [rejected]        ${br} -> ${br} (fetch first)\nerror: failed to push some refs. Use git pull first.`);
+        if (remoteTip === local && !flag('-u', '--set-upstream')) { out.push('Everything up-to-date'); return; }
+        repo.remote.branches[br] = local;
+        if (flag('-u', '--set-upstream')) repo.upstream[br] = rem + '/' + br;
+        out.push(`To ${repo.remotes[rem]}`, `   ${remoteTip || '0000000'}..${local}  ${br} -> ${br}`);
+        if (flag('-u', '--set-upstream')) out.push(`branch '${br}' set up to track '${rem}/${br}'.`);
+        return;
+      }
+      case 'fetch': { if (!repo.remote) throw new Error('fatal: no remote configured'); out.push('From ' + (repo.remotes.origin || 'origin')); return; }
+      case 'pull': {
+        if (!repo.remote) throw new Error('fatal: no remote configured');
+        const tip = repo.remote.branches[repo.head];
+        if (!tip) throw new Error('There is no tracking information for the current branch.');
+        gitCmd(repo, ['merge', 'origin/' + repo.head], out); return;
+      }
+      case 'stash': {
+        if (args[0] === 'pop') { const s = repo.stash.pop(); if (!s) throw new Error('No stash entries found.'); repo.wd = s.wd; repo.index = s.index; out.push('Dropped refs/stash@{0}'); return; }
+        if (args[0] === 'list') { repo.stash.slice().reverse().forEach((_, i) => out.push(`stash@{${i}}: WIP on ${repo.head}`)); return; }
+        const s = repo.status(); if (!s.staged.length && !s.unstaged.length) { out.push('No local changes to save'); return; }
+        repo.stash.push({ wd: { ...repo.wd }, index: { ...repo.index } });
+        const t = repo.tree(repo.tip()); const keep = {}; for (const f of s.untracked) keep[f] = repo.wd[f];
+        repo.wd = { ...t, ...keep }; repo.index = { ...t };
+        out.push(`Saved working directory and index state WIP on ${repo.head}`); return;
+      }
+      case 'reset': {
+        const target = args.find((x) => /^HEAD(~\d+)?$/.test(x)) || 'HEAD';
+        let h = repo.tip(); const k = Number((target.split('~')[1]) || 0);
+        for (let i = 0; i < k; i++) h = repo.commits[h] && repo.commits[h].parents[0];
+        if (k && !h) throw new Error("fatal: ambiguous argument 'HEAD~': unknown revision");
+        repo.branches[repo.head] = h;
+        if (flag('--hard')) repo.checkoutTree(h);
+        else if (!flag('--soft')) repo.index = { ...repo.tree(h) };
+        return;
+      }
+      case 'revert': {
+        const h = args[0] === 'HEAD' ? repo.tip() : args[0];
+        const c = repo.commits[h]; if (!c) throw new Error(`fatal: bad revision '${args[0]}'`);
+        const parent = repo.tree(c.parents[0]);
+        for (const f of new Set([...Object.keys(c.files), ...Object.keys(parent)])) {
+          if (c.files[f] === parent[f]) continue;
+          if (f in parent) { repo.index[f] = parent[f]; repo.wd[f] = parent[f]; } else { delete repo.index[f]; delete repo.wd[f]; }
+        }
+        const nh = repo.commit(`Revert "${c.msg}"`); out.push(`[${repo.head} ${nh}] Revert "${c.msg}"`); return;
+      }
+      case 'tag': { const n = args.find((x) => !x.startsWith('-')); if (!n) { out.push(...Object.keys(repo.tags || {})); return; } repo.tags = repo.tags || {}; repo.tags[n] = repo.tip(); return; }
+      default: throw new Error(`git: '${cmd}' is not a git command (ou ainda não existe neste simulador).`);
+    }
+  }
+
+  // roda um script (uma linha por comando). Comentários com # são ignorados.
+  function runScript(code, setup) {
+    const repo = new Repo();
+    if (setup && setup.remote) { repo.remote = { branches: {} }; }
+    if (setup && setup.cmds) for (const l of setup.cmds) exec(repo, l, []);
+    if (setup && setup.publish) { // simula um repo que já existe no GitHub
+      repo.remote = { branches: {} };
+      const map = setup.publish === true ? { main: 'main' } : setup.publish;
+      for (const [rb, lb] of Object.entries(map)) repo.remote.branches[rb] = repo.branches[lb];
+      repo.remotes.origin = 'https://github.com/rick/app.git';
+      for (const rb of Object.keys(map)) if (rb in repo.branches) repo.upstream[rb] = 'origin/' + rb;
+    }
+    if (setup && setup.drop) for (const b of setup.drop) delete repo.branches[b];
+    if (setup && setup.switchTo) { repo.head = setup.switchTo; repo.checkoutTree(repo.branches[setup.switchTo]); }
+    if (setup && setup.fresh) { const r2 = new Repo(); r2.remote = repo.remote; r2.commits = repo.commits; r2.order = repo.order; r2.n = repo.n; return finish(r2); }
+    return finish(repo);
+    function finish(r) {
+      const transcript = []; const cmds = []; let error = null;
+      for (const raw of code.split('\n')) {
+        const line = raw.replace(/^\s*\$\s*/, '').trim();
+        if (!line || line.startsWith('#')) continue;
+        cmds.push(line); transcript.push('$ ' + line);
+        const out = [];
+        try { exec(r, line, out); transcript.push(...out); }
+        catch (e) { transcript.push(...out); transcript.push('!! ' + e.message); error = e.message; break; }
+      }
+      return { repo: r, transcript, cmds, error };
+    }
+  }
+
+  function runGit(code, step) {
+    const results = [];
+    let run;
+    try { run = runScript(code, step.setup); }
+    catch (e) { return Promise.resolve({ output: [], raw: true, results: [{ name: 'O setup do exercício quebrou', pass: false, err: e.message }], error: e.message }); }
+    const { repo, transcript, cmds, error } = run;
+    const api = {
+      repo, cmds,
+      files: repo.wd, staged: repo.index,
+      branch: repo.head,
+      branches: Object.keys(repo.branches),
+      commits: repo.tip() ? repo.log() : [],
+      status: repo.status(),
+      clean: (() => { const s = repo.status(); return !s.staged.length && !s.unstaged.length && !s.untracked.length; })(),
+      remote: repo.remote ? repo.remote.branches : {},
+      remotes: repo.remotes,
+      used: (re) => cmds.some((c) => new RegExp(re).test(c)),
+      tipMsg: repo.tip() ? repo.commits[repo.tip()].msg : null,
+      isMerge: repo.tip() ? repo.commits[repo.tip()].parents.length > 1 : false,
+      merging: !!repo.merging,
+    };
+    for (const [name, expr] of step.tests || []) {
+      try { results.push({ name, pass: !!new Function(...Object.keys(api), 'return (' + expr + ')')(...Object.values(api)) }); }
+      catch (e) { results.push({ name, pass: false, err: e.message }); }
+    }
+    if (error && results.every((r) => r.pass)) results.push({ name: 'Todos os comandos rodam sem erro', pass: false });
+    return Promise.resolve({ output: transcript, raw: true, results, explainMsg: error });
+  }
+
+  /* ---------- runner de texto (inglês e carreira) ---------- */
+  function runText(code, step) {
+    const text = code.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n').trim();
+    const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+    const words = (text.match(/[A-Za-zÀ-ÿ0-9'’-]+/g) || []);
+    const api = { text, lines, words, lower: text.toLowerCase(), has: (w) => new RegExp('\\b' + w + '\\b', 'i').test(text) };
+    const results = (step.tests || []).map(([name, expr]) => {
+      try { return { name, pass: !!new Function(...Object.keys(api), 'return (' + expr + ')')(...Object.values(api)) }; }
+      catch (e) { return { name, pass: false, err: e.message }; }
+    });
+    const out = text ? [`${words.length} words · ${lines.length} line${lines.length === 1 ? '' : 's'}`] : ['(escreva seu texto no editor)'];
+    return Promise.resolve({ output: out, results });
+  }
+
+  TD.gitsim = { Repo, exec, runScript, argv };
+  Object.assign(TD.runners, { runGit, runText });
+})();
+
+</script>
 <script>/* pedagogy.js */
 /* Método Trilha: o motor pedagógico. Vale pra QUALQUER trilha, inclusive as que forem criadas no futuro,
  * porque trabalha só com o formato das lições (learn / quiz / predict / code) e nunca com uma linguagem específica.
@@ -4848,6 +5665,19 @@ type Expect<T extends true> = T;
       [/is missing the following properties|is missing in type/, 'Faltam properties obrigatórias no object. Confira a interface.'],
       [/Unused '@ts-expect-error' directive/, 'Um teste de tipo esperava um erro e ele não aconteceu: seu tipo está aceitando valores que deveria recusar.'],
       [/lacks ending return statement|Not all code paths return a value/, 'Algum caminho da function termina sem `return`. Trate todos os casos.']
+    ],
+    git: [
+      [/not a git repository/, 'Essa pasta ainda não é um repositório. Comece com `git init` (ou `git clone <url>` pra baixar um que já existe).'],
+      [/nada pra commitar|nothing added to commit/, 'O commit só leva o que está na staging area. Rode `git add <arquivo>` (ou `git add .`) antes do `git commit`.'],
+      [/did not match any/, 'Esse nome de arquivo ou branch não existe. Confira com `ls` (arquivos) ou `git branch` (branches).'],
+      [/has no upstream branch/, 'Na primeira vez que manda uma branch pro GitHub, use `git push -u origin <branch>`. Depois disso, só `git push` basta.'],
+      [/rejected|fetch first/, 'O GitHub tem commits que você não tem. Rode `git pull` primeiro, resolva o que precisar e aí faça `git push`.'],
+      [/unmerged files|fix conflicts/, 'Tem conflito. Abra o arquivo, escolha o conteúdo final (apagando as linhas `<<<<<<<`, `=======` e `>>>>>>>`), depois `git add` e `git commit`.'],
+      [/would be overwritten/, 'Você tem mudanças sem commit. Faça commit (ou `git stash`) antes de trocar de branch.'],
+      [/not fully merged/, 'Essa branch tem commits que ainda não estão na atual. Faça o merge antes, ou use `-D` se quer jogar fora mesmo.'],
+      [/command not found/, 'Esse terminal simulado só entende `git`, `echo`, `touch`, `cat`, `ls` e `rm`.'],
+      [/is not a git command/, 'Confira a grafia do comando. Os mais usados: `status`, `add`, `commit`, `log`, `branch`, `switch`, `merge`, `push`, `pull`.'],
+      [/aspas não fechadas/, 'Faltou fechar as aspas da mensagem: `git commit -m "mensagem"`.'],
     ],
     sql: [
       [/no such column/, 'Essa column não existe. Confira o nome na descrição do banco (e o alias da table, como `c.name`).'],
@@ -5519,7 +6349,7 @@ type Expect<T extends true> = T;
     return `<div class="lesson-foot ${ok ? 'good' : 'badf'}"><div class="msg"><strong>${ok ? 'Acesso liberado' : 'Resposta errada'}</strong>${md(step.why)}${ok ? '' : '<span>Essa pergunta volta na sua revisão, pra fixar.</span>'}</div><button class="btn primary" data-act="next">Continuar <kbd>Enter</kbd></button></div>`;
   }
 
-  function fileName(r) { return { js: 'main.js', ts: 'main.ts', sql: 'query.sql', web: 'index.html', dom: 'index.html' }[r] || 'main.txt'; }
+  function fileName(r) { return { js: 'main.js', ts: 'main.ts', sql: 'query.sql', web: 'index.html', dom: 'index.html', git: 'terminal', text: 'draft.txt' }[r] || 'main.txt'; }
   function unitIndexOf(c, lessonId) { return c.units.findIndex((u) => u.lessons.some((l) => l.id === lessonId)); }
   function defaultMode(step, ls) {
     if (step._blocks) return TD.ped.parsonsBlocks(step, 'x') ? 'blocks' : 'write';
@@ -5604,7 +6434,7 @@ type Expect<T extends true> = T;
   }
   function explainHTML(r, res) {
     if (!res) return '';
-    const msg = [res.error, ...(res.typeErrors || [])].filter(Boolean).join('\n');
+    const msg = [res.error, res.explainMsg, ...(res.typeErrors || [])].filter(Boolean).join('\n');
     const tip = TD.ped.explainError(r, msg);
     return tip ? `<div class="explain"><strong>O que esse erro quer dizer:</strong> ${inline(tip)}</div>` : '';
   }
@@ -5612,7 +6442,9 @@ type Expect<T extends true> = T;
     if (!res) return `<pre class="console"><span class="dim">${empty}</span></pre>`;
     const lines = [];
     if (res.typeErrors && res.typeErrors.length) lines.push(...res.typeErrors.map((e) => `<span class="err">${esc(e)}</span>`));
-    if (res.output && res.output.length) lines.push(...res.output.map((x) => `<span class="prompt">›</span> ${esc(x)}`));
+    if (res.output && res.output.length) lines.push(...res.output.map((x) => res.raw
+      ? (x.startsWith('$ ') ? `<span class="prompt">$</span> <b>${esc(x.slice(2))}</b>` : x.startsWith('!! ') ? `<span class="err">${esc(x.slice(3))}</span>` : esc(x))
+      : `<span class="prompt">›</span> ${esc(x)}`));
     if (res.error) lines.push(`<span class="err">${esc(res.error)}</span>`);
     if (!lines.length) lines.push('<span class="dim">(nada no console)</span>');
     return `<pre class="console">${lines.join('\n')}</pre>${explainHTML(r, res)}`;
@@ -5629,7 +6461,7 @@ type Expect<T extends true> = T;
       if (res.error) return `<pre class="console"><span class="err">${esc(res.error)}</span></pre>${explainHTML(r, res)}`;
       return (res.output ? `<pre class="console"><span class="dim">${esc(res.output.join('\n'))}</span></pre>` : '') + (res.table ? tableHTML(res.table) : '');
     }
-    return consoleHTML(res, 'A saída do console.log aparece aqui.', r);
+    return consoleHTML(res, r === 'git' ? 'Rode os comandos pra ver a saída do terminal aqui.' : r === 'text' ? 'Rode pra conferir seu texto.' : 'A saída do console.log aparece aqui.', r);
   }
   function codeFoot(step, ls) {
     const d = ls.d;
@@ -5726,6 +6558,8 @@ type Expect<T extends true> = T;
       if (r === 'js') res = await R.runJS(code, step);
       else if (r === 'ts') res = await R.runTS(code, step);
       else if (r === 'sql') res = await R.runSQL(code, step, c);
+      else if (r === 'git') res = await R.runGit(code, step);
+      else if (r === 'text') res = await R.runText(code, step);
       else res = await R.runWeb(code, step, document.getElementById('preview'));
     } catch (e) {
       res = { output: [], results: [{ name: 'Não foi possível rodar', pass: false, err: e.message }], error: 'Não consegui carregar o que esse exercício precisa. Tente de novo.' };

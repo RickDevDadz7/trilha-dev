@@ -19,6 +19,10 @@
   --c-ts: #3db4ff;
   --c-sql: #2dffb0;
   --c-web: #ff4f8b;
+  --c-react: #61dafb;
+  --c-git: #ff8a3d;
+  --c-eng: #b48cff;
+  --c-career: #b6ff3d;
   --font-display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
   --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
@@ -50,6 +54,10 @@ a { color: var(--cyan); }
 [data-course="ts"] { --accent: var(--c-ts); --on-accent: #001222; }
 [data-course="sql"] { --accent: var(--c-sql); --on-accent: #00140d; }
 [data-course="web"] { --accent: var(--c-web); --on-accent: #1a0009; }
+[data-course="react"] { --accent: var(--c-react); --on-accent: #001820; }
+[data-course="git"] { --accent: var(--c-git); --on-accent: #1a0a00; }
+[data-course="eng"] { --accent: var(--c-eng); --on-accent: #12002a; }
+[data-course="career"] { --accent: var(--c-career); --on-accent: #0d1a00; }
 
 .cut { clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut))); }
 .hud { font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); }

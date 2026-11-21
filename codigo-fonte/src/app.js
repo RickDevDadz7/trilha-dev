@@ -471,7 +471,7 @@
     return `<div class="lesson-foot ${ok ? 'good' : 'badf'}"><div class="msg"><strong>${ok ? 'Acesso liberado' : 'Resposta errada'}</strong>${md(step.why)}${ok ? '' : '<span>Essa pergunta volta na sua revisão, pra fixar.</span>'}</div><button class="btn primary" data-act="next">Continuar <kbd>Enter</kbd></button></div>`;
   }
 
-  function fileName(r) { return { js: 'main.js', ts: 'main.ts', sql: 'query.sql', web: 'index.html', dom: 'index.html' }[r] || 'main.txt'; }
+  function fileName(r) { return { js: 'main.js', ts: 'main.ts', sql: 'query.sql', web: 'index.html', dom: 'index.html', git: 'terminal', text: 'draft.txt' }[r] || 'main.txt'; }
   function unitIndexOf(c, lessonId) { return c.units.findIndex((u) => u.lessons.some((l) => l.id === lessonId)); }
   function defaultMode(step, ls) {
     if (step._blocks) return TD.ped.parsonsBlocks(step, 'x') ? 'blocks' : 'write';
@@ -556,7 +556,7 @@
   }
   function explainHTML(r, res) {
     if (!res) return '';
-    const msg = [res.error, ...(res.typeErrors || [])].filter(Boolean).join('\n');
+    const msg = [res.error, res.explainMsg, ...(res.typeErrors || [])].filter(Boolean).join('\n');
     const tip = TD.ped.explainError(r, msg);
     return tip ? `<div class="explain"><strong>O que esse erro quer dizer:</strong> ${inline(tip)}</div>` : '';
   }
@@ -564,7 +564,9 @@
     if (!res) return `<pre class="console"><span class="dim">${empty}</span></pre>`;
     const lines = [];
     if (res.typeErrors && res.typeErrors.length) lines.push(...res.typeErrors.map((e) => `<span class="err">${esc(e)}</span>`));
-    if (res.output && res.output.length) lines.push(...res.output.map((x) => `<span class="prompt">›</span> ${esc(x)}`));
+    if (res.output && res.output.length) lines.push(...res.output.map((x) => res.raw
+      ? (x.startsWith('$ ') ? `<span class="prompt">$</span> <b>${esc(x.slice(2))}</b>` : x.startsWith('!! ') ? `<span class="err">${esc(x.slice(3))}</span>` : esc(x))
+      : `<span class="prompt">›</span> ${esc(x)}`));
     if (res.error) lines.push(`<span class="err">${esc(res.error)}</span>`);
     if (!lines.length) lines.push('<span class="dim">(nada no console)</span>');
     return `<pre class="console">${lines.join('\n')}</pre>${explainHTML(r, res)}`;
@@ -581,7 +583,7 @@
       if (res.error) return `<pre class="console"><span class="err">${esc(res.error)}</span></pre>${explainHTML(r, res)}`;
       return (res.output ? `<pre class="console"><span class="dim">${esc(res.output.join('\n'))}</span></pre>` : '') + (res.table ? tableHTML(res.table) : '');
     }
-    return consoleHTML(res, 'A saída do console.log aparece aqui.', r);
+    return consoleHTML(res, r === 'git' ? 'Rode os comandos pra ver a saída do terminal aqui.' : r === 'text' ? 'Rode pra conferir seu texto.' : 'A saída do console.log aparece aqui.', r);
   }
   function codeFoot(step, ls) {
     const d = ls.d;
@@ -678,6 +680,8 @@
       if (r === 'js') res = await R.runJS(code, step);
       else if (r === 'ts') res = await R.runTS(code, step);
       else if (r === 'sql') res = await R.runSQL(code, step, c);
+      else if (r === 'git') res = await R.runGit(code, step);
+      else if (r === 'text') res = await R.runText(code, step);
       else res = await R.runWeb(code, step, document.getElementById('preview'));
     } catch (e) {
       res = { output: [], results: [{ name: 'Não foi possível rodar', pass: false, err: e.message }], error: 'Não consegui carregar o que esse exercício precisa. Tente de novo.' };
