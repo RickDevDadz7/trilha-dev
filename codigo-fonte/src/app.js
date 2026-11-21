@@ -128,26 +128,25 @@
   const isGuest = () => { try { return localStorage.getItem('td-guest') === '1'; } catch (e) { return false; } };
   const needsLogin = () => cloudOn() && !TD.cloud.user() && !isGuest();
   const GOOGLE_SVG = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C.9 16.6 0 20.2 0 24s.9 7.4 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.7-4.1-13.6-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>';
+  const EYE_ON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const EYE_OFF = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></svg>';
   function loginHTML() {
     const A = S.auth || (S.auth = { tab: 'in', email: '', msg: null, confirm: false });
     const desktop = !!window.tdNative;
     const google = S.google && !desktop && A.tab !== 'rec';
-    const title = A.tab === 'up' ? 'Criar conta' : A.tab === 'rec' ? 'Recuperar senha' : 'Entrar';
     return `<div class="auth-screen">
-      <div class="auth-brand"><span class="brand-mark auth-mark" aria-hidden="true"><svg width="72" height="72" viewBox="0 0 512 512"><path d="M56 56 H400 L456 112 V456 H112 L56 400 Z" fill="#ff3ea5"/><polyline points="214,166 132,256 214,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><polyline points="298,166 380,256 298,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><rect x="24" y="226" width="210" height="20" fill="#00e5ff"/><rect x="300" y="300" width="188" height="14" fill="#ffffff"/></svg></span>
-<div class="auth-name">Over<b>clock</b></div><p>Aprenda a programar do zero ao avançado. Seu progresso salvo na nuvem, no celular e no PC.</p></div>
+      <div class="auth-brand"><span class="brand-mark auth-mark" aria-hidden="true"><svg width="72" height="72" viewBox="0 0 512 512"><path d="M56 56 H400 L456 112 V456 H112 L56 400 Z" fill="#ff3ea5"/><polyline points="214,166 132,256 214,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><polyline points="298,166 380,256 298,346" fill="none" stroke="#0b0510" stroke-width="42" stroke-linecap="square"/><rect x="24" y="226" width="210" height="20" fill="#00e5ff"/><rect x="300" y="300" width="188" height="14" fill="#ffffff"/></svg></span><div class="auth-name">Over<b>clock</b></div><p>Aprenda a programar do zero ao avançado.</p></div>
       <form class="auth-card cut" id="auth-form" novalidate>
-        <span class="hud">Acesso ao sistema</span><h2>${title}</h2>
-        ${A.tab === 'rec' ? '' : `<div class="seg auth-tabs" role="tablist"><button type="button" class="${A.tab === 'in' ? 'on' : ''}" data-act="auth-tab" data-authtab="in">Entrar</button><button type="button" class="${A.tab === 'up' ? 'on' : ''}" data-act="auth-tab" data-authtab="up">Criar conta</button></div>`}
-        ${google ? `<button type="button" class="btn google-btn auth-google" data-act="auth-google">${GOOGLE_SVG} ${A.tab === 'up' ? 'Criar conta com Google' : 'Entrar com Google'}</button><div class="or-sep"><span>ou com e-mail</span></div>` : ''}
-        <div class="field"><label for="auth-email">E-mail</label><input id="auth-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="voce@email.com" value="${esc(A.email || '')}"></div>
-        ${A.tab === 'rec' ? '<p class="dim-note">Vamos mandar um link pro seu e-mail pra você criar uma senha nova.</p>' : `<div class="field"><label for="auth-pass">Senha${A.tab === 'up' ? ' (mínimo 8 caracteres)' : ''}</label><div class="pass-row"><input id="auth-pass" type="password" autocomplete="${A.tab === 'up' ? 'new-password' : 'current-password'}" placeholder="senha"><button type="button" class="btn ghost sm" data-act="auth-eye" aria-label="Mostrar senha">👁</button></div></div>`}
+        ${A.tab === 'rec' ? '<h2>Recuperar senha</h2>' : `<div class="seg auth-tabs" role="tablist"><button type="button" class="${A.tab === 'in' ? 'on' : ''}" data-act="auth-tab" data-authtab="in">Entrar</button><button type="button" class="${A.tab === 'up' ? 'on' : ''}" data-act="auth-tab" data-authtab="up">Criar conta</button></div>`}
+        ${google ? `<button type="button" class="btn auth-google" data-act="auth-google"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6C12.3 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.8-6C.9 16.6 0 20.2 0 24s.9 7.4 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.7-4.1-13.6-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg> Continuar com Google</button><div class="or-sep"><span>ou</span></div>` : ''}
+        <input id="auth-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="E-mail" aria-label="E-mail" value="${esc(A.email || '')}">
+        ${A.tab === 'rec' ? '<p class="auth-hint">Enviamos um link pro seu e-mail pra criar uma senha nova.</p>' : `<div class="pass-wrap"><input id="auth-pass" type="password" autocomplete="${A.tab === 'up' ? 'new-password' : 'current-password'}" placeholder="${A.tab === 'up' ? 'Senha (mín. 8 caracteres)' : 'Senha'}" aria-label="Senha"><button type="button" class="eye" data-act="auth-eye" aria-label="Mostrar senha" aria-pressed="false">${EYE_OFF}</button></div>`}
         ${A.msg ? `<div class="auth-msg ${A.msg.ok ? 'ok' : 'bad'}">${esc(A.msg.text)}</div>` : ''}
-        <button type="submit" class="btn primary auth-go" ${A.busy ? 'disabled' : ''}>${A.busy ? 'Aguarde...' : A.tab === 'up' ? 'Criar conta' : A.tab === 'rec' ? 'Enviar link' : 'Entrar'} ${A.busy ? '' : ICON.play}</button>
-        <div class="auth-links">${A.tab === 'rec' ? '<button type="button" class="linkbtn" data-act="auth-tab" data-authtab="in">← Voltar</button>' : '<button type="button" class="linkbtn" data-act="auth-tab" data-authtab="rec">Esqueci minha senha</button>'}${A.confirm ? '<button type="button" class="linkbtn" data-act="auth-resend">Reenviar e-mail de confirmação</button>' : ''}</div>
-        <p class="dim-note">${desktop ? 'No programa de PC o login com Google não funciona (o Google bloqueia): use e-mail e senha. Se criou a conta com o Google, defina uma senha pelo celular em Configurações → Conta.' : 'É a mesma conta do Stempel e do RONIN. '}${A.tab === 'up' ? ' Ao criar com e-mail, chega uma confirmação (veja também o spam). Depois de confirmar, volte e toque em Entrar.' : ''}</p>
+        <button type="submit" class="btn primary auth-go" ${A.busy ? 'disabled' : ''}>${A.busy ? 'Aguarde...' : A.tab === 'up' ? 'Criar conta' : A.tab === 'rec' ? 'Enviar link' : 'Entrar'}</button>
+        <div class="auth-links">${A.tab === 'rec' ? '<button type="button" class="linkbtn" data-act="auth-tab" data-authtab="in">← Voltar</button>' : A.tab === 'in' ? '<button type="button" class="linkbtn" data-act="auth-tab" data-authtab="rec">Esqueci minha senha</button>' : ''}${A.confirm ? '<button type="button" class="linkbtn" data-act="auth-resend">Reenviar confirmação</button>' : ''}</div>
+        ${desktop ? '<p class="auth-hint">No PC, entre com e-mail e senha.</p>' : ''}
       </form>
-      <button class="linkbtn auth-guest" data-act="auth-guest">Continuar sem conta (o progresso fica só neste aparelho)</button>
+      <button class="linkbtn auth-guest" data-act="auth-guest">Continuar sem conta</button>
     </div>`;
   }
   async function authSubmit() {
@@ -180,7 +179,12 @@
   async function authAction(act, t) {
     const A = S.auth || (S.auth = { tab: 'in' });
     if (act === 'auth-tab') { A.email = (document.getElementById('auth-email') || {}).value || A.email; A.tab = t.getAttribute('data-authtab'); A.msg = null; render(); return; }
-    if (act === 'auth-eye') { const i = document.getElementById('auth-pass'); if (i) i.type = i.type === 'password' ? 'text' : 'password'; return; }
+    if (act === 'auth-eye') {
+      const i = document.getElementById('auth-pass'); if (!i) return;
+      const show = i.type === 'password'; i.type = show ? 'text' : 'password';
+      t.innerHTML = show ? EYE_ON : EYE_OFF; t.setAttribute('aria-pressed', String(show)); t.setAttribute('aria-label', show ? 'Esconder senha' : 'Mostrar senha');
+      i.focus(); return;
+    }
     if (act === 'auth-google') { TD.cloud.signInWithGoogle(); return; }
     if (act === 'auth-guest') { try { localStorage.setItem('td-guest', '1'); } catch (e) { /* */ } S.auth = null; location.hash = ''; route(); return; }
     if (act === 'auth-resend') { try { await TD.cloud.resend((document.getElementById('auth-email') || {}).value || A.email); A.msg = { ok: true, text: 'Enviamos de novo. Confira a caixa de entrada e o spam.' }; } catch (e) { A.msg = { ok: false, text: e.message }; } render(); }
