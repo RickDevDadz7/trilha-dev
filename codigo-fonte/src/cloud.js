@@ -103,6 +103,12 @@
     return URL_ + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(redirectTo());
   }
   function signInWithGoogle() { location.href = googleURL(); }
+  /** O Google só aparece se estiver ligado no painel (Authentication → Providers). */
+  let providers = null;
+  async function googleEnabled() {
+    if (!providers) providers = call('/auth/v1/settings', { timeout: 8000 }).then((r) => (r && r.external) || {}).catch(() => { providers = null; return {}; });
+    return !!(await providers).google;
+  }
   /** Links do e-mail (confirmação, nova senha) voltam com os tokens no endereço (#access_token=…). */
   function handleRedirect() {
     let h = ''; try { h = location.hash || ''; } catch (e) { return null; }
@@ -122,5 +128,5 @@
   const user = () => { const s = session(); return s && s.user; };
   const available = () => typeof fetch !== 'undefined' && !globalThis.claude;
 
-  TD.cloud = { URL: URL_, session, user, token, signUp, signIn, signInWithGoogle, googleURL, resend, recover, updatePassword, signOut, handleRedirect, rest, available, _call: call };
+  TD.cloud = { URL: URL_, session, user, token, signUp, signIn, signInWithGoogle, googleURL, googleEnabled, resend, recover, updatePassword, signOut, handleRedirect, rest, available, _call: call };
 })(globalThis.TD = globalThis.TD || {});

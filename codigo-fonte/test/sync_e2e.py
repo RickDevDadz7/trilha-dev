@@ -21,6 +21,8 @@ async def handle(route):
             return await route.fulfill(status=204, body='')
     if '/auth/v1/token' in u:
         return await route.fulfill(status=200, content_type='application/json', body=json.dumps({'access_token': 'a', 'refresh_token': 'r', 'expires_in': 3600, 'user': USER}))
+    if '/auth/v1/settings' in u:
+        return await route.fulfill(status=200, content_type='application/json', body=json.dumps({'external': {'google': False, 'email': True}}))
     if '/auth/v1/authorize' in u:
         return await route.fulfill(status=200, body='google')
     await route.fulfill(status=404, body='{}')
@@ -79,6 +81,7 @@ async def main():
         check(dsum == sa[0], f'soma dos dias = XP total ({dsum})')
         # botão do Google leva pra tela de autorização do Supabase
         await pa.evaluate('TD.cloud.signOut()'); await pa.evaluate("location.hash = ''; location.hash = 'config'"); await pa.wait_for_timeout(300)
+        check(await pa.evaluate("!document.querySelector('[data-act=\"cloud-google\"]')"), 'botão do Google escondido enquanto não estiver ligado no painel')
         g = await pa.evaluate('TD.cloud.googleURL()')
         check('provider=google' in g and 'redirect_to=' in g, 'URL do login com Google')
         # volta do Google com tokens no endereço

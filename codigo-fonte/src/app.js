@@ -135,10 +135,10 @@
     if (!u) {
       return `<div class="card cut" id="account-card"><span class="hud">Conta</span><h3>Sincronizar PC e celular</h3>
         <p>Entre com a mesma conta nos dois aparelhos e o progresso se junta sozinho. É a mesma conta do Deutsch mit Plan.</p>
-        ${desktop ? '<p class="dim-note">No programa de PC, entre com e-mail e senha. Se criou a conta com o Google, use "Esqueci a senha" pra criar uma senha pra ela.</p>' : '<div class="row"><button class="btn primary google-btn" data-act="cloud-google"><b>G</b> Entrar com Google</button></div><p class="dim-note" style="margin:10px 0 4px">ou com e-mail e senha:</p>'}
+        ${desktop ? '<p class="dim-note">No programa de PC, entre com e-mail e senha. Se criou a conta com o Google, use "Esqueci a senha" pra criar uma senha pra ela.</p>' : S.google ? '<div class="row"><button class="btn primary google-btn" data-act="cloud-google"><b>G</b> Entrar com Google</button></div><p class="dim-note" style="margin:10px 0 4px">ou com e-mail e senha:</p>' : ''}
         <div class="field"><label for="cloud-email">E-mail</label><input id="cloud-email" type="email" autocomplete="email" placeholder="voce@email.com"></div>
         <div class="field"><label for="cloud-pass">Senha</label><input id="cloud-pass" type="password" autocomplete="current-password" placeholder="mínimo 8 caracteres"></div>
-        <div class="row"><button class="btn ${desktop ? 'primary' : ''}" data-act="cloud-signin">Entrar</button><button class="btn ghost" data-act="cloud-signup">Criar conta</button><button class="btn ghost sm" data-act="cloud-recover">Esqueci a senha</button></div>
+        <div class="row"><button class="btn ${desktop || !S.google ? 'primary' : ''}" data-act="cloud-signin">Entrar</button><button class="btn ghost" data-act="cloud-signup">Criar conta</button><button class="btn ghost sm" data-act="cloud-recover">Esqueci a senha</button></div>
         <div id="cloud-msg" class="dim-note"></div></div>`;
     }
     const last = TD.sync.lastInfo();
@@ -1059,6 +1059,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
     S.store.autoBackup(now(), TD.contentVersion).catch((e) => log('warn', 'backup automático: ' + (e.code || e.message)));
     if (redirect) toast(redirect.error ? redirect.error : redirect.type === 'recovery' ? 'Defina sua nova senha abaixo.' : 'Conectado' + (redirect.email ? ' como ' + redirect.email : '') + '. Sincronizando...');
     if (cloudOn()) {
+      TD.cloud.googleEnabled().then((on) => { if (on !== !!S.google) { S.google = on; refreshAccount(); } });
       if (TD.cloud.user()) runSync(false);
       setInterval(() => runSync(false), 10 * 60000);
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') runSync(false); else scheduleSync(1500); });
