@@ -7166,7 +7166,7 @@ type Expect<T extends true> = T;
   const coursePct = (c) => Math.round((courseDone(c) / Math.max(1, allLessons(c).length)) * 100);
   // Mastery learning: o 1º lição de cada módulo exige o checkpoint do módulo anterior.
   const isUnlocked = (c, lesson) => {
-    if (P().settings.unlockAll || P().done[lesson.id]) return true;
+    if (P().done[lesson.id]) return true;
     const ls = allLessons(c); const i = ls.findIndex((l) => l.id === lesson.id);
     if (i === 0) return true;
     if (!P().done[ls[i - 1].id]) return false;
@@ -7174,7 +7174,7 @@ type Expect<T extends true> = T;
     return ui <= 0 || TD.ped.unitMastered(P(), c, ui - 1) || !TD.ped.checkpointLesson(c, ui - 1, 'x');
   };
   const unitDone = (c, ui) => c.units[ui].lessons.every((l) => P().done[l.id]);
-  const checkpointOpen = (c, ui) => P().settings.unlockAll || unitDone(c, ui);
+  const checkpointOpen = (c, ui) => unitDone(c, ui);
   // próxima coisa a fazer na trilha: lição pendente ou checkpoint pendente
   function nextTarget(c) {
     for (let ui = 0; ui < c.units.length; ui++) {
@@ -7606,7 +7606,6 @@ type Expect<T extends true> = T;
             <span class="hud">Ritmo</span><h3>Meta diária</h3>
             <div class="field"><label for="cfg-goal">XP por dia</label>
               <select id="cfg-goal">${[20, 30, 50, 80].map((g) => `<option value="${g}" ${goal() === g ? 'selected' : ''}>${g} XP · ${{ 20: 'leve', 30: 'normal', 50: 'puxado', 80: 'insano' }[g]}</option>`).join('')}</select></div>
-            <label class="toggle"><input type="checkbox" id="cfg-unlock" ${st.unlockAll ? 'checked' : ''}> Liberar todas as lições (pular o que já sei)</label>
           </div>
           <div class="card cut">
             <span class="hud">Áudio</span><h3>Efeitos sonoros</h3>
@@ -8161,7 +8160,6 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
     } else if (e.target.id === 'cfg-goal') { P().settings.goal = Number(e.target.value); await saveProgress(); toast('Meta diária: ' + e.target.value + ' XP'); }
     else if (e.target.id === 'cfg-sound') { P().settings.sound = e.target.checked; TD.sfx.configure({ on: e.target.checked }); if (e.target.checked) sfx('toggle', true); await saveProgress(); }
     else if (e.target.id === 'cfg-volume') { P().settings.volume = Number(e.target.value) / 100; TD.sfx.configure({ vol: P().settings.volume }); sfx('correct'); await saveProgress(); }
-    else if (e.target.id === 'cfg-unlock') { P().settings.unlockAll = e.target.checked; await saveProgress(); toast(e.target.checked ? 'Todas as lições liberadas.' : 'Lições em sequência de novo.'); }
   });
   app.addEventListener('mouseover', (e) => {
     const t = e.target.closest('.course-card, .node:not(:disabled), .opt:not(:disabled), .rail-item, .btn.primary');
