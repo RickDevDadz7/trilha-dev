@@ -188,6 +188,7 @@ FROM orders
 WHERE status = 'delivered';
 ~~~`),
           quiz('Qual a diferença entre `COUNT(*)` e `COUNT(email)`?', ['Nenhuma', 'COUNT(email) ignora rows com email NULL', 'COUNT(*) ignora NULL', 'COUNT(email) conta emails únicos'], 1, '`COUNT(coluna)` só conta valores não nulos.'),
+          predict('O que essa query retorna?', 'SELECT COUNT(*), MAX(age)\nFROM customers;', ['Uma row por cliente', 'Uma única row com 2 valores', 'Duas rows', 'Um erro: faltou GROUP BY'], 1, 'Sem GROUP BY, as aggregate functions resumem a tabela inteira numa row só.'),
           code({ title: 'Faturamento', task: 'Calcule a soma de `amount` dos orders com status `\'delivered\'`, com a column chamada `revenue`.', starter: '-- write your query\n', solution: "SELECT SUM(amount) AS revenue FROM orders WHERE status = 'delivered';", checkColumns: true, hint: "`SELECT SUM(amount) AS revenue FROM orders WHERE status = 'delivered';`" })),
 
         lesson('sql-groupby', 'GROUP BY',
@@ -201,6 +202,7 @@ GROUP BY country;
 
 Regra: toda column no SELECT que não está numa aggregate precisa estar no GROUP BY.`),
           quiz('Em `SELECT status, SUM(amount) FROM orders GROUP BY status`, quantas rows vêm?', ['Uma por pedido', 'Uma por status diferente', 'Uma só', 'Depende do amount'], 1, 'Uma row pra cada grupo.'),
+          predict('Se existem clientes de 4 países, quantas rows saem?', 'SELECT country, COUNT(*)\nFROM customers\nGROUP BY country;', ['1', '4', 'Uma por cliente', '0'], 1, 'GROUP BY cria um grupo por valor distinto de country: 4 países, 4 rows.'),
           code({ title: 'Clientes por país', task: 'Mostre cada `country` e quantos customers ele tem, numa column `total`, do país com mais clientes pro com menos (empate: ordem alfabética do país).',
             starter: '-- write your query\n', solution: 'SELECT country, COUNT(*) AS total FROM customers GROUP BY country ORDER BY total DESC, country;', ordered: true, checkColumns: true, hint: '`GROUP BY country ORDER BY total DESC, country`' })),
 
@@ -217,6 +219,7 @@ HAVING SUM(amount) > 500;       -- só quem gastou mais de 500
 
 Ordem completa: \`SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY → LIMIT\`.`),
           quiz('Onde filtrar "países com mais de 2 clientes"?', ['WHERE COUNT(*) > 2', 'HAVING COUNT(*) > 2', 'LIMIT 2', 'ORDER BY COUNT(*)'], 1, 'Condição sobre a aggregate vai no HAVING.'),
+          quiz('Qual a diferença entre WHERE e HAVING?', ['Nenhuma', 'WHERE filtra rows antes de agrupar; HAVING filtra grupos depois', 'HAVING só funciona com JOIN', 'WHERE só funciona com números'], 1, 'WHERE age sobre rows individuais; HAVING sobre o resultado de GROUP BY, por isso aceita COUNT/SUM.'),
           code({ title: 'Bons clientes', task: 'Ignorando pedidos `\'canceled\'`, mostre `customer_id` e o total gasto como `spent`, só para quem gastou **mais de 200**.',
             starter: '-- write your query\n', solution: "SELECT customer_id, SUM(amount) AS spent FROM orders WHERE status <> 'canceled' GROUP BY customer_id HAVING SUM(amount) > 200;", checkColumns: true, hint: "WHERE pra tirar os cancelados, GROUP BY customer_id, HAVING SUM(amount) > 200." }))
       ),

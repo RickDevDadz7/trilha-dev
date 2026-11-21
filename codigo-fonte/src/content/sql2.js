@@ -1,7 +1,7 @@
 /* SQL — módulos 5 a 8: expressões, alterando dados, modelagem, avançado */
 (function (TD) {
   'use strict';
-  const { learn, quiz, code, lesson, unit } = TD.C;
+  const { learn, quiz, predict, code, lesson, unit } = TD.C;
   const sql = TD.courses.find((c) => c.id === 'sql');
 
   sql.units.push(
@@ -28,6 +28,7 @@ SELECT
 FROM orders;
 ~~~`),
           quiz('Se nenhum WHEN bate e não há ELSE, o CASE retorna o quê?', ["''", '0', 'NULL', 'Dá erro'], 2, 'Sem ELSE, o resultado é NULL.'),
+          predict('Para um cliente de 30 anos, o que sai?', "CASE\n  WHEN age < 30 THEN 'young'\n  WHEN age < 50 THEN 'adult'\n  ELSE 'senior'\nEND", ["'young'", "'adult'", "'senior'", 'NULL'], 1, '30 não é < 30, então pula pro próximo WHEN: 30 < 50 → adult. O primeiro WHEN verdadeiro ganha.'),
           code({ title: 'Faixa etária', task: 'Mostre `name` e uma column `age_group` com: `\'young\'` (menos de 30), `\'adult\'` (30 a 49) e `\'senior\'` (50+).',
             starter: '-- write your query\n', solution: "SELECT name, CASE WHEN age < 30 THEN 'young' WHEN age < 50 THEN 'adult' ELSE 'senior' END AS age_group FROM customers;", checkColumns: true, hint: 'Teste do menor pro maior: `WHEN age < 30 THEN ... WHEN age < 50 THEN ... ELSE ...`.' })),
 
@@ -47,6 +48,7 @@ COALESCE(email, 'no email')       -- primeiro valor não nulo
 
 \`COALESCE\` é a forma padrão de trocar NULL por um valor padrão.`),
           quiz('O que `COALESCE(NULL, NULL, \'x\')` retorna?', ['NULL', "'x'", 'Erro', "''"], 1, 'Retorna o primeiro argumento não nulo.'),
+          predict('O que sai?', "SELECT COALESCE(NULL, NULL, 'x', 'y');", ['NULL', "'x'", "'y'", 'Erro'], 1, 'COALESCE devolve o primeiro valor que não é NULL.'),
           code({ title: 'Contatos', task: 'Mostre `name` em maiúsculas como `customer` e o email como `contact`, trocando email nulo por `\'no email\'`.',
             starter: '-- write your query\n', solution: "SELECT UPPER(name) AS customer, COALESCE(email, 'no email') AS contact FROM customers;", checkColumns: true, hint: "`UPPER(name) AS customer, COALESCE(email, 'no email') AS contact`" })),
 
@@ -63,6 +65,7 @@ julianday('2026-12-25') - julianday('2026-12-20')   -- diferença: 5.0
 
 Em PostgreSQL o equivalente é \`EXTRACT(YEAR FROM ...)\`, \`DATE_TRUNC('month', ...)\` e \`+ INTERVAL '30 days'\`. O raciocínio é o mesmo.`),
           quiz("O que `strftime('%m', '2026-04-30')` retorna?", ["'04'", "'30'", "'2026'", '4'], 0, '`%m` é o mês com dois dígitos.'),
+          quiz("O que `strftime('%Y-%m', '2026-03-15')` retorna no SQLite?", ["'2026-03-15'", "'2026-03'", "'03'", "'2026'"], 1, '%Y é o ano, %m o mês: 2026-03.'),
           code({ title: 'Vendas por mês', task: 'Ignorando cancelados, mostre o mês (`\'YYYY-MM\'`) como `month` e a soma de `amount` como `revenue`, em ordem cronológica.',
             starter: '-- write your query\n', solution: "SELECT strftime('%Y-%m', created_at) AS month, SUM(amount) AS revenue FROM orders WHERE status <> 'canceled' GROUP BY month ORDER BY month;", ordered: true, checkColumns: true, hint: "`strftime('%Y-%m', created_at) AS month` e `GROUP BY month`." }))
     ),

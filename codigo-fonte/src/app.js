@@ -148,7 +148,15 @@
           <div class="stat goal"><div class="row"><small>Meta do dia</small><small style="font-family:var(--font-mono)">${todayXP()}/${goal()} XP</small></div><div class="meter" style="--accent:var(--cyan)"><i style="width:${gp}%"></i></div></div>
         </div>
         <div class="save-state" id="save-state"></div>
-      </aside>`;
+      </aside>
+      <nav class="tabbar" aria-label="Navegação">
+        <a class="${v.name === 'home' ? 'active' : ''}" href="#"><span>▣</span>Trilhas</a>
+        <a class="${v.name === 'course' ? 'active' : ''}" href="#${esc(v.name === 'course' ? v.id : (P().last && byId[P().last] ? P().last : COURSES[0].id))}"><span>◆</span>Mapa</a>
+        <a href="#" data-start="x:@review"><span>↻</span>Revisão</a>
+        <a class="${v.name === 'data' ? 'active' : ''}" href="#dados"><span>⇅</span>Dados</a>
+        <a class="${v.name === 'config' ? 'active' : ''}" href="#config"><span>⚙</span>Config</a>
+      </nav>
+      <header class="topbar"><span class="brand-name">Trilha<b>.dev</b></span><span class="tb-stat">🔥 ${st}</span><span class="tb-stat">${p.xp} XP</span></header>`;
   }
 
   /* ---------- home ---------- */
@@ -235,7 +243,7 @@
                     const un = isUnlocked(c, l), dn = !!P().done[l.id], cur = nl && nl.id === l.id;
                     const codeN = l.steps.filter((s) => s.t === 'code').length;
                     return `
-                    <div class="node-wrap ${un ? '' : 'locked'}" style="transform:translateX(${off}px)">
+                    <div class="node-wrap ${un ? '' : 'locked'}" style="transform:translateX(${off}px);--off:${off}">
                       <span class="hex-ring ${cur && un ? 'current' : ''}">
                         <button class="node ${dn ? 'done' : un ? '' : 'locked'}" ${un ? `data-start="${c.id}:${l.id}"` : 'disabled'} aria-label="${esc(l.title)}${un ? '' : ' (bloqueada)'}">${dn ? ICON.check : un ? num : ICON.lock}</button>
                       </span>
@@ -835,7 +843,7 @@ Pergunta do aluno: ${d.tutorQ || 'Por que meu código não passa? Me dá uma dic
     if (t.hasAttribute('data-start') || t.hasAttribute('data-go')) sfx('nav');
     else if (t.hasAttribute('data-opt')) sfx('select');
     else if (!['check', 'run', 'sound'].includes(act0)) sfx('click');
-    if (t.hasAttribute('data-start')) { const [cid, lid] = t.getAttribute('data-start').split(':'); startLesson(cid, lid); return; }
+    if (t.hasAttribute('data-start')) { e.preventDefault(); const [cid, lid] = t.getAttribute('data-start').split(':'); startLesson(cid, lid); return; }
     if (t.hasAttribute('data-go')) { const id = t.getAttribute('data-go'); if ('#' + id === location.hash) route(); else location.hash = id; return; }
     if (t.hasAttribute('data-tab')) { S.lesson.d.tab = t.getAttribute('data-tab'); refreshCodeChrome(); return; }
     if (t.hasAttribute('data-opt')) { S.lesson.d.sel = Number(t.getAttribute('data-opt')); renderLesson(); return; }
