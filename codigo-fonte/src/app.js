@@ -219,7 +219,21 @@
       if (act === 'cloud-sync') { await runSync(true); return; }
       if (act === 'cloud-pass-show') { S.recovery = true; refreshAccount(); return; }
       if (act === 'cloud-newpass') { await TD.cloud.updatePassword((document.getElementById('cloud-newpass') || {}).value || ''); S.recovery = false; toast('Senha salva. Agora dá pra entrar com e-mail e senha também.'); refreshAccount(); return; }
-      if (act === 'cloud-signout') { await runSync(false); await TD.cloud.signOut(); toast('Você saiu da conta. O progresso continua neste aparelho.'); location.hash = 'login'; return; }
+      if (act === 'cloud-signout') {
+        // 1) garante que tudo está na nuvem antes de apagar daqui
+        const ok = await runSync(false);
+        if (!ok) { toast('Não consegui salvar na nuvem (sem internet?). Conecte e tente sair de novo, pra não perder progresso.'); return; }
+        await TD.cloud.signOut();
+        // 2) apaga o que ficou neste aparelho, pra outra conta começar limpa
+        const prefs = P().settings || {};
+        await S.store.wipeLocal(now(), { sound: prefs.sound, volume: prefs.volume });
+        try { ['td-sync-last', 'td-guest'].forEach((k) => localStorage.removeItem(k)); } catch (e) { /* */ }
+        S.auth = null; S.recovery = false;
+        toast('Você saiu da conta. Os dados foram apagados deste aparelho e continuam salvos na nuvem.');
+        // 3) volta pro começo do app
+        if (location.hash.replace('#', '') === '') route(); else location.hash = '';
+        return;
+      }
     } catch (e) { msg(e.message); }
   }
 

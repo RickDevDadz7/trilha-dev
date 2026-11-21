@@ -94,6 +94,17 @@
   Store.prototype.saveCode = function (lessonId) { return this._write('code/c/' + safeId(lessonId), this.state.code[lessonId]); };
   Store.prototype.flush = async function () { await Promise.allSettled(Object.values(this.tail)); };
 
+  /** Apaga tudo que está salvo neste aparelho (progresso, código, cópias automáticas). Usado ao sair da conta. */
+  Store.prototype.wipeLocal = async function (now, keepSettings) {
+    await this.flush();
+    const codes = await this.b.list('code/c').catch(() => []);
+    for (const c of codes) await this.b.del('code/c/' + c.id).catch(() => {});
+    const bks = await this.b.list('backups/b').catch(() => []);
+    for (const b of bks) await this.b.del('backups/b/' + b.id).catch(() => {});
+    this.state = { progress: Object.assign(blankProgress(now), keepSettings ? { settings: keepSettings } : {}), code: {} };
+    await this._write('progress', this.state.progress);
+  };
+
   /* ---------- Backup / restauração ---------- */
   Store.prototype.exportData = function (now, contentVersion) {
     const data = clone({ progress: this.state.progress, code: Object.values(this.state.code) });
